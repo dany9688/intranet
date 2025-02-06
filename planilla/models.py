@@ -26,7 +26,7 @@ class Base(models.Model):
         ("En apoyo", "En apoyo"),
         ("Sin chofer","Sin chofer")
     ]
-    estado = models.CharField(choices=estados, null=True, blank=True, max_length=20, verbose_name="estado")
+    estado = models.CharField(choices=estados, null=True, blank=True, max_length=20, default="Cubriendo zona", verbose_name="estado")
     def __str__(self):
         return self.base
     class Meta:
@@ -68,14 +68,14 @@ class Estado(models.Model):
         verbose_name_plural = "Estados"
 
 class Movil(models.Model):
-    numero = models.IntegerField(blank=True, null=True, verbose_name="Número")
-    IDTipo = models.ForeignKey(TipoMovil, null=True, on_delete=models.SET_NULL)
-    litros = models.IntegerField()
+    numero = models.IntegerField(blank=True, null=True, verbose_name="número")
+    IDTipo = models.ForeignKey(TipoMovil, null=True, on_delete=models.SET_NULL, verbose_name="tipo")
+    litros = models.IntegerField(null=True, blank=True, verbose_name="litros de combustible")
     ultima_carga = models.DateTimeField(blank=True, null=True, auto_now_add=False, default=False)
     ultima_fluidos = models.DateTimeField(blank=True, null=True)
-    intervenciones = models.IntegerField(blank=True, null=True)
-    IDBase = models.ForeignKey(Base, null=True, on_delete=models.SET_NULL, verbose_name="Base")
-    IDEstado = models.ForeignKey(Estado, null=True, on_delete=models.SET_NULL, verbose_name="Estado")
+    intervenciones = models.IntegerField(blank=True, null=True, default=0)
+    IDBase = models.ForeignKey(Base, null=True, on_delete=models.SET_NULL, verbose_name="base")
+    IDEstado = models.ForeignKey(Estado, null=True, on_delete=models.SET_NULL, verbose_name="estado")
     def __str__(self):
         return "Móvil "+str(self.numero)
     class Meta:
@@ -114,7 +114,7 @@ class Fluidos(models.Model):
         verbose_name_plural = "Fluidos"
 
 class TipoServicio(models.Model):
-    tipo = models.CharField(max_length=100, verbose_name="Tipo de servicio")
+    tipo = models.CharField(max_length=100, verbose_name="tipo de servicio")
     def __str__(self):
         return self.tipo
     class Meta:
