@@ -1,0 +1,157 @@
+{% extends 'planilla/base.html' %}
+{% load static %}
+{% block title %}Dashboard{% endblock title %}
+{% block content %}
+    <!-- Content Wrapper. Contains page content -->
+    <div class="content-wrapper">
+    <!-- Content Header (Page header) -->
+    <div class="content-header">
+        <div class="container-fluid">
+        <div class="col-sm-6">
+        </div><!-- /.col -->
+        </div>
+        <!-- /.container-fluid -->
+    </div>
+    <!-- /.content-header -->
+
+    <!-- Main content -->
+    <div class="content">
+        <div class="container-fluid">
+        <!-- 1ra fila -->
+        <div class="row mb-2 ml-1">
+            <h2>Panel de Encargado de guardia</h2>
+        </div>
+        <div class="row">
+          {%for cuartel in base %}
+            <div class="col-md-4">
+              <!-- Widget: user widget style 2 -->
+              <div class="card card-widget widget-user-2" style="height: 320px;">
+                <!-- Add the bg color to the header using any of the bg-* classes -->
+                 {% if cuartel.estado == "Cubriendo zona" %}
+                <div class="widget-user-header bg-success">
+                 {% elif cuartel.estado == "En apoyo" %}
+                <div class="widget-user-header bg-warning">
+                 {% elif cuartel.estado == "Sin chofer" %} 
+                <div class="widget-user-header bg-danger">
+                {%endif%}
+
+                  <div class="widget-user-image">
+                    <img class="img-circle elevation-2" src="{% static 'planilla/logo.png' %}" alt="User Avatar">
+                  </div>
+                  <!-- /.widget-user-image -->
+                  <h3 class="widget-user-username">{{cuartel.base}}</h3>
+                  <h5 class="widget-user-desc">{{cuartel.estado|upper}}</h5>
+                </div>
+                <div class="card-footer p-0">
+                  <table class="table table-valign-middle mt-0">
+                    <thead style="height: 20px;">
+                      <tr>
+                        <th class="text-center">Cuartel Central</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td class="text-center">
+                          {% for movil in moviles %}
+                            {% if movil.IDBase.base == cuartel.base %}
+                            {% if movil.IDEstado.estado == "En servicio" %}
+                            <button style="cursor: default;"  class="mb-1 btn btn-success">Móvil {{ movil.numero }}</button>
+                            {% elif movil.IDEstado.estado == "Condicional"  %}
+                            <button style="cursor: default;"  class="mb-1 btn btn-warning">Móvil {{ movil.numero }}</button>
+                            {% elif movil.IDEstado.estado == "Ocupado"%}
+                            <button style="cursor: default;"  class="mb-1 btn btn-secondary">
+                              {% for servicio in servicios %}
+                                {% if servicio.movil.id == movil.id%}
+                                  {% if servicio.tipo.tipo == "Incendio" %}
+                                    <span class="badge bg-danger"><i class="fa-solid fa-fire"></i></span>
+                                  {% elif servicio.tipo.tipo == "Auxilio" %}
+                                    <span class="badge bg-success"><i class="fa-solid fa-suitcase-medical"></i></span>
+                                  {% elif servicio.tipo.tipo == "Colaboración" %}
+                                    <span class="badge bg-success"><i class="fa-solid fa-handshake-angle"></i></span>
+                                  {% else %}
+                                    <span class="badge bg-purple"><i class="fa-solid fa-circle-info"></i></span>
+                                  {% endif %}
+                                {% endif %}
+                              {% endfor %}
+                              Móvil {{ movil.numero }}</button>
+                            {% else %}
+                            <button style="cursor: default;"  class="mb-1 btn btn-danger">Móvil {{ movil.numero }}</button>
+                            {% endif %}
+                            {% endif %}
+                          {% endfor %}
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              <!-- /.widget-user -->
+            </div>
+            {%endfor%}
+        </div>
+
+        <div class="row">
+            <div class="col-sm-12">
+                <div class="card card-danger">
+                    <div class="card-header border-0">
+                      <h3 class="card-title">Novedades de los últimos 10 días</h3>
+                    </div>
+                    <div class="card-body">
+                      <table class="table table-striped" style="table-layout: fixed; width: 100%;">
+                        <thead>
+                        <tr>
+                          <th style="width: 10%;">Fecha</th>
+                          <th style="width: 20%;"></th>
+                          <th style="width: 70%;">Novedad</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for novedad in novedades %}
+                        {% if novedad.novedades%}
+                        {% if novedad.cuartel.base == group%}
+                        <tr>
+                          <td style="width: 10%;">{{ novedad.fecha }}</td>
+                          <td style="width: 20%;">{{ novedad.encargado }}</td>
+                          <td style="width: 70%;">{{ novedad.novedades }}</td>
+                        </tr>
+                        {%endif%}
+                        {%endif%}
+                        {% endfor %}
+                        </tbody>
+                      </table>
+                    </div>
+                </div>
+            </div>
+      </div>
+
+    </div>
+    </div>
+    </div>
+{% endblock %}
+{% block js_block %}
+   <!-- DATATABLES -->
+   <script src="https://cdn.datatables.net/v/dt/dt-2.1.4/datatables.min.js"></script>
+   <script src="https://cdn.datatables.net/buttons/3.1.1/js/dataTables.buttons.js"></script>
+   <script src="https://cdn.datatables.net/buttons/3.1.1/js/buttons.dataTables.js"></script>
+   <script src="https://cdn.datatables.net/buttons/3.1.1/js/buttons.html5.min.js"></script>
+
+<script>
+   $(function () {
+       $('#example1').DataTable({
+       language: {
+       url: 'https://cdn.datatables.net/plug-ins/2.2.1/i18n/es-CL.json',
+       },
+      //  columnDefs: [{ width: '20%', targets: 0 }],
+      //  columnDefs: [{ width: '30%', targets: 1 }],
+      //  columnDefs: [{ width: '50%', targets: 2 }],
+       "paging": true,
+       "lengthChange": false,
+       "ordering": true,
+           order:[[0, 'desc']],
+       "searching": false,
+       "autoWidth": true,
+       "responsive": true,
+       });
+   });
+   </script>
+{% endblock %}

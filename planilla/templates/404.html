@@ -1,0 +1,48 @@
+{% extends 'planilla/base.html' %}
+{% load static %}
+{% block css_block %}
+
+{% endblock %}
+{% block content %}
+
+  <!-- Content Wrapper. Contains page content -->
+  <div class="content-wrapper">
+    <!-- Content Header (Page header) -->
+    <section class="content-header">
+      <div class="container-fluid">
+        <div class="row mb-2">
+          <div class="col-sm-6">
+          </div>
+        </div>
+      </div><!-- /.container-fluid -->
+    </section>
+
+    <!-- Main content -->
+    <section class="content d-flex justify-content-center">
+      <div class="error-page col-sm-12">
+        <div class="row col-sm-6">
+          <h2 class="headline text-warning">Error 404</h2><br>
+        </div>
+
+        <div class="row col-sm-6">
+          <div class="error-content">
+            <h3><i class="fas fa-exclamation-triangle text-warning"></i> Oops! No encontramos la página.</h3>
+  
+            <p>
+              Hubo algún error y la página que buscas no existe.
+              Por favor, regresá al  <a href="/">panel principal</a>.
+            </p>
+  
+          </div>
+        </div>
+
+        <!-- /.error-content -->
+      </div>
+      <!-- /.error-page -->
+    </section>
+    <!-- /.content -->
+  </div>
+  {% endblock %}
+  {% block js_block %}
+
+  {% endblock %}

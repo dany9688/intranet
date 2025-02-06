@@ -1,0 +1,575 @@
+{% extends 'planilla/base.html' %}
+
+{% block content %}
+    <!-- Content Wrapper. Contains page content -->
+    <div class="content-wrapper">
+        <!-- Content Header (Page header) -->
+        <div class="content-header">
+            <div class="container-fluid">
+            <div class="col-sm-6">
+            </div><!-- /.col -->
+            </div>
+            <!-- /.container-fluid -->
+        </div>
+        <!-- /.content-header -->
+
+        <!-- Main content -->
+        <div class="content">
+            <div class="container-fluid">
+            <!-- 1ra fila -->
+            <div class="col-md-12 mx-auto">
+                <div class="card">
+                <div class="card-header bg-dark text-center">
+                    <h3 class="text-white">MODIFICAR PLANILLA</h3>
+                </div>
+                <div class="col-sm-12">
+                    <form action="/modificarplanilla/{{ planilla.id }}/" method="POST" class="form-horizontal">
+                        {% csrf_token %}
+                    <div class="card-body">
+                        <div class="card card-warning card-outline">
+                            <div class="card-header">
+                            <h3 class="card-title">
+                                <i class="fas fa-walkie-talkie"></i>
+                                NOVEDADES DE LA GUARDIA
+                            </h3>
+                            </div>
+                        <div class="card-body">
+                            <div class="row">
+                            <div class="form-group col-md-3">
+                                <label for="exampleInputPassword1">Guardia operativa</label>
+                                <input type="number" class="form-control" id="guardiaoperativa" name="guardiaoperativa" value="{{ planilla.guardia_operativa }}" required>
+                                <span id="statusMessage" style="color: red;"></span>
+                            </div>
+                            <div class="form-group col-md-3">
+                                <label for="exampleInputPassword1">Fecha</label>
+                                <input type="date" class="form-control" id="fecha" name="fecha" required value="{{fecha}}">
+                            </div>
+                            <div class="form-group col-md-3">
+                                <label for="exampleInputPassword1">Guardia</label>
+                                <select name="guardia" id="guardia" class="form-control">
+                                <option selected value="{{planilla.guardia}}">{{planilla.guardia}}</option>
+                                <option value="Diurna">Diurna</option>
+                                <option value="Nocturna">Nocturna</option>
+                                </select>
+                            </div>
+                            <div class="form-group col-md-3">
+                                <label for="exampleInputPassword1">Cuartel</label>
+                                <select name="base" id="base" class="form-control">
+                                    <option value='{{ base_id }}' selected>{{ base }}</option>
+                                </select>
+                            </div>
+                            </div>
+                            <div class="row">
+                            <div class="form-group col-md-3">
+                                <label for="exampleInputEmail1">Cabecera de compañia</label>
+                                <select class="form-control" name="cabecera" required>
+                                {% for cuartel in compania %}
+                                <option value="{{planilla.cuartel.id}}">{{planilla.cabecera}}</option>
+                                    <option value="{{ cuartel.id }}">{{ cuartel.cuartel }}</option>
+                                {% endfor %}
+                                </select>
+
+                            </div>
+                            <div class="form-group col-md-5">
+                                <label for="exampleInputPassword1">Of. a Cargo</label>
+                                <select class="form-control" name="oficial"  required>
+                                    <option value="{{planilla.oficial.id}}">{{planilla.oficial}}</option>
+                                {% for bombero in bomberos %}
+                                    {% if "Comandante" in bombero.IDJerarquia.jerarquia or "Oficial" in bombero.IDJerarquia.jerarquia %}
+                                        <option value="{{ bombero.id }}">{{ bombero.IDJerarquia.jerarquia }} {{ bombero.apellido }}, {{ bombero.nombre }}</option>
+                                    {% endif %}
+                                {% endfor %}
+                                </select>
+                            </div>
+                            <div class="form-group col-md-4">
+                                <label for="exampleInputPassword1">Cuartelero</label>
+                                <input type="text" class="form-control" id="exampleInputPassword1" name="cuartelero" value="{{planilla.cuartelero}}" required>
+                            </div>
+                            </div>
+
+                        <hr>
+                        <h5>GASTOS</h5>
+                        <div class="row wrapper">
+                            <div class="form-group col-md-3">
+                            <label for="exampleInputPassword1">Dinero recibido</label>
+                            <input type="number" class="form-control" id="exampleInputPassword1" name="recibido" min="0" value={{planilla.recibido}}>
+                            </div>
+                            <div class="form-group col-md-3">
+                            <label for="exampleInputPassword1">Gastos</label>
+                            <input type="number" class="form-control" id="exampleInputPassword1" name="gastos" min="0" value="{{planilla.gastado}}">
+                            </div>
+                            <div class="form-group col-md-3">
+                            <label for="exampleInputPassword1">Concepto</label>
+                            <input type="text" class="form-control" id="exampleInputPassword1" name="concepto" value="{{planilla.concepto}}">
+                            </div>
+                            <div class="form-group col-md-3">
+                            <label for="exampleInputPassword1">Dinero entregado</label>
+                            <input type="number" class="form-control" id="exampleInputPassword1" name="entregado" min="0" value="{{planilla.entregado}}">
+                            </div>
+                        </div>
+                        </div>
+                        </div>
+
+                        <div class="card card-primary card-outline">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                            <i class="fas fa-user"></i>
+                            PERSONAL DE GUARDIA
+                            </h3>
+                        </div>
+                        <div class="card-body">
+                        <div class="row">
+                            <div class="col-sm-6 row form-group">
+                                <label class="col-form-label col-sm-2" for="exampleInputPassword1">Encargado</label>
+                                <select class="form-control col-sm-6" name="encargado" required>
+                                    <option value="{{planilla.encargado.id}}" selected>{{planilla.encargado}}</option>
+                                    {% for bombero in bomberos %}
+                                        <option value="{{ bombero.id }}">{{ bombero.IDJerarquia.jerarquia }} {{ bombero.apellido }}, {{ bombero.nombre }}</option>
+                                    {% endfor %}
+                                </select>
+                                <label class="col-form-label col-sm-2" >Ingreso</label>
+                                <input class="form-control col-sm-2" name="ingresoEncargado" type="time" value="{{planilla.ingreso_encargado}}">
+                            </div>
+                            <div class="col-sm-6 row form-group">
+                                <label class="col-form-label col-sm-2" for="exampleInputPassword1">Chofer</label>
+                                <select class="form-control col-sm-6" name="chofer">
+                                    {% if planilla.chofer %}
+                                    <option value="{{planilla.chofer.id}}" selected>value="{{planilla.chofer}}"</option>
+                                    {% for bombero in bomberos %}
+                                    {% if bombero.es_chofer %}
+                                        <option value="{{ bombero.id }}">{{ bombero.IDJerarquia.jerarquia }} {{ bombero.apellido }}, {{ bombero.nombre }}</option>
+                                    {% endif %}
+                                {% endfor %}
+                                    {% else %}
+                                    <option value="">Sin chofer</option>
+                                    {% for bombero in bomberos %}
+                                    {% if bombero.es_chofer %}
+                                        <option value="{{ bombero.id }}">{{ bombero.IDJerarquia.jerarquia }} {{ bombero.apellido }}, {{ bombero.nombre }}</option>
+                                    {% endif %}
+                                {% endfor %}
+                                {%endif%}
+                                </select>
+                                <label class="col-form-label col-sm-2" >Ingreso</label>
+                                <input class="form-control col-sm-2" name="ingresoChofer" type="time" value="{{planilla.ingreso_chofer}}">
+                            </div>
+                        </div>
+                        <hr>
+                        {% if presentes %}
+                        <label for="">PRESENTES:</label>
+                        <table class="table table-bordered nowrap mb-2">
+                            <thead>
+                              <tr>
+                                <th>Bombero</th>
+                                <th>Ingreso</th>
+                                <th>Acciones</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {% for presente in presentes %}
+                              {% if not presente.encargado == True %}
+                                  <tr id="presente-{{ presente.id }}">
+                                    <td>{{presente.bombero}}</td>
+                                    <td>{{ presente.ingreso }}</td>
+                                    <td>
+                                        <button class="btn btn-danger eliminar-btn" data-id="{{ presente.id }}">Eliminar</button>
+                                    </td>
+                                  </tr>
+                                {% endif %}
+                              {% endfor %}
+                            </tbody>
+                          </table>
+                        {% endif %}
+                        <div class="row">
+                            <div class="form-group col-md-12">
+                                <label for="row-count">Selecciona el número de bomberos presentes:</label>
+                                <select class="form-control col-md-1" id="row-countP">
+                                  <option value="0">0</option>
+                                  <option value="1">1</option>
+                                  <option value="2">2</option>
+                                  <option value="3">3</option>
+                                  <option value="4">4</option>
+                                  <option value="5">5</option>
+                                  <option value="6">6</option>
+                                  <option value="7">7</option>
+                                  <option value="8">8</option>
+                                  <option value="9">9</option>
+                                  <option value="10">10</option>
+                                  <option value="11">11</option>
+                                  <option value="12">12</option>
+                                  <option value="13">13</option>
+                                  <option value="14">14</option>
+                                  <option value="15">15</option>
+                                  <option value="16">16</option>
+                                  <option value="17">17</option>
+                                  <option value="18">18</option>
+                                  <option value="19">19</option>
+                                  <option value="20">20</option>
+                                </select>
+                            </div>
+                        
+                            <div id="fields-presente" class="row col-md-12 wrapper"></div>
+                        </div>
+                        <hr>
+                        {% if ausentes %}
+                        <LAbel>AUSENTES:</LAbel>
+                        <table class="table table-bordered nowrap mb-2">
+                            <thead>
+                              <tr>
+                                <th>Bombero</th>
+                                <th>Ingreso</th>
+                                <th>Acciones</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {% for ausente in ausentes %}
+                                  <tr>
+                                    <td>{{ausente.bombero}}</td>
+                                    <td>{{ ausente.ingreso }}</td>
+                                    <td>
+                                      <a class="btn btn-danger" href="/modificarplanilla/{{ planilla.id }}/">Eliminar</a>
+                                    </td>
+                                  </tr>
+                              {% endfor %}
+                            </tbody>
+                          </table>
+                        {% endif %}
+                        <div class="row">
+                            <div class="form-group col-md-12">
+                                <label for="row-count">Selecciona el número de bomberos ausentes:</label>
+                                <select class="form-control col-md-1" id="row-countA">
+                                  <option value="0">0</option>
+                                  <option value="1">1</option>
+                                  <option value="2">2</option>
+                                  <option value="3">3</option>
+                                  <option value="4">4</option>
+                                  <option value="5">5</option>
+                                  <option value="6">6</option>
+                                  <option value="7">7</option>
+                                  <option value="8">8</option>
+                                  <option value="9">9</option>
+                                  <option value="10">10</option>
+                                </select>
+                            </div>
+                        
+                            <div id="fields-ausente" class="row col-md-12 wrapper"></div>
+                        </div>
+                        <hr>
+                        {% if refuerzos %}
+                        <label for="">REFUERZOS:</label>
+                        <table class="table table-bordered nowrap mb-2">
+                            <thead>
+                              <tr>
+                                <th>Bombero</th>
+                                <th>Ingreso</th>
+                                <th>Acciones</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {% for refuerzo in refuerzos %}
+                                  <tr>
+                                    <td>{{refuerzo.bombero}}</td>
+                                    <td>{{ refuerzo.ingreso }}</td>
+                                    <td>
+                                      <a class="btn btn-danger" href="/modificarplanilla/{{ planilla.id }}/">Eliminar</a>
+                                    </td>
+                                  </tr>
+                              {% endfor %}
+                            </tbody>
+                          </table>
+                        {% endif %}
+                        <div class="row">
+                            <div class="form-group col-md-12">
+                                <label for="row-count">Selecciona el número de bomberos de refuerzo:</label>
+                                <select class="form-control col-md-1" id="row-countR">
+                                  <option value="0">0</option>
+                                  <option value="1">1</option>
+                                  <option value="2">2</option>
+                                  <option value="3">3</option>
+                                  <option value="4">4</option>
+                                  <option value="5">5</option>
+                                  <option value="6">6</option>
+                                  <option value="7">7</option>
+                                  <option value="8">8</option>
+                                  <option value="9">9</option>
+                                  <option value="10">10</option>
+                                  <option value="11">11</option>
+                                  <option value="12">12</option>
+                                  <option value="13">13</option>
+                                  <option value="14">14</option>
+                                  <option value="15">15</option>
+                                  <option value="16">16</option>
+                                  <option value="17">17</option>
+                                  <option value="18">18</option>
+                                  <option value="19">19</option>
+                                  <option value="20">20</option>
+                                </select>
+                            </div>
+                        
+                            <div id="fields-refuerzo" class="row col-md-12 wrapper"></div>
+                        </div>
+
+                        <!-- <div class="row">
+                            <div class="col-5 col-sm-3" style="height: 350px;">
+                            <div class="nav flex-column nav-tabs h-100" id="vert-tabs-tab" role="tablist" aria-orientation="vertical">
+                                <a class="nav-link" id="vert-tabs-profile-tab" data-toggle="pill" href="#vert-tabs-profile" role="tab" aria-controls="vert-tabs-profile" aria-selected="false">AUSENTES</a>
+                                <a class="nav-link" id="vert-tabs-messages-tab" data-toggle="pill" href="#vert-tabs-messages" role="tab" aria-controls="vert-tabs-messages" aria-selected="false">REFUERZOS</a>
+                            </div>
+                            </div>
+
+                            <div class="col-7 col-sm-9" style="height: 350px;">
+                            <div class="tab-content" id="vert-tabs-tabContent" style="height: 300px;">
+                                <div class="tab-pane fade" id="vert-tabs-profile" role="tabpanel" aria-labelledby="vert-tabs-profile-tab" style="height: 300px;">
+                                    {{ ausentes }}
+                                </div>
+                                <div class="tab-pane fade" id="vert-tabs-messages" role="tabpanel" aria-labelledby="vert-tabs-messages-tab" style="height: 300px;">
+                                    {{ refuerzos }}
+                                </div>
+                            </div>
+                            </div>
+                        </div> -->
+                        </div>
+                        </div>
+                    <div class="card card-success card-outline">
+                        <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="fas fa-list-check"></i>
+                            TAREAS REALIZADAS Y NOVEDADES A DESTACAR
+                        </h3>
+                        </div>
+                    <div class="card-body">
+                        <div class="row">
+                        <div class="col-5 col-sm-3">
+                            <div class="nav flex-column nav-tabs h-100" id="vert-tabs-tab2" role="tablist" aria-orientation="vertical">
+                            <a class="nav-link active" id="vert-tabs-home-tab2" data-toggle="pill" href="#vert-tabs-home2" role="tab" aria-controls="vert-tabs-home2" aria-selected="true">TAREAS REALIZADAS</a>
+                            <a class="nav-link" id="vert-tabs-profile-tab2" data-toggle="pill" href="#vert-tabs-profile2" role="tab" aria-controls="vert-tabs-profile2" aria-selected="false">NOVEDADES A DESTACAR</a>
+                            </div>
+                        </div>
+                        <div class="col-7 col-sm-9">
+                            <div class="tab-content" id="vert-tabs-tabContent2">
+                            <div class="tab-pane text-left fade show active" id="vert-tabs-home2" role="tabpanel" aria-labelledby="vert-tabs-home-tab2">
+                                <textarea rows="10" class="form-control" style="width: 100%;" id="exampleInputPassword1"
+                                name="tareas" placeholder="Tareas habituales como por ejemplo orden interno.">{{planilla.tareas}}"</textarea>
+                            </div>
+                            <div class="tab-pane fade" id="vert-tabs-profile2" role="tabpanel" aria-labelledby="vert-tabs-profile-tab2">
+                                <textarea rows="10" class="form-control" style="width: 100%;" id="exampleInputPassword1"
+                                name="novedades" placeholder="Problemas que deban saber los demás encargados. Ej: Problemas con móviles o materiales, edilicios, etc.">{{planilla.novedades}}</textarea>
+                            </div>
+                            </div>
+                        </div>
+                        </div>
+                    </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <button class="btn btn-success col-sm-2" id="boton" title="submit">Guardar</button>
+                    </form>
+                </div>
+                </div>
+                </div>
+            </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const rowCountSelectP = document.getElementById("row-countP");
+        const fieldsContainerP = document.getElementById("fields-presente");
+    
+        rowCountSelectP.addEventListener("change", function () {
+          const rowCount = parseInt(rowCountSelectP.value, 10);
+    
+          // Limpiar el contenedor antes de agregar nuevos campos
+          fieldsContainerP.innerHTML = "";
+    
+          // Generar las filas dinámicamente
+          for (let i = 0; i < rowCount; i++) {
+            const row = document.createElement("div");
+            row.className = "form-group row col-md-6";
+                
+            // Crear un select
+            const selectLabel = document.createElement("label");
+            selectLabel.innerText = "Bombero"
+            selectLabel.className = "col-sm-2 col-form-label"
+            const select = document.createElement("select");
+            select.name = `presente-${i}`;
+            select.className = "form-control col-4"
+            select.innerHTML = `<option value="Null">Sin bombero</option>
+            {%for bombero in bomberos %}
+            <label>Bombero:</label>
+            <option class="mr-3" value={{bombero.id}}>{{bombero.jerarquia}} {{bombero.apellido}}, {{bombero.nombre}}</option>
+            {% endfor %}
+            `;
+    
+            // Crear un input de tipo time
+            const timeLabel = document.createElement("label");
+            timeLabel.innerText = "Ingreso"
+            timeLabel.className = "col-sm-2 col-form-label"
+            const timeInput = document.createElement("input");
+            timeInput.type = "time";
+            timeInput.className = "col-2 form-control";
+            timeInput.name = `time-${i}`;
+    
+            // Agregar los elementos al contenedor de la fila
+            row.appendChild(selectLabel);
+            row.appendChild(select);
+            row.appendChild(timeLabel);
+            row.appendChild(timeInput);
+    
+            // Agregar la fila al contenedor principal
+            fieldsContainerP.appendChild(row);
+          }
+        });
+      </script>
+
+<script>
+    const rowCountSelectA = document.getElementById("row-countA");
+    const fieldsContainerA = document.getElementById("fields-ausente");
+
+    rowCountSelectA.addEventListener("change", function () {
+      const rowCount = parseInt(rowCountSelectA.value, 10);
+
+      // Limpiar el contenedor antes de agregar nuevos campos
+      fieldsContainerA.innerHTML = "";
+
+      // Generar las filas dinámicamente
+      for (let i = 0; i < rowCount; i++) {
+        const row = document.createElement("div");
+        row.className = "form-group row col-md-6";
+
+        // Crear un select
+        const selectLabel = document.createElement("label");
+        selectLabel.innerText = "Bombero"
+        selectLabel.className = "col-sm-2 col-form-label"
+        const select = document.createElement("select");
+        select.name = `ausente-${i}`;
+        select.className = "form-control col-4"
+        select.innerHTML = `<option value="Null">Sin bombero</option>
+        {%for bombero in bomberos %}
+        <label>Bombero:</label>
+        <option class="mr-3" value="{{bombero.id}}">{{bombero.jerarquia}} {{bombero.apellido}}, {{bombero.nombre}}</option>
+        {% endfor %}
+        `;
+
+        // Agregar los elementos al contenedor de la fila
+        row.appendChild(selectLabel);
+        row.appendChild(select);
+
+        // Agregar la fila al contenedor principal
+        fieldsContainerA.appendChild(row);
+      }
+    });
+  </script>
+
+<script>
+    const rowCountSelectR = document.getElementById("row-countR");
+    const fieldsContainerR = document.getElementById("fields-refuerzo");
+
+    rowCountSelectR.addEventListener("change", function () {
+      const rowCount = parseInt(rowCountSelectR.value, 10);
+
+      // Limpiar el contenedor antes de agregar nuevos campos
+      fieldsContainerR.innerHTML = "";
+
+      // Generar las filas dinámicamente
+      for (let i = 0; i < rowCount; i++) {
+        const row = document.createElement("div");
+        row.className = "form-group row col-md-6";
+
+        // Crear un select
+        const selectLabel = document.createElement("label");
+        selectLabel.innerText = "Bombero"
+        selectLabel.className = "col-sm-2 col-form-label"
+        const select = document.createElement("select");
+        select.name = `refuerzo-${i}`;
+        select.className = "form-control col-4"
+        select.innerHTML = `<option value="Null">Sin bombero</option>
+        {%for bombero in bomberos %}
+        <label>Bombero:</label>
+        <option class="mr-3" value="{{bombero.id}}">{{bombero.jerarquia}} {{bombero.apellido}}, {{bombero.nombre}}</option>
+        {% endfor %}
+        `;
+
+        // Agregar los elementos al contenedor de la fila
+        row.appendChild(selectLabel);
+        row.appendChild(select);
+
+        // Agregar la fila al contenedor principal
+        fieldsContainerR.appendChild(row);
+      }
+    });
+  </script>
+
+<script>
+  document.getElementById("guardiaoperativa").addEventListener("blur", function () {
+    const number = this.value;
+    const statusMessage = document.getElementById("statusMessage");
+
+    // Verificar si el campo está vacío
+    if (!number) {
+      statusMessage.textContent = "";
+      return;
+    }
+
+    // Enviar el número al servidor para validación
+    fetch("/planilla/verificar-numero/", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRFToken": getCookie("csrftoken") // Para Django
+      },
+      body: JSON.stringify({ numero: number }),
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        if (data.existePlanilla) {
+          statusMessage.textContent = "Este número ya está registrado.";
+        } else if (data.existeServicio) {
+          statusMessage.textContent = "Este número ya está registrado.";
+        } else {
+          statusMessage.textContent = "";
+        }
+      })
+      .catch((error) => {
+        console.error("Error:", error);
+      });
+  });
+
+  // Función para obtener el CSRF token
+  function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== "") {
+      const cookies = document.cookie.split(";");
+      for (let i = 0; i < cookies.length; i++) {
+        const cookie = cookies[i].trim();
+        if (cookie.startsWith(name + "=")) {
+          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+          break;
+        }
+      }
+    }
+    return cookieValue;
+  }
+</script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+      document.querySelectorAll(".eliminar-btn").forEach(button => {
+        button.addEventListener("click", function () {
+          let presenteId = this.getAttribute("data-id");
+  
+          fetch(`/eliminarpresente/${presenteId}/`, {
+            method: "DELETE",
+            headers: {
+              "X-CSRFToken": "{{ csrf_token }}"  // Asegurar la protección CSRF
+            }
+          }).then(response => {
+            if (response.ok) {
+              document.getElementById(`presente-${presenteId}`).remove();
+            }
+          }).catch(error => console.error("Error:", error));
+        });
+      });
+    });
+  </script>
+
+{% endblock %}

@@ -1,0 +1,203 @@
+{% extends 'planilla/base.html' %}
+{% load static %}
+{% block title %}Guardia{% endblock title %}
+{% block content %}
+    <!-- Content Wrapper. Contains page content -->
+    <div class="content-wrapper">
+    <!-- Content Header (Page header) -->
+    <div class="content-header">
+        <div class="container-fluid">
+        <div class="col-sm-6">
+
+        </div><!-- /.col -->
+        </div>
+        <!-- /.container-fluid -->
+    </div>
+    <!-- /.content-header -->
+
+    <!-- Main content -->
+    <div class="content">
+        <div class="container-fluid">
+          <!-- Contenedor de Toasts de Bootstrap -->
+          <div aria-live="polite" aria-atomic="true" class="position-fixed bottom-0 end-0 p-3" style="z-index: 1050;">
+            <div id="toastContainer" class="toast-container"></div>
+          </div>
+        <!-- 1ra fila -->
+        <div class="row mb-2 ml-1 mr-2 d-flex">
+            <h2 class="p-2">Panel de guardia - {{request.user.first_name}} {{request.user.last_name}}</h2>
+            <button type="button" data-toggle="modal" data-target="#cambiarcuartel"  class="btn btn-xs btn-secondary ml-auto">Cambiar estado<br>de cuartel</button>
+        </div>
+
+        <div class="modal fade" id="cambiarcuartel" tabindex="-1" aria-labelledby="cambiarcuartel" aria-hidden="true">
+          <div class="modal-dialog">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel3">Cambiar estado de cuartel</h5>
+              </div>
+              <div class="modal-body">
+                  <form action="/cambiaestbase/" method="POST">
+                    {% csrf_token %}
+                    <label for="movil">Indique el cuartel:</label>
+                    <select class="form-control col-sm-6" name="base">
+                      {% for cuartel in base %}
+                      <option value={{cuartel.id}}>{{cuartel.base}}</option>
+                      {%endfor%}
+                    </select>
+                    <label for="movil">Indique el nuevo estado:</label>
+                    <select class="form-control col-sm-6" name="estado">
+                      <option value="Cubriendo zona">Cubriendo zona</option>
+                      <option value="En apoyo">En apoyo</option>
+                      <option value="Sin chofer">Sin chofer</option>
+                    </select>
+              </div>
+              <div class="modal-footer">
+                <button type="submit" class="btn btn-primary">Cambiar estado</button>
+              </form>
+              <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+        
+              </div>
+            </div>
+          </div>
+      </div>
+        <div class="row">
+          {%for cuartel in base %}
+            <div class="col-md-3">
+              <!-- Widget: user widget style 2 -->
+              <div class="card card-widget widget-user-2">
+                <!-- Add the bg color to the header using any of the bg-* classes -->
+                 {% if cuartel.estado == "Cubriendo zona" %}
+                <div class="widget-user-header bg-success">
+                 {% elif cuartel.estado == "En apoyo" %}
+                 <div class="widget-user-header bg-warning">
+                 {% elif cuartel.estado == "Sin chofer" %} 
+                 <div class="widget-user-header bg-danger">
+                {%endif%}
+                  <div class="widget-user-image">
+                    <img class="img-circle elevation-2" src="{% static 'planilla/logo.png' %}" alt="User Avatar">
+                  </div>
+                  <!-- /.widget-user-image -->
+                  <h3 class="widget-user-username">{{cuartel.base}}</h3>
+                  <h5 class="widget-user-desc">{{cuartel.estado|upper}}</h5>
+                </div>
+                <div class="card-footer p-0">
+                  <ul class="nav flex-column">
+                    <li class="nav-item">
+                      <span style="cursor: default;" class="nav-link">
+                        {% for cuenta in cuentas %}
+                        {% if cuenta.base == cuartel.base%}
+                        Móviles disponibles <span class="float-right badge bg-success" style="font-size: 16px;">{{cuenta.en_servicio}}</span>
+                      </span>
+                    </li>
+                    <li class="nav-item">
+                      <span style="cursor: default;"  class="nav-link">
+                        Móviles ocupados <span class="float-right badge bg-secondary" style="font-size: 16px;">{{cuenta.ocupados}}</span>
+                      </span>
+                    </li>
+                    <li class="nav-item">
+                      <span style="cursor: default;"  class="nav-link">
+                        Móviles en condicional <span class="float-right badge bg-warning" style="font-size: 16px;">{{cuenta.condicional}}</span>
+                      </span>
+                    </li>
+                    <li class="nav-item">
+                      <span style="cursor: default;"  class="nav-link">
+                        Móviles fuera de servicio <span class="float-right badge bg-danger" style="font-size: 16px;">{{cuenta.fuera_servicio}}</span>
+                      </span>
+                    </li>
+                    {% endif %}
+                    {% endfor %}
+                  </ul>
+                </div>
+              </div>
+              <!-- /.widget-user -->
+            </div>
+            {%endfor%}
+            <div class="col-sm-3">
+                <div style="text-align:center;padding:1em 0;">
+                  <h2>
+                    <span style="color:gray;">Hora actual en</span><br/>
+                    Morón, Argentina
+                  </h2>
+                    <iframe src="https://www.zeitverschiebung.net/clock-widget-iframe-v2?language=es&size=large&timezone=America%2FArgentina%2FBuenos_Aires" width="100%" height="140" frameborder="0" seamless style="pointer-events: none;"></iframe>
+              </div>
+            </div>
+        </div>
+        <div class="row">
+          <div class="col-md-12">
+            <div class="card card-navy">  
+              <div class="card-header d-flex">
+                <h3 class="card-title mr-auto p-2">Servicios en curso</h3>
+                <a class="btn btn-danger ml-auto p-2" href="/cargar_servicio"><i class="fa-regular fa-bell"></i> Nuevo servicio</a>
+              </div>
+              
+              <!-- /.card-header -->
+              <div class="card-body table-responsive">
+                {% if servicios %}
+                <table class="table table-bordered table-striped ">
+                  <thead>
+                    <tr>
+                      <th>Número</th>
+                      <th>Móvil</th>
+                      <th>Salida</th>
+                      <th>Domicilio</th>
+                      <th>Encargado</th>
+                      <th>Tipo de servicio</th>
+                      <th>Finalizar</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for servicio in servicios %}
+                    {% if servicio.estado == "Abierto" %}
+                        <tr>
+                          <td>{{ servicio.numero }} </td>
+                          <td>Móvil {{ servicio.movil.numero}}</td>
+                          <td>{{ servicio.salida }}</td>
+                          <td>{{ servicio.direccion }}</td>
+                          <td>{{ servicio.encargado.legajo }} - {{ servicio.encargado.apellido }}, {{ servicio.encargado.nombre }}</td>
+                          <td>{{ servicio.tipo.tipo }}</td>
+                          <td>
+                            <a href="/modificar_servicio/{{servicio.id}}" class="btn bg-warning"><i class="fa-solid fa-pen-to-square"></i></a>
+                            <a href="/finalizar_servicio/{{servicio.id}}" class="btn bg-danger">Finalizar</a>
+                          </td>
+                        </tr>
+                      {% endif %}
+                    {% endfor %}
+                  </tbody>
+                </table>
+        </div>
+              <!-- /.card-body -->
+    
+          </div>
+        {% else %}
+          <p>No hay servicios cargados.</p>
+        {% endif %}
+        </div>
+        </div>
+    </div>
+    </div>
+
+{% endblock %}
+{% block js_block %}
+   <!-- DATATABLES -->
+   <script src="https://cdn.datatables.net/v/dt/dt-2.1.4/datatables.min.js"></script>
+   <script src="https://cdn.datatables.net/buttons/3.1.1/js/dataTables.buttons.js"></script>
+   <script src="https://cdn.datatables.net/buttons/3.1.1/js/buttons.dataTables.js"></script>
+   <script src="https://cdn.datatables.net/buttons/3.1.1/js/buttons.html5.min.js"></script>
+
+<script>
+   $(function () {
+       $('#example1').DataTable({
+       language: {
+       url: 'https://cdn.datatables.net/plug-ins/2.2.1/i18n/es-CL.json',
+       },
+       "paging": true,
+       "lengthChange": false,
+       "ordering": true,
+           order:[[0, 'desc']],
+       "length": 40,
+       "searching": true,
+       "autoWidth": true,
+       "responsive": true,
+       });
+   });
+   </script>
+{% endblock %}

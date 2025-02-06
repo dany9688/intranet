@@ -1,0 +1,467 @@
+{% extends 'planilla/base.html' %}
+{% load static %}
+
+{% block title %}Ficha de control -{{movil}} {% endblock %}
+{% block css_block %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.0/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://cdn.datatables.net/2.2.1/css/dataTables.bootstrap5.css">
+<link rel="stylesheet" href="https://cdn.datatables.net/responsive/3.0.3/css/responsive.bootstrap5.css">
+{% endblock %}
+{% block content %}
+    <!-- Content Wrapper. Contains page content -->
+    <div class="content-wrapper">
+    <!-- Content Header (Page header) -->
+    <div class="content-header">
+        <div class="container-fluid">
+        <div class="col-sm-6">
+        </div><!-- /.col -->
+        </div>
+        <!-- /.container-fluid -->
+    </div>
+    <!-- /.content-header -->
+
+    <!-- Main content -->
+    <div class="content">
+        <div class="container-fluid">
+        <!-- 1ra fila -->
+        <div class="row mb-3 ml-3">
+            <span id="id" hidden>{{ id }}</span>
+            <h2>FICHA DE CONTROL - {{movil}}</h2>
+        </div>
+        <div class="row">
+            <div class="col-sm-6">
+            <div class="card card-primary">
+                <div class="card-header border-0">
+                  <h3 class="card-title">Carga de combustible</h3>
+                </div>
+                <div class="card-body table-responsive">
+                  <table id="example1" class="table table-striped table-valign-middle mt-0">
+                    <thead>
+                    <tr>
+                      <th>Fecha</th>
+                      <th>Cantidad</th>
+                      <th>Encargado</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for carga in combustible %}
+                    <tr>
+                      <td>
+                        {{ carga.fecha }}
+                      </td>
+                      <td>{{ carga.cantidad }} litros</td>
+                      <td>{{ carga.encargado }}</td>
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              </div>
+              <div class="col-md-6">
+                <div class="card card-danger collapsed-card">
+                  <div class="card-header">
+                    <h3 class="card-title">Consumo de combustible</h3>
+    
+                    <div class="card-tools">
+                      <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                        <i class="fas fa-minus"></i>
+                      </button>
+                      <button type="button" class="btn btn-tool" data-card-widget="remove">
+                        <i class="fas fa-times"></i>
+                      </button>
+                    </div>
+                  </div>
+                  <div class="card-body">
+                    <div class="chart-combustible">
+                      <canvas id="barChart-combustible" style="min-height: 350px; height: 450px; max-height: 450px; max-width: 100%;"></canvas>
+                    </div>
+                  </div>
+                  <!-- /.card-body -->
+                </div>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-sm-12">
+              <div class="card card-success">
+                <div class="card-header border-0">
+                  <h3 class="card-title">Control de fluidos</h3>
+                </div>
+                <div class="card-body table-responsive">
+                  <table id="example2"  class="table table-striped table-bordered table-valign-middle mt-0">
+                    <thead>
+                    <tr>
+                      <th>Fecha</th>
+                      <th>Encargado</th>
+                      <th>Radiador</th>
+                      <th>Aceite</th>
+                      <th>Hidráulico</th>
+                      <th>Frenos</th>
+                      <th>Agua</th>
+                      <th>Bomba</th>
+                      <th>Sirena/Bocina</th>
+                      <th>Luces reglamentarias/Emergencia</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for control in fluidos %}
+                    <tr>
+                      <td>{{ control.fecha }}</td>
+                      <td>{{ control.encargado }}</td>
+                      <td>{{ control.agua }} litros</td>
+                      <td>{{ control.aceite }} litros</td>
+                      <td>{{ control.hidraulico }} litros</td>
+                      <td>{{ control.frenos }} litros</td>
+                      <td>{{ control.tanque }}</td>
+                      <td>{{ control.bomba }}</td>
+                      <td>{{ control.sirena }}</td>
+                      <td>{{ control.luces }}</td>
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              </div>
+        </div>
+        <div class="row">
+            <div class="col-md-12">
+            <div class="card card-danger collapsed-card">
+                <div class="card-header">
+                  <h3 class="card-title">Consumos</h3>
+  
+                  <div class="card-tools">
+                    <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                      <i class="fas fa-minus"></i>
+                    </button>
+                    <button type="button" class="btn btn-tool" data-card-widget="remove">
+                      <i class="fas fa-times"></i>
+                    </button>
+                  </div>
+                </div>
+                <div class="card-body">
+                  <div class="chart">
+                    <canvas id="barChart" style="min-height: 350px; height: 450px; max-height: 450px; max-width: 100%;"></canvas>
+                  </div>
+                </div>
+                <!-- /.card-body -->
+              </div>
+            </div>
+        </div>
+        <div class="row">
+          <div class="col-sm-12">
+            <div class="card card-olive">
+              <div class="card-header border-0 d-flex">
+                <h3 class="card-title">Reparaciones</h3>
+                <button data-toggle="modal" data-target="#reparacion" class="btn btn-xs btn-secondary ml-auto"><i class="fa-solid fa-wrench"></i>  Nueva reparación</button>
+              </div>
+              <div class="card-body table-responsive">
+                <table id="example3" class="table table-striped table-valign-middle mt-0">
+                  <thead>
+                  <tr>
+                    <th>Fecha</th>
+                    <th>Encargado</th>
+                    <th>Tarea realizada</th>
+                  </tr>
+                  </thead>
+                  <tbody>
+                  {% for reparacion in reparaciones %}
+                  <tr>
+                    <td>{{ reparacion.fecha }}</td>
+                    <td>{{ reparacion.encargado }}</td>
+                    <td>{{ reparacion.tarea }}</td>
+                  </tr>
+                  {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            </div>
+        </div>
+
+    </div>
+    </div>
+            <!-- MODAL COMBUSTIBLE-->
+            <div class="modal fade" id="reparacion" tabindex="-1" aria-labelledby="reparacion" aria-hidden="true">
+              <div class="modal-dialog">
+                <div class="modal-content">
+                  <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel3">Nueva reparación - {{ movil }}</h5>
+                  </div>
+                  <div class="modal-body">
+                      <form action="/reparacion_movil/{{ id }}/" method="post">
+                        {% csrf_token %}
+                      <label for="movil">Encargado:</label>
+                      <select class="form-control col-sm-6" name="encargado" id="">
+                        {% for bombero in bomberos %}
+                        <option value={{bombero.id}}>{{bombero.apellido}}, {{bombero.nombre}}</option>
+                        {% endfor %}
+                      </select><br>
+                      <label for="movil">Tarea realizada:</label>
+                      <textarea class="form-control" name="tarea" id="" cols="30" rows="10"></textarea>
+                  </div>
+                  <div class="modal-footer">
+                    <button type="submit" class="btn btn-primary">Agregar reparación</button>
+                  </form>
+                  <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+            
+                  </div>
+                </div>
+              </div>
+          </div>
+
+{% endblock %}
+
+{% block js_block %}
+<!-- DATATABLES -->
+<script src="https://cdn.datatables.net/v/dt/dt-2.1.4/datatables.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/3.1.1/js/dataTables.buttons.js"></script>
+<script src="https://cdn.datatables.net/buttons/3.1.1/js/buttons.dataTables.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/3.1.1/js/buttons.html5.min.js"></script>
+<script src="https://cdn.datatables.net/2.2.1/js/dataTables.bootstrap5.js"></script>
+<script src="https://cdn.datatables.net/responsive/3.0.3/js/dataTables.responsive.js"></script>
+<script src="https://cdn.datatables.net/responsive/3.0.3/js/responsive.bootstrap5.js"></script>
+<script src= "{% static 'planilla/Chart.min.js' %}"></script>
+
+<script>
+   $(function () {
+       $('#example2').DataTable({
+       language: {
+       url: 'https://cdn.datatables.net/plug-ins/2.2.1/i18n/es-CL.json',
+       },
+       "paging": true,
+       "lengthChange": false,
+       layout: {
+        topStart: {
+            buttons: ['copyHtml5', 'excelHtml5']
+        }},
+       "ordering": true,
+           order:[[0,'desc']],
+       "searching": true,
+       "autoWidth": false,
+       "responsive": true,
+       });
+   });
+</script>
+
+<script>
+  $(function () {
+      $('#example1').DataTable({
+      language: {
+      url: 'https://cdn.datatables.net/plug-ins/2.2.1/i18n/es-CL.json',
+      },
+      "paging": true,
+      "lengthChange": false,
+      layout: {
+       topStart: {
+           buttons: ['copyHtml5', 'excelHtml5']
+       }},
+      "ordering": true,
+          order:[[0,'desc']],
+      "searching": true,
+      "autoWidth": false,
+      "responsive": true,
+      });
+  });
+</script>
+
+<script>
+  $(function () {
+      $('#example3').DataTable({
+      language: {
+      url: 'https://cdn.datatables.net/plug-ins/2.2.1/i18n/es-CL.json',
+      },
+      "paging": true,
+      "lengthChange": false,
+      layout: {
+       topStart: {
+           buttons: ['copyHtml5', 'excelHtml5']
+       }},
+      "ordering": true,
+          order:[[0,'desc']],
+      "searching": true,
+      "autoWidth": false,
+      "responsive": true,
+      });
+  });
+</script>
+
+<script>
+    $(function () {
+    movil = document.getElementById("id").innerHTML
+
+    // Enviar el número al servidor para validación
+    fetch("/movil_grafico/", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRFToken": getCookie("csrftoken") // Para Django
+      },
+      body: JSON.stringify({ numero: movil }),
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        if (!data.fechasC) {
+                console.error("El objeto data.fechasC no está definido:", data);
+                return;
+            }
+        const fechasA = data.fechasA;
+        const fechasAC = data.fechasAC;
+        const fechasH = data.fechasH;
+        const fechasF = data.fechasF;
+    
+        /* ChartJS
+       * -------
+       * Here we will create a few charts using ChartJS
+       */
+
+    var areaChartData = {
+        labels  : ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'],
+        datasets: [
+          {
+            label               : 'Agua',
+            backgroundColor     : '#00a65a',
+            borderColor         : '#00a65a',
+            pointRadius         : false,
+            pointColor          : '#00a65a',
+            pointStrokeColor    : '#c1c7d1',
+            pointHighlightFill  : '#fff',
+            pointHighlightStroke: 'rgba(220,220,220,1)',
+            data                : [fechasA["1"],fechasA["2"],fechasA["3"],fechasA["4"],fechasA["5"],fechasA["6"],fechasA["7"],fechasA["8"],fechasA["9"],fechasA["10"],fechasA["11"],fechasA["12"],]
+          },
+          {
+            label               : 'Aceite',
+            backgroundColor     : '#f39c12',
+            borderColor         : '#f39c12',
+            pointRadius         : false,
+            pointColor          : '#f39c12',
+            pointStrokeColor    : '#c1c7d1',
+            pointHighlightFill  : '#fff',
+            pointHighlightStroke: 'rgba(220,220,220,1)',
+            data                : [fechasAC["1"],fechasAC["2"],fechasAC["3"],fechasAC["4"],fechasAC["5"],fechasAC["6"],fechasAC["7"],fechasAC["8"],fechasAC["9"],fechasAC["10"],fechasAC["11"],fechasAC["12"],]
+          },
+          {
+            label               : 'Hidráulico',
+            backgroundColor     : '#00c0ef',
+            borderColor         : '#00c0ef',
+            pointRadius         : false,
+            pointColor          : '#00c0ef',
+            pointStrokeColor    : '#c1c7d1',
+            pointHighlightFill  : '#fff',
+            pointHighlightStroke: 'rgba(220,220,220,1)',
+            data                : [fechasH["1"],fechasH["2"],fechasH["3"],fechasH["4"],fechasH["5"],fechasH["6"],fechasH["7"],fechasH["8"],fechasH["9"],fechasH["10"],fechasH["11"],fechasH["12"],]
+          },
+          {
+            label               : 'Frenos',
+            backgroundColor     : '#3c8dbc',
+            borderColor         : '#3c8dbc',
+            pointRadius         : false,
+            pointColor          : '#3c8dbc',
+            pointStrokeColor    : '#c1c7d1',
+            pointHighlightFill  : '#fff',
+            pointHighlightStroke: 'rgba(220,220,220,1)',
+            data                : [fechasF["1"],fechasF["2"],fechasF["3"],fechasF["4"],fechasF["5"],fechasF["6"],fechasF["7"],fechasF["8"],fechasF["9"],fechasF["10"],fechasF["11"],fechasF["12"],]
+          },
+        ]
+      }
+
+      //-------------
+      //- BAR CHART -
+      //-------------
+      var barChartCanvas = $('#barChart').get(0).getContext('2d')
+      var barChartData = $.extend(true, {}, areaChartData)
+  
+      var barChartOptions = {
+        responsive              : true,
+        maintainAspectRatio     : false,
+        datasetFill             : false
+      }
+  
+      new Chart(barChartCanvas, {
+        type: 'bar',
+        data: barChartData,
+        options: barChartOptions
+      })
+
+      .catch((error) => {
+        console.error("Error:", error);
+      });
+    });
+      // Enviar el número al servidor para validación
+      fetch("/movil_grafico/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRFToken": getCookie("csrftoken") // Para Django
+        },
+        body: JSON.stringify({ numero: movil }),
+      })
+      .then((response) => response.json())
+      .then((data) => {
+        if (!data.fechasC) {
+                console.error("El objeto data.fechasC no está definido:", data);
+                return;
+            }
+        console.log("DATA:", data.fechasC)
+        const fechasC = data.fechasC;
+      
+      let areaChartDataC = {
+        labels  : ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'],
+        datasets: [
+          {
+            label               : 'Combustible',
+            backgroundColor     : '#f56954',
+            borderColor         : '#f56954',
+            pointRadius          : false,
+            pointColor          : '#3b8bba',
+            pointStrokeColor    : '#f56954',
+            pointHighlightFill  : '#fff',
+            pointHighlightStroke: 'rgba(220,220,220,1)',
+            data                : [fechasC["1"],fechasC["2"],fechasC["3"],fechasC["4"],fechasC["5"],fechasC["6"],fechasC["7"],fechasC["8"],fechasC["9"],fechasC["10"],fechasC["11"],fechasC["12"],]
+          },
+        ]
+      }
+      
+      //-------------
+      //- BAR CHART -
+      //-------------
+      var barChartCanvasCombustible= $('#barChart-combustible').get(0).getContext('2d')
+      var barChartDataCombustible = $.extend(true, {}, areaChartDataC)
+  
+      var barChartOptionsCombustible = {
+        responsive              : true,
+        maintainAspectRatio     : false,
+        datasetFill             : false
+      }
+  
+      new Chart(barChartCanvasCombustible, {
+        type: 'bar',
+        data: barChartDataCombustible,
+        options: barChartOptionsCombustible
+      })
+
+      .catch((error) => {
+        console.error("Error:", error);
+      });
+    });
+
+    // Función para obtener el CSRF token
+    function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== "") {
+    const cookies = document.cookie.split(";");
+    for (let i = 0; i < cookies.length; i++) {
+        const cookie = cookies[i].trim();
+        if (cookie.startsWith(name + "=")) {
+        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+        break;
+        }
+    }
+    }
+    return cookieValue;
+    }
+
+  })
+  </script>
+{% endblock %}

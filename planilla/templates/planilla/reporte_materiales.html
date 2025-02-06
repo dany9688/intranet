@@ -1,0 +1,330 @@
+{% extends 'planilla/base.html' %}
+{% load static %}
+{% block content %}
+<!-- Content Wrapper. Contains page content -->
+<div class="content-wrapper">
+    <!-- Content Header (Page header) -->
+    <div class="content-header">
+        <div class="container-fluid">
+        <div class="col-sm-6">
+        </div><!-- /.col -->
+        </div>
+        <!-- /.container-fluid -->
+    </div>
+    <!-- /.content-header -->
+
+    <!-- Main content -->
+    <div class="content">
+        <div class="container-fluid">
+        <!-- 1ra fila -->
+        <div class="row">
+          <div class="col-md-4">
+          <div class="card card-danger">
+              <div class="card-header">
+                <h3 class="card-title">Estado de materiales</h3>
+              </div>
+              <div class="card-body">
+                <div class="chart">
+                  <canvas id="donutChart" style="min-height: 250px; height: 250px; max-height: 250px; max-width: 100%;"></canvas>
+                </div>
+              </div>
+              <!-- /.card-body -->
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="card card-danger">
+                <div class="card-header">
+                  <h3 class="card-title">Cantidad de mangas</h3>
+                </div>
+                <div class="card-body">
+                  <div class="chart">
+                    <canvas id="mangaChart" style="min-height: 250px; height: 250px; max-height: 250px; max-width: 100%;"></canvas>
+                  </div>
+                </div>
+                <!-- /.card-body -->
+              </div>
+            </div>
+      </div>
+        <div class="row">
+          {% if materiales %}
+            <div class="col-md-12">
+              <div class="card">
+                <div class="card-header">
+                  <h3 class="card-title">Reporte de materiales</h3>
+                </div>
+                <!-- /.card-header -->
+                <div class="card-body table-responsive">
+                  <table id="example1" class="table table-bordered table-striped ">
+                    <thead>
+                      <tr>
+                        <th>Nombre</th>
+                        <th>Cantidad total</th>
+                        <th>Estado</th>
+                      </tr>
+                    </thead>
+                    <tbody class="text-center">
+                      {% for material in materiales %}
+                          <tr class="text-center">
+                            <td class="text-center">{{ material.nombre }}</td>
+                            <td>{{ material.cantidad }}</td>
+                            <td>{{material.estado}}</td>  
+                          </tr>
+                      {% endfor %}
+                    </tbody>
+                  </table>
+
+          <!-- MODAL COMBUSTIBLE-->
+          <div class="modal fade" id="cargar" tabindex="-1" aria-labelledby="cargar" aria-hidden="true">
+              <div class="modal-dialog">
+                <div class="modal-content">
+                  <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel3">Carga de combustible</h5>
+                  </div>
+                  <div class="modal-body">
+                      <form action="/cargarcombustible/" method="post">
+                        {% csrf_token %}
+                        <label for="movil">Indique el móvil:</label>
+                        <select class="form-control col-sm-3" name="movil" id="">
+                          {% for movil in todo_los_moviles %}
+                          <option value={{movil.id}}>Móvil {{movil.numero}}</option>
+                          {% endfor %}
+                        </select>
+                        <label for="movil">Encargado:</label>
+                        <select class="form-control col-sm-6" name="encargado" id="">
+                          {% for bombero in bomberos %}
+                          <option value={{bombero.id}}>{{bombero.apellido}}, {{bombero.nombre}}</option>
+                          {% endfor %}
+                        </select>
+                        <label for="movil">Cantidad de litros:</label>
+                        <input type="number" name="cantidad" min="0" max="300">
+                  </div>
+                  <div class="modal-footer">
+                    <button type="submit" class="btn btn-primary">Actualizar combustible</button>
+                  </form>
+                  <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+            
+                  </div>
+                </div>
+              </div>
+          </div>
+
+                    <!-- MODAL COMBUSTIBLE-->
+                    <div class="modal fade" id="estado" tabindex="-1" aria-labelledby="estado" aria-hidden="true">
+                      <div class="modal-dialog">
+                        <div class="modal-content">
+                          <div class="modal-header">
+                            <h5 class="modal-title" id="exampleModalLabel3">Cambio de estado</h5>
+                          </div>
+                          <div class="modal-body">
+                              <form action="/cambiarestado/" method="post">
+                                {% csrf_token %}
+                                <label for="movil">Indique el móvil:</label>
+                                <select class="form-control col-sm-3" name="movil" id="">
+                                  {% for movil in todo_los_moviles %}
+                                  <option value={{movil.id}}>Móvil {{movil.numero}}</option>
+                                  {% endfor %}
+                                </select>
+                                <label for="movil">Nuevo estado:</label>
+                                <select class="form-control col-sm-6" name="estado" id="">
+                                  {% for estado in estados %}
+                                  <option value={{estado.id}}>{{estado.estado}}</option>
+                                  {% endfor %}
+                                </select>
+                          </div>
+                          <div class="modal-footer">
+                            <button type="submit" class="btn btn-primary">Actualizar estado</button>
+                          </form>
+                          <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+                    
+                          </div>
+                        </div>
+                      </div>
+                  </div>
+
+          <!-- MODAL FLUIDOS-->
+          <div class="modal fade" id="fluidos" tabindex="-1" aria-labelledby="fluidos" aria-hidden="true">
+            <div class="modal-dialog">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title" id="exampleModalLabel3">Carga de combustible</h5>
+                </div>
+                <div class="modal-body">
+                    <form action="/fluidos/" method="post">
+                      {% csrf_token %}
+                      <label for="movil">Indique el móvil:</label>
+                      <select class="form-control col-sm-3" name="movil" id="">
+                        {% for movil in todo_los_moviles %}
+                        <option value={{movil.id}}>Móvil {{movil.numero}}</option>
+                        {% endfor %}
+                      </select>
+                      <label for="movil">Encargado:</label>
+                      <select class="form-control col-sm-6" name="encargado" id="">
+                        {% for bombero in bomberos %}
+                        <option value={{bombero.id}}>{{bombero.apellido}}, {{bombero.nombre}}</option>
+                        {% endfor %}
+                      </select>
+                      <label for="movil">Litros de agua agregados:</label>
+                      <input type="number" name="agua" min="0" max="300" value="0">
+                      <label for="movil">Litros de aceite agregados:</label>
+                      <input type="number" name="aceite" min="0" max="300" value="0">
+                      <label for="movil">Litros de líquido hidráulico agregados:</label>
+                      <input type="number" name="hidraulico" min="0" max="300" value="0">
+                      <label for="movil">Litros de líquido de frenos agregados:</label>
+                      <input type="number" name="frenos" min="0" max="300" value="0"><br>
+                      <label for="movil">Agua:</label>
+                      <select class="form-control" name="tanque">
+                        <option value="Chequeado - OK">Chequeado - OK</option>
+                        <option value="Chequeado - Faltaba">Chequeado - Faltaba</option>
+                        <option value="Sin chequear">Sin chequear</option>
+                      </select>
+                      <label for="movil">Bomba:</label> 
+                      <select class="form-control" name="bocina">
+                        <option value="Chequeado - OK">Chequeado - OK</option>
+                        <option value="Chequeado - Falla">Chequeado - Falla</option>
+                        <option value="Sin chequear">Sin chequear</option>
+                      </select>
+                      <label for="movil">Luces reglamentarias/Emergencia:</label>
+                      <select class="form-control" name="luces">
+                        <option value="Chequeado - OK">Chequeado - OK</option>
+                        <option value="Chequeado - Falla">Chequeado - Falla</option>
+                        <option value="Sin chequear">Sin chequear</option>
+                      </select>
+                      <label for="movil">Sirena/Bocina:</label>
+                      <select class="form-control" name="sirena">
+                        <option value="Chequeado - OK">Chequeado - OK</option>
+                        <option value="Chequeado - Falla">Chequeado - Falla</option>
+                        <option value="Sin chequear">Sin chequear</option>
+                      </select>
+                </div>
+                <div class="modal-footer">
+                  <button type="submit" class="btn btn-primary">Actualizar fluidos</button>
+                </form>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+          
+                </div>
+              </div>
+            </div>
+        </div>
+          </div>
+          </div>
+          <!-- /.card-body -->
+        </div>
+
+    {% else %}
+      <p>No hay móviles cargados.</p>
+    {% endif %}
+  </div>
+
+</div>
+</div>
+{% endblock %}
+
+{% block js_block %}
+   <!-- DATATABLES -->
+   <script src="https://cdn.datatables.net/v/dt/dt-2.1.4/datatables.min.js"></script>
+   <script src="https://cdn.datatables.net/buttons/3.1.1/js/dataTables.buttons.js"></script>
+   <script src="https://cdn.datatables.net/buttons/3.1.1/js/buttons.dataTables.js"></script>
+   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+   <script src="https://cdn.datatables.net/buttons/3.1.1/js/buttons.html5.min.js"></script>
+   <script src= "{% static 'planilla/Chart.min.js' %}"></script>
+<script>
+  $(function () {
+
+  // Enviar el número al servidor para validación
+  fetch("/materiales_grafico/", {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      "X-CSRFToken": getCookie("csrftoken") // Para Django
+    },
+  })
+    .then((response) => response.json())
+    .then((data) => {
+      console.log(data)
+      if (!data.en_servicio) {
+              console.error("El objeto data.fechasC no está definido:", data);
+              return;
+          }
+
+    //-------------
+    //- DONUT CHART -
+    //-------------
+    // Get context with jQuery - using jQuery's .get() method.
+    var donutChartCanvas = $('#donutChart').get(0).getContext('2d')
+    var donutData        = {
+      labels: [
+          'En servicio',
+          'Condicional',
+          'Fuera de servicio',
+      ],
+      datasets: [
+        {
+          data: [data.en_servicio,data.condicional,data.f_servicio],
+          backgroundColor : ['#00a65a', '#f39c12', '#f56954'],
+        }
+      ]
+    }
+    var donutOptions     = {
+      maintainAspectRatio : false,
+      responsive : true,
+    }
+    //Create pie or douhnut chart
+    // You can switch between pie and douhnut using the method below.
+    new Chart(donutChartCanvas, {
+      type: 'doughnut',
+      data: donutData,
+      options: donutOptions
+    })
+    console.log("data.cuentas: ", data.labels)
+    //-------------
+    //- MANGA CHART -
+    //-------------
+    // Get context with jQuery - using jQuery's .get() method.
+    var donutChartCanvas = $('#mangaChart').get(0).getContext('2d')
+    var colors = ['#f56954', '#00c0ef', '#3c8dbc', '#d2d6de', '#ff6384', '#36a2eb', '#cc65fe', '#ffce56']; // Más colores
+    var donutData        = {
+      labels: data.labels,
+      datasets: [
+        {
+          data: data.values,
+          backgroundColor: colors.slice(0, data.labels.length),
+        }
+      ]
+    }
+    var donutOptions     = {
+      maintainAspectRatio : false,
+      responsive : true,
+    }
+    //Create pie or douhnut chart
+    // You can switch between pie and douhnut using the method below.
+    new Chart(donutChartCanvas, {
+      type: 'doughnut',
+      data: donutData,
+      options: donutOptions
+    })
+
+    })
+    .catch((error) => {
+      console.error("Error:", error);
+    });
+
+  // Función para obtener el CSRF token
+  function getCookie(name) {
+  let cookieValue = null;
+  if (document.cookie && document.cookie !== "") {
+  const cookies = document.cookie.split(";");
+  for (let i = 0; i < cookies.length; i++) {
+      const cookie = cookies[i].trim();
+      if (cookie.startsWith(name + "=")) {
+      cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+      break;
+      }
+  }
+  }
+  return cookieValue;
+  }
+
+  })
+</script>
+
+{% endblock %}

@@ -1,0 +1,60 @@
+{% extends 'planilla/base.html' %}
+{% block title %}Lista de horarios - {{bombero.nombre}} {{bombero.apellido}}{% endblock title %}
+{% block content %}
+<!-- Content Wrapper. Contains page content -->
+<div class="content-wrapper">
+    <!-- Content Header (Page header) -->
+    <div class="content-header">
+        <div class="container-fluid">
+        <div class="col-sm-6">
+        </div><!-- /.col -->
+        </div>
+        <!-- /.container-fluid -->
+    </div>
+    <!-- /.content-header -->
+
+    <!-- Main content -->
+    <div class="content">
+        <div class="container-fluid">
+        <!-- 1ra fila -->
+<div class="row">
+    {% if ingresos %}
+      <div class="col-md-12 d-flex justify-content-center">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">Listado de ingresos - {{bombero.nombre}} {{bombero.apellido}}</h3>
+          </div>
+          <!-- /.card-header -->
+          <div class="card-body table-responsive ">
+            <table id="example1" class="table table-bordered table-striped ">
+              <thead>
+                <tr>
+                  <th>Fecha</th>
+                  <th>Guardia operativa</th>
+                  <th>Hora de ingreso</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for ingreso in ingresos %}
+                    <tr>
+                      <td>{{ingreso.fecha}}</td>
+                      <td><a href="/planilla_detail/{{ ingreso.guardia_op_id }}/">{{ingreso.guardia_op.guardia_operativa}}</a></td>
+                      <td>{{ingreso.ingreso}}</td>
+                    </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+
+          </div>
+          </div>
+          <!-- /.card-body -->
+        </div>
+
+    {% else %}
+      <p>No tiene guardia cargadas.</p>
+    {% endif %}
+  </div>
+
+</div>
+</div>
+{% endblock %}

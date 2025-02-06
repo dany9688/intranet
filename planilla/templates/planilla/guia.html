@@ -1,0 +1,124 @@
+{% extends 'planilla/base.html' %}
+{% load static %}
+{% block title %}Guía telefónica{% endblock title %}
+{% block css_block %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.0/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://cdn.datatables.net/2.2.1/css/dataTables.bootstrap5.css">
+<link rel="stylesheet" href="https://cdn.datatables.net/responsive/3.0.3/css/responsive.bootstrap5.css">
+{% endblock %}
+{% block content %}
+    <!-- Content Wrapper. Contains page content -->
+    <div class="content-wrapper">
+    <!-- Content Header (Page header) -->
+    <div class="content-header">
+        <div class="container-fluid">
+        <div class="col-sm-6">
+        </div><!-- /.col -->
+        </div>
+        <!-- /.container-fluid -->
+    </div>
+    <!-- /.content-header -->
+
+    <!-- Main content -->
+    <div class="content">
+        <div class="container-fluid">
+        <!-- 1ra fila -->
+        <div class="row mb-2 ml-1">
+            <h2>Guía telefónica</h2>
+        </div>
+        <div class="row">
+          <div class="col-sm-12">
+            <div class="card card-primary">
+                <div class="card-header border-0">
+                  <h3 class="card-title">Guía telefónica</h3>
+                </div>
+                <table id="example1" class="table table-striped" style="table-layout: fixed; width: 100%;">
+                  <thead>
+                  <tr>
+                    <th>Tipo</th>
+                    <th>Contacto</th>
+                    <th>Descripción</th>
+                    <th>Teléfono</th>
+                    <th>Teléfono</th>
+                    <th>Dirección</th>
+                    <th>Frecuencia</th>
+                  </tr>
+                  </thead>
+                  <tbody>
+                  {% for contacto in contactos %}
+                  <tr>
+                    {% if contacto.tipo %}
+                    <td>{{ contacto.tipo }}</td>
+                    {%else%}
+                    <td></td>
+                    {%endif%}
+                    {% if contacto.contacto %}
+                    <td>{{ contacto.contacto }}</td>
+                    {%else%}
+                    <td></td>
+                    {%endif%}
+                    {% if contacto.descripcion %}
+                    <td>{{ contacto.descripcion }}</td>
+                    {%else%}
+                    <td></td>
+                    {%endif%}
+                    {% if contacto.telefono %}
+                    <td>{{ contacto.telefono }}</td>
+                    {%else%}
+                    <td></td>
+                    {%endif%}
+                    {% if contacto.telefono2 %}
+                    <td>{{ contacto.telefono2 }}</td>
+                    {%else%}
+                    <td></td>
+                    {%endif%}
+                    {% if contacto.direccion %}
+                    <td>{{ contacto.direccion }}</td>
+                    {%else%}
+                    <td></td>
+                    {%endif%}
+                    {% if contacto.frecuencia %}
+                    <td>{{ contacto.frecuencia }}</td>
+                    {%else%}
+                    <td></td>
+                    {%endif%}
+                  </tr>
+                  {% endfor %}
+                  </tbody>
+                </table>
+            </div>
+        </div>
+        </div>
+    </div>
+    </div>
+
+{% endblock %}
+{% block js_block %}
+  <!-- DATATABLES -->
+  <script src="https://cdn.datatables.net/v/dt/dt-2.1.4/datatables.min.js"></script>
+  <script src="https://cdn.datatables.net/buttons/3.1.1/js/dataTables.buttons.js"></script>
+  <script src="https://cdn.datatables.net/buttons/3.1.1/js/buttons.dataTables.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <script src="https://cdn.datatables.net/buttons/3.1.1/js/buttons.html5.min.js"></script>
+  <script src="https://cdn.datatables.net/2.2.1/js/dataTables.bootstrap5.js"></script>
+  <script src="https://cdn.datatables.net/responsive/3.0.3/js/dataTables.responsive.js"></script>
+<script src="https://cdn.datatables.net/responsive/3.0.3/js/responsive.bootstrap5.js"></script>
+
+<script>
+   $(function () {
+       $('#example1').DataTable({
+       language: {
+       url: 'https://cdn.datatables.net/plug-ins/2.2.1/i18n/es-CL.json',
+       },
+       "paging": true,
+       "lengthChange": false,
+       "ordering": true,
+           order:[[0, 'desc']],
+       "length": 40,
+       "searching": true,
+       "autoWidth": true,
+       "responsive": true,
+       });
+   });
+   </script>
+{% endblock %}

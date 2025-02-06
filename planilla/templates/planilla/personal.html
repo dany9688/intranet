@@ -1,0 +1,158 @@
+{% extends 'planilla/base.html' %}
+{% load static %}
+
+{% block title %}Personal{% endblock %}
+{% block css_block %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.0/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://cdn.datatables.net/2.2.1/css/dataTables.bootstrap5.css">
+<link rel="stylesheet" href="https://cdn.datatables.net/responsive/3.0.3/css/responsive.bootstrap5.css">
+{% endblock %}
+{% block content %}
+<!-- Content Wrapper. Contains page content -->
+<div class="content-wrapper">
+    <!-- Content Header (Page header) -->
+    <div class="content-header">
+        <div class="container-fluid">
+        <div class="col-sm-6">
+        </div><!-- /.col -->
+        </div>
+        <!-- /.container-fluid -->
+    </div>
+    <!-- /.content-header -->
+
+    <!-- Main content -->
+    <div class="content">
+        <div class="container-fluid">
+        <!-- 1ra fila -->
+<div class="row">
+    {% if todo_el_personal %}
+      <div class="col-md-12">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">Listado de bomberos cargados</h3>
+          </div>
+          <!-- /.card-header -->
+          <div class="card-body table-responsive">
+            <table id="examplepersonal" class="table table-bordered table-striped">
+              <thead>
+                <tr>
+                  <th>Legajo</th>
+                  <th>Jerarquía</th>
+                  <th>Apellido</th>
+                  <th>Nombre</th>
+                  <th>Base</th>
+                  <th>Posición</th>
+                  <th>Estado</th>
+                  {% if request.user.groups.all.0.name == "Jefatura" %}
+                  <th>Jefatura</th>
+                  {% endif %}
+                </tr>
+              </thead>
+              <tbody>
+                {% for bombero in todo_el_personal %}
+                    <tr>
+                      <td>{{ bombero.legajo }} </td>
+                      <td>{{ bombero.IDJerarquia }}</td>
+                      <td>{{ bombero.apellido }}</td>
+                      <td>{{ bombero.nombre }}</td>
+                      <td>{{ bombero.IDBase }}</td>
+                      <td>{{ bombero.posicion }}</td>
+                      {% if bombero.activo == True %}
+                        <td class="text-green"><i class="fa-solid fa-circle-check"></i></td>
+                      {% else %}
+                        <td class="text-red"><i class="fa-solid fa-circle-xmark"></i></td>
+                      {% endif %}  
+                      {% if request.user.groups.all.0.name == "Jefatura" %}
+                      <td>
+                        <button type="button" data-toggle="modal" data-target="#ingreso{{bombero.id}}" class="btn btn-primary"> Ver ingresos</button>
+                      </td>
+                      {% endif %}
+                      <div class="modal fade" id="ingreso{{bombero.id}}" tabindex="-1" aria-labelledby="ingreso" aria-hidden="true">
+                        <div class="modal-dialog">
+                          <div class="modal-content">
+                            <div class="modal-header">
+                              <h5 class="modal-title" id="exampleModalLabel3">Ver horarios de ingreso</h5>
+                            </div>
+                            <div class="modal-body">
+                                <form action="/ingresos/{{bombero.id}}" method="GET">
+                                  <!-- {% csrf_token %} -->
+                                  <label for="movil">Indique el año:</label>
+                                  <select class="form-control col-sm-3" name="anio" id="">
+                                    <option value="2025">2025</option>
+                                  </select>
+                                  <label for="movil">Indique el mes:</label>
+                                  <select class="form-control col-sm-6" name="mes" id="">
+                                    <option value="1">Enero</option>
+                                    <option value="2">Febrero</option>
+                                    <option value="3">Marzo</option>
+                                    <option value="4">Abril</option>
+                                    <option value="5">Mayo</option>
+                                    <option value="6">Junio</option>
+                                    <option value="7">Julio</option>
+                                    <option value="8">Agosto</option>
+                                    <option value="9">Septiembre</option>
+                                    <option value="10">Octubre</option>
+                                    <option value="11">Noviembre</option>
+                                    <option value="12">Diciembre</option>
+                                  </select>
+                            </div>
+                            <div class="modal-footer">
+                              <button type="submit" class="btn btn-primary">Ver ingresos</button>
+                            </form>
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+                      
+                            </div>
+                          </div>
+                        </div>
+                    </div>
+                    </tr>                              <!-- MODAL Horarios-->
+                {% endfor %}
+              </tbody>
+            </table>
+            
+          </div>
+          <!-- /.card-body -->
+        </div>
+
+      </div>
+    {% else %}
+      <p>No hay bomberos cargados.</p>
+    {% endif %}
+  </div>
+
+</div>
+</div>
+{% endblock %}
+
+{% block js_block %}
+  <!-- DATATABLES -->
+  <script src="https://cdn.datatables.net/v/dt/dt-2.1.4/datatables.min.js"></script>
+  <script src="https://cdn.datatables.net/buttons/3.1.1/js/dataTables.buttons.js"></script>
+  <script src="https://cdn.datatables.net/buttons/3.1.1/js/buttons.dataTables.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <script src="https://cdn.datatables.net/buttons/3.1.1/js/buttons.html5.min.js"></script>
+  <script src="https://cdn.datatables.net/2.2.1/js/dataTables.bootstrap5.js"></script>
+  <script src="https://cdn.datatables.net/responsive/3.0.3/js/dataTables.responsive.js"></script>
+<script src="https://cdn.datatables.net/responsive/3.0.3/js/responsive.bootstrap5.js"></script>
+
+<script>
+   $(function () {
+       $('#examplepersonal').DataTable({
+       language: {
+       url: 'https://cdn.datatables.net/plug-ins/2.2.1/i18n/es-CL.json',
+       },
+       "paging": true,
+       "lengthChange": false,
+       layout: {
+        topStart: {
+            buttons: ['copyHtml5', 'excelHtml5']
+        }},
+       "ordering": true,
+           order:[[4,'asc'],[5,'asc']],
+       "searching": true,
+       "autoWidth": false,
+       "responsive": true,
+       });
+   });
+   </script>
+{% endblock %}

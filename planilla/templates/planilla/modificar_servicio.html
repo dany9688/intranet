@@ -1,0 +1,191 @@
+{% extends 'planilla/base.html' %}
+{% load static %}
+{% block css_block %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+  #map {
+      height: 500px;
+      width: 100%;
+  }
+</style>
+{% endblock %}
+{% block content %}
+    <!-- Content Wrapper. Contains page content -->
+    <div class="content-wrapper">
+    <!-- Content Header (Page header) -->
+    <div class="content-header">
+        <div class="container-fluid">
+        <div class="col-sm-6">
+        </div><!-- /.col -->
+        </div>
+        <!-- /.container-fluid -->
+    </div>
+    <!-- /.content-header -->
+
+    <!-- Main content -->
+    <div class="content">
+        <div class="container-fluid">
+        <!-- 1ra fila -->
+         <div class="row col-sm-12 mb-3 d-flex justify-content-center">
+            <div class="col-sm-12">
+                <div class="card card-info">
+                    <div class="card-header border-0">
+                      <h3 class="card-title">Nuevo servicio</h3>
+                    </div>
+                    <div class="card-body">
+                    <form action="/modificar_servicio/{{servicio.id}}/" method="POST" id="form_servicio">
+                        {% csrf_token %}
+                    <div class="row col-md-12">
+                        <div class="col-md-6">
+                            <div class="row form-group col-md-12">
+                                <label for="">Dirección de la intervención</label>
+                                <div class="row col-md-12">
+                                    <input class="form-control col-sm-8" type="text" name="address" id="address" placeholder="Ingrese una dirección" value="{{servicio.direccion}}" required>
+                                    <button class="btn btn-success" onclick="geocodeAddress(event)">Buscar Dirección</button>
+                                </div>
+                            </div>
+                            <div class="row col-md-12">
+                                <div class="row form-group mr-3 col-md-4">
+                                    <label for="exampleInputPassword1">Número de guardia operativa</label>
+                                    <input type="number" class="form-control" id="guardia" name="guardia" min="0" value="{{servicio.guardia_operativa}}" required>
+                                </div>
+                                <div class="row form-group col-md-4">
+                                    <label for="exampleInputPassword1">Número de servicio</label>
+                                    <input type="number" class="form-control" id="numeroservicio" name="numero" min="0" value="{{servicio.numero}}" required>
+                                </div>
+                            </div>
+                            <div class="row col-md-12">
+                                <div class="form-group col-md-3 row mr-3">
+                                <label for="exampleInputPassword1">Móvil</label>
+                                <select class="form-control" name="movil" id="movil">
+                                    <option value="{{ servicio.movil.id }}" selected>Móvil {{ servicio.movil.numero }}</option>
+                                {% for movil in moviles %}
+                                {% if movil.IDEstado.estado == "En servicio" or movil.IDEstado.estado == "Condicional" %}
+                                    <option value="{{ movil.id }}">Móvil {{ movil.numero }}</option>
+                                {%endif%}
+                                {% endfor %}
+                                </select>
+                                </div>
+                                <div class="form-group col-md-6 row">
+                                    <label for="exampleInputPassword1">Hora de salida</label>
+                                    <input type="datetime-local" class="form-control" name="salida" value="{{ fecha }}" required>
+                                </div>
+                            </div>
+                            <div class="row col-md-12">
+                                <div class="form-group col-md-6 row mr-3">
+                                    <label for="exampleInputPassword1">Encargado</label>
+                                    <select class="form-control" name="encargado" id="encargado" required>
+                                        <option value="{{ servicio.encargado.id }}" selected>{{ servicio.encargado.IDJerarquia.jerarquia }} {{ servicio.encargado.apellido }}, {{ servicio.encargado.nombre }}</option>
+                                        {% for bombero in bomberos %}
+                                            <option value="{{ bombero.id }}">{{ bombero.IDJerarquia.jerarquia }} {{ bombero.apellido }}, {{ bombero.nombre }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="form-group col-md-4 row mr-3">
+                                    <label for="exampleInputPassword1">Tipo de servicio</label>
+                                    <select class="form-control" name="tiposervicio" id="tiposervicio" required>
+                                        <option value="{{ servicio.tipo.id }}">{{ servicio.tipo.tipo }}</option>
+                                        {% for tipo in tipo_servicios %}
+                                            <option value="{{ tipo.id }}">{{ tipo.tipo }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                            <input type="hidden" id="latitude" name="latitude" value="{{servicio.latitud}}">
+                            <input type="hidden" id="longitude" name="longitude" value="{{servicio.longitud}}">
+                            <button type='submit' class="btn btn-danger">Modificar intervención</button>
+                        </div>
+                        <div class="col-md-6">                   
+                            <div class="col-md-12 d-flex justify-content-center mt-3 mb-3">
+                                <div id="map" style="height: 500px; width: 900px;"></div>
+                            </div>
+                        </div>
+                    </div>
+                    </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+    </div>
+    </div>
+    </div>
+
+{% endblock %}
+{% block js_block %}
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDgZ9iDyLaJEwAAYUcuN7MgVWN2alaLd1s&libraries=places"></script>
+
+<script>
+    // Inicializa el mapa y el geocodificador
+    var map;
+    var geocoder;
+    var marker;
+  
+    function initMap() {
+      // Crear el mapa y centrarlo en una ubicación predeterminada
+      map = new google.maps.Map(document.getElementById("map"), {
+        center: { lat: -34.657713050818785, lng: -58.63239669756467 },
+        zoom: 13
+      });
+        // Inicializar el servicio de geocodificación
+        geocoder = new google.maps.Geocoder();
+
+      // Crea un marcador (será movido después según la dirección)
+      marker = new google.maps.Marker({
+        map: map,
+      });
+  
+      // Crear el servicio de autocompletado
+      var input = document.getElementById("address");
+      var autocomplete = new google.maps.places.Autocomplete(input);
+  
+      // Asocia el autocompletado con el mapa
+      autocomplete.bindTo("bounds", map);
+  
+      // Define lo que sucede cuando se selecciona una opción del autocompletado
+      autocomplete.addListener("place_changed", function () {
+            var place = autocomplete.getPlace();
+            if (!place.geometry) {
+                alert("No se encontraron coordenadas para la dirección.");
+                return;
+            }
+
+            map.setCenter(place.geometry.location);
+            map.setZoom(15);
+
+            marker.setPosition(place.geometry.location);
+            marker.setVisible(true);
+
+            // Guardar latitud y longitud en los inputs ocultos
+            document.getElementById("latitude").value = place.geometry.location.lat();
+            document.getElementById("longitude").value = place.geometry.location.lng();
+        });
+    }
+
+    function geocodeAddress(event) {
+        event.preventDefault()
+        console.log("Evento cancelado correctamente");
+
+        var address = document.getElementById("address").value;
+        geocoder.geocode({ 'address': address }, function (results, status) {
+            if (status === 'OK') {
+                map.setCenter(results[0].geometry.location);
+                marker.setPosition(results[0].geometry.location);
+                marker.setVisible(true);
+
+                // Guardar latitud y longitud en los inputs ocultos
+                document.getElementById("latitude").value = results[0].geometry.location.lat();
+                document.getElementById("longitude").value = results[0].geometry.location.lng();
+            } else {
+                alert('No se pudo encontrar la dirección: ' + status);
+            }
+        });
+    }
+    // Cargar el mapa cuando la página esté lista
+    google.maps.event.addDomListener(window, "load", initMap);
+
+
+  </script>
+{% endblock %}

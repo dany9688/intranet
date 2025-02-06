@@ -1,0 +1,154 @@
+{% extends 'planilla/base.html' %}
+{% load static %}
+{% block title %}Servicios{% endblock %}
+{% block css_block %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.0/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://cdn.datatables.net/2.2.1/css/dataTables.bootstrap5.css">
+<link rel="stylesheet" href="https://cdn.datatables.net/responsive/3.0.3/css/responsive.bootstrap5.css">
+{% endblock %}
+{% block content %}
+<!-- Content Wrapper. Contains page content -->
+<div class="content-wrapper">
+    <!-- Content Header (Page header) -->
+    <div class="content-header">
+        <div class="container-fluid">
+        <div class="col-sm-6">
+        </div><!-- /.col -->
+        </div>
+        <!-- /.container-fluid -->
+    </div>
+    <!-- /.content-header -->
+    <!-- Main content -->
+    <div class="content">
+    <div class="container-fluid">
+        <!-- 1ra fila -->
+      <div class="row">
+          <div class="col-md-12">
+          <div class="card card-danger">  
+            <div class="card-header">
+              <h3 class="card-title">Servicios en curso</h3>
+            </div>
+            <!-- /.card-header -->
+            <div class="card-body table-responsive">
+              {% if servicios %}
+              <table class="table table-striped ">
+                <thead>
+                  <tr>
+                    <th>Número</th>
+                    <th>Móvil</th>
+                    <th>Salida</th>
+                    <th>Domicilio</th>
+                    <th>Encargado</th>
+                    <th>Tipo de servicio</th>
+                    <th>Finalizar</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for servicio in servicios %}
+                  {% if servicio.estado == "Abierto" %}
+                      <tr>
+                        <td>{{ servicio.numero }} </td>
+                        <td>Móvil {{ servicio.movil.numero}}</td>
+                        <td>{{ servicio.salida }}</td>
+                        <td>{{ servicio.direccion }}</td>
+                        <td>{{ servicio.encargado.legajo }} - {{ servicio.encargado.apellido }}, {{ servicio.encargado.nombre }}</td>
+                        <td>{{ servicio.tipo.tipo }}</td>
+                        <td><a href="/finalizar_servicio/{{servicio.id}}" class="btn bg-danger">Finalizar</a></td>
+                      </tr>
+                    {% endif %}
+                  {% endfor %}
+                </tbody>
+              </table>
+      </div>
+            <!-- /.card-body -->
+        </div>
+      {% else %}
+        <p>No hay servicios cargados.</p>
+      {% endif %}
+      </div>
+      </div>
+      <div class="row">
+      <div class="col-md-12">
+        <div class="card card-success">  
+          <div class="card-header">
+            <h3 class="card-title">Listado de servicios realizados</h3>
+          </div>
+          
+          <!-- /.card-header -->
+          <div class="card-body table-responsive">
+            {% if servicios %}
+            <table id="example1" class="table table-bordered table-striped ">
+              <thead>
+                <tr>
+                  <th>Número</th>
+                  <th>Móvil</th>
+                  <th>Dirección</th>
+                  <th>Salida</th>
+                  <th>Regreso</th>
+                  <th>Encargado</th>
+                  <th>Tipo de servicio</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for servicio in servicios %}
+                {% if not servicio.estado == "Abierto" %}
+                    <tr>
+                      <td>{{ servicio.numero }} </td>
+                      <td>Móvil {{ servicio.movil.numero}}</td>
+                      <td>{{ servicio.direccion }}</td>
+                      <td>{{ servicio.salida }}</td>
+                      <td>{{ servicio.regreso }}</td>
+                      <td>{{ servicio.encargado.apellido }}, {{ servicio.encargado.nombre }}</td>
+                      <td>{{ servicio.tipo.tipo }}</td>
+                    </tr>
+                  {% endif %}
+                {% endfor %}
+              </tbody>
+            </table>
+       </div>
+          <!-- /.card-body -->
+
+      </div>
+    {% else %}
+      <p>No hay servicios cargados.</p>
+    {% endif %}
+      </div>
+
+      </div>
+    </div>
+    </div>
+</div>
+{% endblock %}
+{% block js_block %}
+  <!-- DATATABLES -->
+  <script src="https://cdn.datatables.net/v/dt/dt-2.1.4/datatables.min.js"></script>
+  <script src="https://cdn.datatables.net/buttons/3.1.1/js/dataTables.buttons.js"></script>
+  <script src="https://cdn.datatables.net/buttons/3.1.1/js/buttons.dataTables.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <script src="https://cdn.datatables.net/buttons/3.1.1/js/buttons.html5.min.js"></script>
+  <script src="https://cdn.datatables.net/2.2.1/js/dataTables.bootstrap5.js"></script>
+  <script src="https://cdn.datatables.net/responsive/3.0.3/js/dataTables.responsive.js"></script>
+<script src="https://cdn.datatables.net/responsive/3.0.3/js/responsive.bootstrap5.js"></script>
+
+
+<script>
+   $(function () {
+       $('#example1').DataTable({
+       language: {
+       url: 'https://cdn.datatables.net/plug-ins/2.2.1/i18n/es-CL.json',
+       },
+       "paging": true,
+       "lengthChange": false,
+       layout: {
+        topStart: {
+            buttons: ['copyHtml5', 'excelHtml5']
+        }},
+       "ordering": true,
+           order:[[0,'asc']],
+       "searching": true,
+       "autoWidth": false,
+       "responsive": true,
+       });
+   });
+   </script>
+{% endblock %}

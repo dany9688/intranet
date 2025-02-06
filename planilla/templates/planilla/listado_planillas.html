@@ -1,0 +1,106 @@
+{% extends 'planilla/base.html' %}
+{% load static %}
+
+{% block title %}Planillas{% endblock %}
+{% block css_block %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.0/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://cdn.datatables.net/2.2.1/css/dataTables.bootstrap5.css">
+<link rel="stylesheet" href="https://cdn.datatables.net/responsive/3.0.3/css/responsive.bootstrap5.css">
+{% endblock %}
+{% block content %}
+
+<!-- Content Wrapper. Contains page content -->
+<div class="content-wrapper">
+    <!-- Content Header (Page header) -->
+    <div class="content-header">
+        <div class="container-fluid">
+        <div class="col-sm-6">
+        </div><!-- /.col -->
+        </div>
+        <!-- /.container-fluid -->
+    </div>
+    <!-- /.content-header -->
+
+    <!-- Main content -->
+    <div class="content">
+        <div class="container-fluid">
+        <!-- 1ra fila -->
+<div class="row">
+    {% if todas_las_planillas %}
+      <div class="col-md-12">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">Listado de planillas</h3>
+          </div>
+          <!-- /.card-header -->
+          <div class="card-body table-responsive">
+            <table id="example1" class="table table-bordered nowrap">
+              <thead>
+                <tr>
+                  <th class="text-center">Guardia operativa</th>
+                  <th class="text-center">Fecha</th>
+                  <th class="text-center">Guardia</th>
+                  <th class="text-center">Encargado</th>
+                  <th class="text-center">Acciones</th>
+                </tr>
+              </thead>
+              <tbody class="text-center">
+                {% for planilla in todas_las_planillas %}
+                    <tr>
+                      <td class="text-center">{{ planilla.guardia_operativa }}</td>
+                      <td>{{ planilla.fecha }}</td>
+                      <td>{{ planilla.guardia }}</td>
+                      <td>{{ planilla.encargado }}</td>
+                      <td>
+                        <a class="btn btn-primary" href="/modificarplanilla/{{ planilla.id }}/">Modificar planilla</a>
+                        <a class="btn btn-success" href="/planilla_detail/{{ planilla.id }}/">Ver planilla</a>
+                      </td>
+                    </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          <!-- /.card-body -->
+        </div>
+
+      </div>
+    {% else %}
+      <p>No hay planillas cargadas.</p>
+    {% endif %}
+  </div>
+
+</div>
+</div>
+
+{% endblock %}
+{% block js_block %}
+
+<!-- DATATABLES -->
+<script src="https://cdn.datatables.net/v/dt/dt-2.1.4/datatables.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/3.1.1/js/dataTables.buttons.js"></script>
+<script src="https://cdn.datatables.net/buttons/3.1.1/js/buttons.dataTables.js"></script>
+<script src="https://cdn.datatables.net/buttons/3.1.1/js/buttons.html5.min.js"></script>
+<script src="https://cdn.datatables.net/2.2.1/js/dataTables.bootstrap5.js"></script> 
+<script src="https://cdn.datatables.net/responsive/3.0.3/js/dataTables.responsive.js"></script>
+<script src="https://cdn.datatables.net/responsive/3.0.3/js/responsive.bootstrap5.js"></script>
+
+<script>
+$(function () {
+    $('#example1').DataTable({
+    language: {
+    url: 'https://cdn.datatables.net/plug-ins/2.2.1/i18n/es-CL.json',
+    },
+    layout: {
+    topStart: {
+        buttons: ['copyHtml5', 'excelHtml5']
+    }},
+    "paging": true,
+    "lengthChange": true,
+    "searching": true,
+    "ordering": true,
+    "autoWidth": false,
+    "responsive": true,
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,396 @@
+{% extends 'planilla/base.html' %}
+{% load static %}
+
+{% block content %}
+
+    <!-- Content Wrapper. Contains page content -->
+    <div class="content-wrapper">
+        <!-- Content Header (Page header) -->
+        <div class="content-header">
+            <div class="container-fluid">
+            <div class="col-sm-6">
+            </div><!-- /.col -->
+            </div>
+            <!-- /.container-fluid -->
+        </div>
+        <!-- /.content-header -->
+
+        <!-- Main content -->
+		<div class="wrapper">
+        <div class="content">
+            <div class="container-fluid d-flex justify-content-center">
+            <!-- 1ra fila -->
+				<div class="col-sm-9 row">
+					<div class="card" style="overflow: hidden; max-height: 100%; width: 100%;">
+					<div class="card-body table-responsive">	
+						<table class="table table-bordered" style="width: 100%;">
+							<tbody>
+							<tr style="height:50.9pt">
+								<td rowspan="2" colspan="2" style="padding-right:3.5pt; padding-left:3.5pt; vertical-align:bottom">
+									<div style="width:100%; height:50.9pt; display:inline-block; overflow:visible">
+										<p style="margin-top:0pt; margin-bottom:0pt; font-size:11pt">
+											<span style="height:0pt; display:block; position:absolute; z-index:0"><img src={% static 'planilla/logo.png' %} width="120" height="120" alt="" style="margin-top:-27.85pt; position:initial" ></span>
+										</p>
+									</div>
+								</td>
+								<td colspan="19" style="border-style:solid; border-width:0.75pt; padding-right:3.12pt; padding-left:3.12pt; vertical-align:middle;">
+									<p style="margin-top:0pt; margin-bottom:0pt; text-align:center; font-size:14pt">
+										<strong><span style="font-family:Arial;">CUARTEL CENTRAL</span></strong>
+									</p>
+								</td>
+								<td colspan="9" style="border-style:solid; border-width:0.75pt; padding-right:3.12pt; padding-left:3.12pt; vertical-align:middle;">
+									<p style="margin-top:0pt; margin-bottom:0pt; text-align:center; font-size:14pt">
+										<strong><em><span style="font-family:Arial">{{planilla.fecha}}</span></em></strong>
+									</p>
+								</td>
+							</tr>
+							<tr style="height:14.35pt">
+								<td colspan="9" style="border-top-style:solid; border-top-width:0.75pt; border-right-style:solid; border-right-width:0.75pt; border-bottom-style:solid; border-bottom-width:0.75pt; padding-right:3.12pt; padding-left:3.5pt; vertical-align:bottom;">
+									<p style="margin-top:0pt; margin-bottom:0pt; text-align:center; font-size:14pt">
+										<strong><span style="font-family:Arial; ">CABECERA DE COMPAÑIA:</span></strong>
+									</p>
+								</td>
+								<td colspan="11" style="border-top-style:solid; border-top-width:0.75pt; border-right-style:solid; border-right-width:0.75pt; border-bottom-style:solid; border-bottom-width:0.75pt; padding-right:3.12pt; padding-left:3.5pt; vertical-align:bottom">
+									<p style="margin-top:0pt; margin-bottom:0pt; text-align:center; font-size:14pt">
+										<strong><span style="font-family:Arial;">{{planilla.cabecera}}</span></strong>
+									</p>
+								</td>
+								<td colspan="9" style="border-top-style:solid; border-top-width:0.75pt; border-right-style:solid; border-right-width:0.75pt; border-bottom-style:solid; border-bottom-width:0.75pt; padding-right:3.12pt; padding-left:3.5pt; vertical-align:bottom;">
+									<p style="margin-top:0pt; margin-bottom:0pt; text-align:center; font-size:14pt">
+										<strong><span style="font-family:Arial;">GUARDIA {{planilla.guardia|upper}}</span></strong>
+									</p>
+								</td>
+							</tr>
+							<tr style="height:13.65pt">
+								<td colspan="30" style="border-top-style:solid; border-top-width:0.75pt; padding-right:3.5pt; padding-left:3.5pt; vertical-align:bottom">
+									<p style="margin-top:0pt; margin-bottom:0pt; text-align:center; font-size:11pt">
+										
+									</p>
+								</td>
+							</tr>
+							<tr style="height:14.35pt">
+								<td colspan="30" style="padding-right:3.5pt; padding-left:3.5pt; vertical-align:bottom; background-color:#d9d9d9">
+									<p style="margin-top:0pt; margin-bottom:0pt; text-align:center; font-size:12pt">
+										<strong><span style="font-family:Arial; color:#ff0000">PERSONAL DE GUARDIA:</span></strong>
+									</p>
+								</td>
+							</tr>
+							<tr style="height:14.35pt">
+								<td colspan="3" style="border-style:solid; border-width:1pt 0.75pt 0.75pt 1pt; padding-right:3.12pt; padding-left:3pt; vertical-align:middle;">
+									<p style="margin-top:0pt; margin-bottom:0pt; font-size:12pt">
+										<strong><span style="font-family:Arial; ">Of. de Semana:</span></strong>
+									</p>
+								</td>
+								<td colspan="27" style="border-top-style:solid; border-top-width:1pt; border-right-style:solid; border-right-width:1pt; padding-right:3pt; padding-left:3.5pt; vertical-align:bottom">
+									<p style="margin-top:0pt; margin-bottom:0pt; text-align:center; font-size:12pt">
+										<strong><span style="font-family:Arial; color:#0070c0">{{planilla.oficial.IDJerarquia.jerarquia}} {{planilla.oficial}}</span></strong>
+									</p>
+								</td>
+							</tr>
+							<tr style="height:14.35pt">
+								<td colspan="3" style="border-top-style:solid; border-top-width:1pt; border-left-style:solid; border-left-width:1pt; border-bottom-style:solid; border-bottom-width:1pt; padding-right:3.5pt; padding-left:3pt; vertical-align:middle;">
+									<p style="margin-top:0pt; margin-bottom:0pt; font-size:12pt">
+										<strong><span style="font-family:Arial; ">Cuartelero</span></strong>
+									</p>
+								</td>
+								<td colspan="27" style="border-top-style:solid; border-top-width:1pt; border-bottom-style:solid; border-bottom-width:1pt; padding-right:3.5pt; padding-left:3.5pt; vertical-align:middle">
+									<p style="margin-top:0pt; margin-bottom:0pt; text-align:center; font-size:12pt">
+										<strong><span style="font-family:Arial; ">{{planilla.cuartelero}}</span></strong>
+									</p>
+								</td>
+							</tr>
+							<tr style="height:13.65pt">
+								<td colspan="11" style="border-style:solid; border-width:0.75pt 0.75pt 0.75pt 1pt; padding-right:3.12pt; padding-left:3pt; vertical-align:middle; background-color:#d9d9d9">
+									<p style="margin-top:0pt; margin-bottom:0pt; text-align:center; font-size:12pt">
+										<strong><span style="font-family:Arial; ">Personal:</span></strong>
+									</p>
+								</td>
+								<td colspan="4" style="border-top-style:solid; border-top-width:0.75pt; border-right-style:solid; border-right-width:0.75pt; border-bottom-style:solid; border-bottom-width:0.75pt; padding-right:3.12pt; padding-left:3.5pt; vertical-align:bottom; background-color:#d9d9d9">
+									<p style="margin-top:0pt; margin-bottom:0pt; text-align:center; font-size:12pt">
+										<strong><span style="font-family:Arial; ">Ingreso:</span></strong>
+									</p>
+								</td>
+								<td colspan="11" style="border-top-style:solid; border-top-width:0.75pt; border-right-style:solid; border-right-width:0.75pt; border-bottom-style:solid; border-bottom-width:0.75pt; padding-right:3.12pt; padding-left:3.5pt; vertical-align:bottom; background-color:#d9d9d9">
+									<p style="margin-top:0pt; margin-bottom:0pt; text-align:center; font-size:12pt">
+										<strong><span style="font-family:Arial; ">Personal:</span></strong>
+									</p>
+								</td>
+								<td colspan="4" style="border-top-style:solid; border-top-width:0.75pt; border-right-style:solid; border-right-width:0.75pt; border-bottom-style:solid; border-bottom-width:0.75pt; padding-right:3.12pt; padding-left:3.5pt; vertical-align:bottom; background-color:#d9d9d9">
+									<p style="margin-top:0pt; margin-bottom:0pt; text-align:center; font-size:12pt">
+										<strong><span style="font-family:Arial; ">Ingreso:</span></strong>
+									</p>
+								</td>
+							</tr>
+							<tr style="height:13.65pt">
+								<td colspan="3" style="border-style:solid; border-width:0.75pt 0.75pt 0.75pt 1pt; padding-right:3.12pt; padding-left:3pt; vertical-align:middle">
+									<p style="margin-top:0pt; margin-bottom:0pt; font-size:12pt">
+										<strong><span style="font-family:Arial; ">Encargado:</span></strong>
+									</p>
+								</td>
+								<td colspan="8" style="border-top-style:solid; border-top-width:0.75pt; border-right-style:solid; border-right-width:0.75pt; border-bottom-style:solid; border-bottom-width:0.75pt; padding-right:3.12pt; padding-left:3.5pt; vertical-align:bottom">
+									<p style="margin-top:0pt; margin-bottom:0pt; text-align:center; font-size:12pt">
+										<strong><span style="font-family:Arial; color:#ff0000">{{planilla.encargado.IDJerarquia.jerarquia}} {{planilla.encargado}}</span></strong>
+									</p>
+								</td>
+								<td colspan="4" style="border-top-style:solid; border-top-width:0.75pt; border-right-style:solid; border-right-width:0.75pt; border-bottom-style:solid; border-bottom-width:0.75pt; padding-right:3.12pt; padding-left:3.5pt; vertical-align:bottom">
+									<p style="margin-top:0pt; margin-bottom:0pt; text-align:center; font-size:12pt">
+										<strong><span style="font-family:Arial; ">{{planilla.ingreso_encargado}}</span></strong>
+									</p>
+								</td>
+								<td colspan="3" style="border-top-style:solid; border-top-width:0.75pt; border-right-style:solid; border-right-width:0.75pt; border-bottom-style:solid; border-bottom-width:0.75pt; padding-right:3.12pt; padding-left:3.5pt; vertical-align:middle">
+									<p style="margin-top:0pt; margin-bottom:0pt; font-size:12pt">
+										<strong><span style="font-family:Arial; ">Chofer:</span></strong>
+									</p>
+								</td>
+								<td colspan="8" style="border-top-style:solid; border-top-width:0.75pt; border-right-style:solid; border-right-width:0.75pt; border-bottom-style:solid; border-bottom-width:0.75pt; padding-right:3.12pt; padding-left:3.5pt; vertical-align:bottom">
+									<p style="margin-top:0pt; margin-bottom:0pt; text-align:center; font-size:12pt">
+										{% if not planilla.chofer %}
+										<strong><span style="font-family:Arial; color:#0070c0">Sin chofer</span></strong>
+										{% else %}
+										<strong><span style="font-family:Arial; color:#0070c0">{{planilla.chofer.IDJerarquia.jerarquia}} {{planilla.chofer}}</span></strong>
+										{% endif %}
+									</p>
+								</td>
+								<td colspan="4" style="border-top-style:solid; border-top-width:0.75pt; border-right-style:solid; border-right-width:0.75pt; border-bottom-style:solid; border-bottom-width:0.75pt; padding-right:3.12pt; padding-left:3.5pt; vertical-align:bottom">
+									<p style="margin-top:0pt; margin-bottom:0pt; text-align:center; font-size:12pt">
+										{% if not planilla.chofer %}
+										<strong><span style="font-family:Arial; "></span></strong>
+										{% else %}
+										<strong><span style="font-family:Arial; ">{{planilla.ingreso_chofer}}</span></strong>
+										{% endif %}
+									</p>
+								</td>
+							</tr>
+							{% with 0 as contador_visible %}
+							<tr style="height:13.65pt">  {# Se inicia la primera fila antes del loop #}
+							{% for bombero in bom_presentes %}
+								{% if planilla.encargado and bombero.bombero.id != planilla.encargado.id %}
+									
+									<td colspan="3" style="border-style:solid; border-width:0.75pt 0.75pt 0.75pt 1pt; padding-right:3.12pt; padding-left:3pt; vertical-align:middle">
+										<p style="margin-top:0pt; margin-bottom:0pt; font-size:12pt">
+											<strong><span style="font-family:Arial;">Componente:</span></strong>
+										</p>
+									</td>
+									<td colspan="8" style="border-top-style:solid; border-top-width:0.75pt; border-right-style:solid; border-right-width:0.75pt; border-bottom-style:solid; border-bottom-width:0.75pt; padding-right:3.12pt; padding-left:3.5pt; vertical-align:bottom">
+										<p style="margin-top:0pt; margin-bottom:0pt; text-align:center; font-size:12pt">
+											{% if bombero.guardia_op_id == planilla.id %}
+											<strong><span style="font-family:Arial;">{{ bombero.bombero.IDJerarquia.jerarquia }} {{ bombero }}</span></strong>
+											{% endif %}
+										</p>
+									</td>
+									<td colspan="4" style="border-top-style:solid; border-top-width:0.75pt; border-right-style:solid; border-right-width:0.75pt; border-bottom-style:solid; border-bottom-width:0.75pt; padding-right:3.12pt; padding-left:3.5pt; vertical-align:bottom">
+										<p style="margin-top:0pt; margin-bottom:0pt; text-align:center; font-size:12pt">
+											<strong><span style="font-family:Arial;">{{ bombero.ingreso }}</span></strong>
+										</p>
+									</td>
+						
+									{% with contador_visible|add:1 as contador_visible %}
+										{% if contador_visible|divisibleby:2 %}  
+											</tr><tr style="height:13.65pt">  {# Cierra la fila si hay dos elementos y abre una nueva #}
+										{% endif %}
+									{% endwith %}
+						
+								{% endif %}
+							{% endfor %}
+							
+							{% if not contador_visible|divisibleby:2 %}
+								<td colspan="3"></td><td colspan="8"></td><td colspan="4"></td></tr> {# Completa la fila si hay un número impar #}
+							{% endif %}
+						{% endwith %}
+						
+						
+							<tr style="height:13.65pt">
+								<td colspan="30" style="border-style:solid; border-width:0.75pt 1pt; padding-right:3pt; padding-left:3pt; vertical-align:middle; background-color:#d9d9d9">
+									<p style="margin-top:0pt; margin-bottom:0pt; font-size:12pt; text-align: center;">
+										<strong><span style="font-family:Arial; color: red; ">NOVEDADES DEL PERSONAL</span></strong>
+									</p>
+								</td>
+							</tr>
+							<tr style="height:13.65pt">
+								<td colspan="30" style="border-top-style:solid; border-top-width:0.75pt; border-right-style:solid; border-right-width:1pt; border-left-style:solid; border-left-width:1pt; padding-right:3pt; padding-left:3pt; vertical-align:bottom">
+									<p style="margin-top:0pt; margin-bottom:0pt; text-align:left; font-size:12pt">
+										<strong><span style="font-family:Arial">AUSENTES:</span></strong>
+										{% for ausente in bom_ausentes %}
+										<span style="font-family:Arial">{{ ausente.bombero.IDJerarquia.jerarquia }} {{ ausente }} </span>
+										{% endfor %}
+									</p>
+								</td>
+							</tr>
+							<tr style="height:14.35pt">
+								<td colspan="30" style="border-style:solid; border-width:0.75pt 1pt 1pt; padding-right:3pt; padding-left:3pt; vertical-align:bottom">
+									<p style="margin-top:0pt; margin-bottom:0pt; text-align:left; font-size:12pt">
+										<strong><span style="font-family:Arial">REFUERZOS:</span></strong>
+										{% for refuerzo in bom_refuerzos %}
+										<span style="font-family:Arial">{{ refuerzo.bombero.IDJerarquia.jerarquia }} {{ refuerzo }}, </span>
+										{% endfor %}
+									</p>
+								</td>
+							</tr>
+							<tr style="height:14.35pt">
+								<td colspan="30" style="padding-right:3.5pt; padding-left:3.5pt; vertical-align:bottom; background-color:#d9d9d9">
+									<p style="margin-top:0pt; margin-bottom:0pt; text-align:center; font-size:12pt">
+										<strong><span style="font-family:Arial; color:#ff0000">SERVICIOS REALIZADOS:</span></strong>
+									</p>
+								</td>
+							</tr>
+							<tr style="height:13.65pt">
+								<td colspan="2" style="border-style:solid; border-width:1pt 0.75pt 0.75pt 1pt; padding-right:3.12pt; padding-left:3pt; vertical-align:bottom;">
+									<p style="margin-top:0pt; margin-bottom:0pt; text-align:center; font-size:12pt">
+										<strong><span style="font-family:Arial; ">N° Servicio:</span></strong>
+									</p>
+								</td>
+								<td colspan="4" style="border-top-style:solid; border-top-width:1pt; border-right-style:solid; border-right-width:0.75pt; border-bottom-style:solid; border-bottom-width:0.75pt; padding-right:3.12pt; padding-left:3.5pt; vertical-align:bottom;">
+									<p style="margin-top:0pt; margin-bottom:0pt; text-align:center; font-size:12pt">
+										<strong><span style="font-family:Arial; ">Movil</span></strong>
+									</p>
+								</td>
+								<td colspan="4" style="border-top-style:solid; border-top-width:1pt; border-right-style:solid; border-right-width:0.75pt; border-bottom-style:solid; border-bottom-width:0.75pt; padding-right:3.12pt; padding-left:3.5pt; vertical-align:bottom;">
+									<p style="margin-top:0pt; margin-bottom:0pt; text-align:center; font-size:12pt">
+										<strong><span style="font-family:Arial; ">Salida</span></strong>
+									</p>
+								</td>
+								<td colspan="6" style="border-top-style:solid; border-top-width:1pt; border-right-style:solid; border-right-width:0.75pt; border-bottom-style:solid; border-bottom-width:0.75pt; padding-right:3.12pt; padding-left:3.5pt; vertical-align:bottom;">
+									<p style="margin-top:0pt; margin-bottom:0pt; text-align:center; font-size:12pt">
+										<strong><span style="font-family:Arial; ">Regreso</span></strong>
+									</p>
+								</td>
+								<td colspan="7" style="border-top-style:solid; border-top-width:1pt; border-right-style:solid; border-right-width:0.75pt; border-bottom-style:solid; border-bottom-width:0.75pt; padding-right:3.12pt; padding-left:3.5pt; vertical-align:bottom;">
+									<p style="margin-top:0pt; margin-bottom:0pt; text-align:center; font-size:12pt">
+										<strong><span style="font-family:Arial; ">A/C Servicio</span></strong>
+									</p>
+								</td>
+								<td colspan="7" style="border-top-style:solid; border-top-width:1pt; border-right-style:solid; border-right-width:1pt; border-bottom-style:solid; border-bottom-width:0.75pt; padding-right:3pt; padding-left:3.5pt; vertical-align:bottom;">
+									<p style="margin-top:0pt; margin-bottom:0pt; text-align:center; font-size:12pt">
+										<strong><span style="font-family:Arial; ">Tipo de servicio</span></strong>
+									</p>
+								</td>
+							</tr>
+							{% for servicio in servicios %}
+
+							<tr style="height:13.65pt">
+								<td colspan="2" style=" border-style:solid; border-width:0.75pt 0.75pt 0.75pt 1pt; padding-right:3.12pt; padding-left:3pt; vertical-align:bottom">
+									<p style="margin-top:0pt; margin-bottom:0pt; text-align:center; font-size:12pt">
+										<span style="font-family:Arial">{{servicio.numero}}</span>
+									</p>
+								</td>
+								<td colspan="4" style="border-top-style:solid; border-top-width:0.75pt; border-right-style:solid; border-right-width:0.75pt; border-bottom-style:solid; border-bottom-width:0.75pt; padding-right:3.12pt; padding-left:3.5pt; vertical-align:bottom">
+									<p style="margin-top:0pt; margin-bottom:0pt; text-align:center; font-size:12pt">
+										<span style="font-family:Arial">{{servicio.movil}}</span>
+									</p>
+								</td>
+								<td colspan="4" style="border-top-style:solid; border-top-width:0.75pt; border-right-style:solid; border-right-width:0.75pt; border-bottom-style:solid; border-bottom-width:0.75pt; padding-right:3.12pt; padding-left:3.5pt; vertical-align:bottom">
+									<p style="margin-top:0pt; margin-bottom:0pt; text-align:center; font-size:12pt">
+										<span style="font-family:Arial">{{servicio.salida}}</span>
+									</p>
+								</td>
+								<td colspan="6" style="border-top-style:solid; border-top-width:0.75pt; border-right-style:solid; border-right-width:0.75pt; border-bottom-style:solid; border-bottom-width:0.75pt; padding-right:3.12pt; padding-left:3.5pt; vertical-align:bottom">
+									<p style="margin-top:0pt; margin-bottom:0pt; text-align:center; font-size:12pt">
+										<span style="font-family:Arial">{{servicio.regreso}}</span>
+									</p>
+								</td>
+								<td colspan="7" style="border-top-style:solid; border-top-width:0.75pt; border-right-style:solid; border-right-width:0.75pt; border-bottom-style:solid; border-bottom-width:0.75pt; padding-right:3.12pt; padding-left:3.5pt; vertical-align:bottom">
+									<p style="margin-top:0pt; margin-bottom:0pt; text-align:center; font-size:12pt">
+										<span style="font-family:Arial">{{servicio.encargado.IDJerarquia.jerarquia}} {{servicio.encargado}}</span>
+									</p>
+								</td>
+								<td colspan="7" style="border-top-style:solid; border-top-width:0.75pt; border-right-style:solid; border-right-width:1pt; border-bottom-style:solid; border-bottom-width:0.75pt; padding-right:3pt; padding-left:3.5pt; vertical-align:bottom">
+									<p style="margin-top:0pt; margin-bottom:0pt; text-align:center; font-size:12pt">
+										<span style="font-family:Arial">{{servicio.tipo}}</span>
+									</p>
+								</td>
+							</tr>
+							{% endfor %}
+							<tr style="height:14.35pt">
+								<td colspan="30" style="border-top-style:solid; border-top-width:1pt; padding-right:3.5pt; padding-left:3.5pt; vertical-align:bottom; background-color:#d9d9d9">
+									<p style="margin-top:0pt; margin-bottom:0pt; text-align:center; font-size:12pt">
+										<strong><span style="font-family:Arial; color:#ff0000">NOVEDADES DURANTE LA GUARDIA:</span></strong>
+									</p>
+								</td>
+							</tr>
+							<tr style="height:13.65pt">
+								<td colspan="7" style="width:144.1pt; border-style:solid; border-width:1pt 0.75pt 0.75pt 1pt; padding-right:3.12pt; padding-left:3pt; vertical-align:middle">
+									<p style="margin-top:0pt; margin-bottom:0pt; font-size:12pt">
+										<strong><span style="font-family:Arial; ">Dinero recibido: $ {{planilla.recibido}}</span></strong>
+									</p>
+								</td>
+								<td colspan="10" style="border-top-style:solid; border-top-width:1pt; border-right-style:solid; border-right-width:0.75pt; border-bottom-style:solid; border-bottom-width:0.75pt; padding-right:3.12pt; padding-left:3.5pt; vertical-align:middle">
+									<p style="margin-top:0pt; margin-bottom:0pt; font-size:12pt">
+										<strong><span style="font-family:Arial; ">Gastos: $ {{planilla.gastado}}</span></strong>
+									</p>
+								</td>
+								<td colspan="13" style="border-top-style:solid; border-top-width:1pt; border-right-style:solid; border-right-width:1pt; border-bottom-style:solid; border-bottom-width:0.75pt; padding-right:3pt; padding-left:3.5pt; vertical-align:middle">
+									<p style="margin-top:0pt; margin-bottom:0pt; font-size:12pt">
+										<strong><span style="font-family:Arial; ">Concepto: {{planilla.concepto}}</span></strong>
+									</p>
+								</td>
+							</tr>
+							<tr style="height:14.35pt">
+								<td colspan="30" style="border-style:solid; border-width:0.75pt 1pt 1pt; padding-right:3pt; padding-left:3pt; vertical-align:middle">
+									<p style="margin-top:0pt; margin-bottom:0pt; font-size:12pt">
+										<strong><span style="font-family:Arial; ">Dinero entregado: $ {{planilla.entregado}}</span></strong>
+									</p>
+								</td>
+							</tr>
+							<tr style="height:13.65pt">
+								<td colspan="30" style="border-right-style:solid; border-right-width:1pt; border-left-style:solid; border-left-width:1pt; border-bottom-style:solid; border-bottom-width:0.75pt; padding-right:3pt; padding-left:3pt; vertical-align:middle">
+									<p style="margin-top:0pt; margin-bottom:0pt; font-size:12pt">
+										<strong><span style="font-family:Arial; ">Novedades (móviles, materiales, edilicio, etc.):</span></strong>
+									</p>
+								</td>
+							</tr>
+							<tr style="height:13.65pt" class="wrapper" >
+								<td colspan="30" style="border-right-style:solid; border-right-width:1pt; border-left-style:solid; border-left-width:1pt; border-bottom-style:solid; border-bottom-width:0.75pt; padding-right:3pt; padding-left:3pt; vertical-align:middle" class="wrapper">
+									<textarea style="width: 100%; resize: none; border: none; color: black;" rows="10" disabled>{{planilla.novedades}}</textarea>
+								</td>
+							</tr>
+							<tr style="height:13.65pt">
+								<td colspan="30" style="border-right-style:solid; border-right-width:1pt; border-left-style:solid; border-left-width:1pt; border-bottom-style:solid; border-bottom-width:0.75pt; padding-right:3pt; padding-left:3pt; vertical-align:middle">
+									<p style="margin-top:0pt; margin-bottom:0pt; font-size:12pt">
+										<strong><span style="font-family:Arial; ">Tareas realizadas: </span></strong>
+									</p>
+								</td>
+							</tr>
+							<tr style="height:13.65pt" class="wrapper" >
+								<td colspan="30" style="border-style:solid; border-width:0.75pt 1pt; padding-right:3pt; padding-left:3pt; vertical-align:bottom; overflow: hidden; text-overflow: ellipsis;" >
+									<textarea style="width: 100%; resize: none; border: none; color: black;" rows="10" disabled>{{planilla.tareas}}</textarea>
+								</td>
+							</tr>
+							<tr style="height:30pt" class="wrapper" >
+								<td colspan="30" style="border-style:solid; border-width:0.75pt 1pt; padding-right:3pt; padding-left:3pt; vertical-align:bottom; overflow: hidden; text-overflow: ellipsis;" >
+								</td>
+							</tr>
+							<tr style="height:13.65pt">
+								<td colspan="14" style="border-top-style:solid; border-top-width:0.75pt; padding-right:3.5pt; padding-left:3.5pt; vertical-align:bottom">
+									<p style="margin-top:0pt; margin-bottom:0pt; text-align:center; font-size:12pt">
+										<span style="font-family:Arial">Firma Of. de Semana</span>
+									</p>
+								</td>
+								<td style="padding-right:3.5pt; padding-left:3.5pt; vertical-align:bottom">
+									<p style="margin-top:0pt; margin-bottom:0pt; font-size:12pt">
+										<span style="font-family:Arial">&#xa0;</span>
+									</p>
+								</td>
+								<td colspan="15" style="border-top-style:solid; border-top-width:0.75pt; padding-right:3.5pt; padding-left:3.5pt; vertical-align:bottom">
+									<p style="margin-top:0pt; margin-bottom:0pt; text-align:center; font-size:12pt">
+										<span style="font-family:Arial">Firma Encargado de Guardia</span>
+									</p>
+								</td>
+							</tr>
+							<tr style="height:28pt">
+								<td colspan="30" style="padding-right:3.5pt; padding-left:3.5pt; vertical-align:bottom">
+									<p style="margin-top:0pt; margin-bottom:0pt; text-align:center; font-size:12pt">
+										<span style="font-family:Arial">&#xa0;</span>
+									</p>
+								</td>
+							</tr>
+						</tbody>
+						</table>
+					</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		</div>
+	</div>		
+
+{% endblock %}

@@ -1,0 +1,247 @@
+{% extends 'planilla/base.html' %}
+{% load static %}
+
+{% block title %}Móviles{% endblock %}
+{% block css_block %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.0/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://cdn.datatables.net/2.2.1/css/dataTables.bootstrap5.css">
+<link rel="stylesheet" href="https://cdn.datatables.net/responsive/3.0.3/css/responsive.bootstrap5.css">
+{% endblock %}
+{% block content %}
+<!-- Content Wrapper. Contains page content -->
+<div class="content-wrapper">
+    <!-- Content Header (Page header) -->
+    <div class="content-header">
+        <div class="container-fluid">
+        <div class="col-sm-6">
+        </div><!-- /.col -->
+        </div>
+        <!-- /.container-fluid -->
+    </div>
+    <!-- /.content-header -->
+
+    <!-- Main content -->
+    <div class="content">
+        <div class="container-fluid">
+        <!-- 1ra fila -->
+<div class="row">
+    {% if todo_los_moviles %}
+      <div class="col-md-12">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">Listado de móviles cargados</h3>
+          </div>
+          <!-- /.card-header -->
+          <div class="card-body table-responsive">
+            <table id="example1" class="table table-bordered table-striped ">
+              <thead>
+                <tr>
+                  <th>Número</th>
+                  <th>Tipo</th>
+                  <th>Base</th>
+                  <th>Intevenciones</th>
+                  <th>Última carga <br>combustible</th>
+                  <th>Última revisión <br>de fluidos</th>
+                  <th>Estado</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody class="text-center">
+                {% for movil in todo_los_moviles %}
+                    <tr class="text-center">
+                      <td class="text-center ">{{ movil.numero }}</td>
+                      <td>{{ movil.IDTipo }}</td>
+                      <td>{{ movil.IDBase }}</td>
+                      <td><div class="progress mb-3">
+                        <div class="progress-bar 
+                                    {% if movil.intervenciones <= 4 %} bg-success 
+                                    {% elif movil.intervenciones <= 7 %} bg-warning 
+                                    {% else %} bg-danger 
+                                    {% endif %}" 
+                             role="progressbar" 
+                             aria-valuenow="{{ movil.intervenciones }}" aria-valuemin="0" aria-valuemax="10" 
+                             style="width: calc({{ movil.intervenciones }} * 10%);">
+                          <span>{{ movil.intervenciones }}</span>
+                        </div>
+                      </div></td>
+                      <td>{{ movil.ultima_carga }}</td>
+                      <td>{{ movil.ultima_fluidos }}</td>
+                      {% if movil.IDEstado.estado == "En servicio" %}
+                        <td class="text-green">{{movil.IDEstado.estado}}</td>
+                      {% elif movil.IDEstado.estado == "Condicional"  %}
+                        <td class="text-yellow">{{movil.IDEstado.estado}}</td>  
+                      {% else %}
+                        <td class="text-red">{{movil.IDEstado.estado}}</td>  
+                      {% endif %}
+                      <td>
+                        <button type="button" data-toggle="modal" data-target="#cargar{{ movil.id }}" class="btn btn-primary">Actualizar carga</button>
+                        <button type="button" data-toggle="modal" data-target="#fluidos{{ movil.id }}" class="btn btn-success">Actualizar fluidos</button>
+                        <button type="button" data-toggle="modal" data-target="#estado{{ movil.id }}" class="btn btn-danger">Actualizar estado</button>
+                        <a class="btn btn-secondary" href="/movil/{{ movil.id }}/">Ficha</a>
+                      </td>
+                    </tr>
+                              <!-- MODAL COMBUSTIBLE-->
+          <div class="modal fade" id="cargar{{ movil.id }}" tabindex="-1" aria-labelledby="cargar" aria-hidden="true">
+            <div class="modal-dialog">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title" id="exampleModalLabel3">Carga de combustible - Móvil {{ movil.numero }}</h5>
+                </div>
+                <div class="modal-body">
+                    <form action="/cargarcombustible/{{ movil.id }}/" method="post">
+                      {% csrf_token %}
+                      <label for="movil">Encargado:</label>
+                      <select class="form-control col-sm-6" name="encargado" id="">
+                        {% for bombero in bomberos %}
+                        <option value={{bombero.id}}>{{bombero.apellido}}, {{bombero.nombre}}</option>
+                        {% endfor %}
+                      </select>
+                      <label for="movil">Cantidad de litros:</label>
+                      <input class="form-control col-sm-3" type="number" name="cantidad" min="0" max="300" required>
+                      <label for="">Fecha y hora del ticket de carga</label>
+                      <input class="form-control col-sm-6" name="fecha" type="datetime-local" required>
+                </div>
+                <div class="modal-footer">
+                  <button type="submit" class="btn btn-primary">Actualizar combustible</button>
+                </form>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+          
+                </div>
+              </div>
+            </div>
+        </div>
+
+        <!-- MODAL COMBUSTIBLE-->
+        <div class="modal fade" id="estado{{ movil.id }}" tabindex="-1" aria-labelledby="estado" aria-hidden="true">
+            <div class="modal-dialog">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title" id="exampleModalLabel3">Cambio de estado - Móvil {{ movil.numero }}</h5>
+                </div>
+                <div class="modal-body">
+                    <form action="/cambiarestado/{{ movil.id }}/" method="post">
+                      {% csrf_token %}
+                      <label for="movil">Nuevo estado:</label>
+                      <select class="form-control col-sm-6" name="estado" id="">
+                        {% for estado in estados %}
+                        <option value={{estado.id}}>{{estado.estado}}</option>
+                        {% endfor %}
+                      </select>
+                </div>
+                <div class="modal-footer">
+                  <button type="submit" class="btn btn-primary">Actualizar estado</button>
+                </form>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+          
+                </div>
+              </div>
+            </div>
+        </div>
+
+        <!-- MODAL FLUIDOS-->
+        <div class="modal fade" id="fluidos{{ movil.id }}" tabindex="-1" aria-labelledby="fluidos" aria-hidden="true">
+          <div class="modal-dialog">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel3">Carga de combustible - Móvil {{ movil.numero }}</h5>
+              </div>
+              <div class="modal-body">
+                  <form action="/fluidos/{{ movil.id }}/" method="post">
+                    {% csrf_token %}
+                    <label for="movil">Encargado:</label>
+                    <select class="form-control col-sm-6" name="encargado" id="">
+                      {% for bombero in bomberos %}
+                      <option value={{bombero.id}}>{{bombero.apellido}}, {{bombero.nombre}}</option>
+                      {% endfor %}
+                    </select><br>
+                    <label for="movil">Litros de agua agregados al radiador:</label>
+                    <input class="form-control" type="number" name="agua" min="0" max="300" value="0"><br>
+                    <label for="movil">Litros de aceite agregados:</label>
+                    <input class="form-control" type="number" name="aceite" min="0" max="300" value="0"><br>
+                    <label for="movil">Litros de líquido hidráulico agregados:</label>
+                    <input class="form-control" type="number" name="hidraulico" min="0" max="300" value="0"><br>
+                    <label for="movil">Litros de líquido de frenos agregados:</label>
+                    <input class="form-control" type="number" name="frenos" min="0" max="300" value="0"><br>
+                    <label for="movil">Agua de tanque:</label>
+                    <select class="form-control" name="tanque">
+                      <option value="Chequeado - OK">Chequeado - OK</option>
+                      <option value="Chequeado - Faltaba">Chequeado - Faltaba</option>
+                      <option value="Sin chequear">Sin chequear</option>
+                    </select>
+                    <label for="movil">Bomba engranada:</label> 
+                    <select class="form-control" name="bomba">
+                      <option value="Chequeado - OK">Chequeado - OK</option>
+                      <option value="Chequeado - Falla">Chequeado - Falla</option>
+                      <option value="Sin chequear">Sin chequear</option>
+                    </select>
+                    <label for="movil">Luces reglamentarias/Emergencia:</label>
+                    <select class="form-control" name="luces">
+                      <option value="Chequeado - OK">Chequeado - OK</option>
+                      <option value="Chequeado - Falla">Chequeado - Falla</option>
+                      <option value="Sin chequear">Sin chequear</option>
+                    </select>
+                    <label for="movil">Sirenas/Bocina:</label>
+                    <select class="form-control" name="sirena">
+                      <option value="Chequeado - OK">Chequeado - OK</option>
+                      <option value="Chequeado - Falla">Chequeado - Falla</option>
+                      <option value="Sin chequear">Sin chequear</option>
+                    </select>
+              </div>
+              <div class="modal-footer">
+                <button type="submit" class="btn btn-primary">Actualizar fluidos</button>
+              </form>
+              <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+        
+              </div>
+            </div>
+          </div>
+        </div>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          </div>
+          <!-- /.card-body -->
+        </div>
+
+    {% else %}
+      <p>No hay móviles cargados.</p>
+    {% endif %}
+  </div>
+
+</div>
+</div>
+{% endblock %}
+{% block js_block %}
+
+<!-- DATATABLES -->
+<script src="https://cdn.datatables.net/v/dt/dt-2.1.4/datatables.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/3.1.1/js/dataTables.buttons.js"></script>
+<script src="https://cdn.datatables.net/buttons/3.1.1/js/buttons.dataTables.js"></script>
+<script src="https://cdn.datatables.net/buttons/3.1.1/js/buttons.html5.min.js"></script>
+<script src="https://cdn.datatables.net/2.2.1/js/dataTables.bootstrap5.js"></script> 
+<script src="https://cdn.datatables.net/responsive/3.0.3/js/dataTables.responsive.js"></script>
+<script src="https://cdn.datatables.net/responsive/3.0.3/js/responsive.bootstrap5.js"></script>
+
+<script>
+$(function () {
+    $('#example1').DataTable({
+    language: {
+    url: 'https://cdn.datatables.net/plug-ins/2.2.1/i18n/es-CL.json',
+    },
+    layout: {
+    topStart: {
+        buttons: ['copyHtml5', 'excelHtml5']
+    }},
+    "paging": true,
+    "lengthChange": true,
+    "searching": true,
+    "ordering": true,
+      order:[[2, 'asc'],[0, 'asc']],
+    "ordering": true,
+    "autoWidth": false,
+    "responsive": true,
+    });
+});
+</script>
+{% endblock %}

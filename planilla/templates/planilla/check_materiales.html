@@ -1,0 +1,82 @@
+{% extends 'planilla/base.html' %}
+{% load static %}
+{% block content %}
+<!-- Content Wrapper. Contains page content -->
+<div class="content-wrapper">
+    <!-- Content Header (Page header) -->
+    <div class="content-header">
+        <div class="container-fluid">
+        <div class="col-sm-6">
+        </div><!-- /.col -->
+        </div>
+        <!-- /.container-fluid -->
+    </div>
+    <!-- /.content-header -->
+
+    <!-- Main content -->
+    <div class="content">
+        <div class="container-fluid">
+        <!-- 1ra fila -->
+<div class="row">
+    {% if materiales %}
+      <div class="col-md-12">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">
+              <i class="ion ion-clipboard mr-1"></i>
+              Checklist de materiales - Móvil {{movil}}
+            </h3>
+          </div>
+          <!-- /.card-header -->
+          <div class="card-body">
+            <ul class="todo-list" data-widget="todo-list">
+              {% for material in materiales %}
+              <li>
+                <!-- checkbox -->
+                <div  class="icheck-primary d-inline ml-2">
+                  <input type="checkbox" value="" name="todo1" id="todoCheck1">
+                  <label for="todoCheck1"></label>
+                </div>
+                <!-- todo text -->
+                <span class="text">Cajonera {{ material.cajonera}} - {{material.nombre}}</span>
+                <!-- Emphasis label -->
+                 {% if material.estado.estado == "En servicio" %}
+                <small class="badge badge-success"></i>E/S</small>
+                {% elif material.estado.estado == "Condicional" %}
+                <small class="badge badge-warning"></i>Condicional</small>
+                {% elif material.estado.estado == "Fuera de servicio" %}
+                <small class="badge badge-danger"></i> F/S</small>
+                {% endif %}
+              </li>
+              {% endfor %}
+            </ul>
+          </div>
+          <!-- /.card-body -->
+          <div class="card-footer clearfix">
+            <button type="button" class="btn btn-primary float-right"><i class="fas fa-plus"></i> Add item</button>
+          </div>
+        </div>
+          <!-- /.card-body -->
+        </div>
+
+    {% else %}
+      <p>No hay materiales cargados.</p>
+    {% endif %}
+  </div>
+
+</div>
+</div>
+{% endblock %}
+
+{% block js_block %}
+<script>
+$('a[rel=popover]').popover({
+  html: true,
+  trigger: 'hover',
+  placement: 'bottom',
+  content: function(){return '<img src="'+$(this).data('img') + '" />';}
+});
+
+</script>
+
+{%endblock%}
