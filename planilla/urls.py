@@ -2,11 +2,12 @@ from django.urls import path
 from django.conf import settings
 from django.conf.urls.static import static
 from . import views
-from planilla.views import CargarPlanilla, PlanillaDetailView, ServicioView, RepMaterialesView, CheckMaterialesView, CargarServicio, ModificarPlanilla, eliminar_presente, Guia, finalizar_servicio, Guardia, ModificarServicio, custom_404_view
+from planilla.views import CargarPlanilla, PlanillaDetailView, ServicioView, RepMaterialesView, CheckMaterialesView, CargarServicio, ModificarPlanilla, eliminar_presente, Guia, finalizar_servicio, Guardia, ModificarServicio
 
 urlpatterns = [
     path("", views.index, name="index"),
     path("mapa/", views.mapa, name="mapa"),
+    path("gps/", views.gps, name="gps"),
     path('hidrantes/', views.get_geojson, name='get_geojson'),
     path("personal/", views.PersonalView.as_view(), name="personal"), 
     path("listado_planillas/", views.PlanillaView.as_view(), name="listado_planillas"), 
@@ -42,3 +43,4 @@ urlpatterns = [
 ]
 
 urlpatterns += static(settings.MEDIA_URL,document_root=settings.MEDIA_ROOT)
+urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

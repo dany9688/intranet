@@ -1,0 +1,164 @@
+{% extends 'planilla/base.html' %}
+{% load static %}
+{% block title %}GPS{% endblock title %}
+{% block css_block %}
+<style>
+  #map {
+      height: 500px;
+      width: 100%;
+  }
+</style>
+{% endblock %}
+{% block content %}
+    <!-- Content Wrapper. Contains page content -->
+    <div class="content-wrapper">
+    <!-- Content Header (Page header) -->
+    <div class="content-header">
+        <div class="container-fluid">
+        <div class="col-sm-6">
+        </div><!-- /.col -->
+        </div>
+        <!-- /.container-fluid -->
+    </div>
+    <!-- /.content-header -->
+
+    <!-- Main content -->
+    <div class="content">
+        <div class="container-fluid">
+        <!-- 1ra fila -->
+         <div class="row col-sm-12">
+          <h1>test gps</h1>
+         </div>
+         
+         <div id="details"></div>
+
+         <div class="row col-sm-12">
+          <div id="map" style="height: 400px; width: 100%;"></div>
+         </div>
+
+    </div>
+    </div>
+
+{% endblock %}
+{% block js_block %}
+<script async src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDgZ9iDyLaJEwAAYUcuN7MgVWN2alaLd1s&libraries=places"></script>
+<!-- <script>
+let detalles = document.getElementById("details")
+var options = {
+    enableHighAccuracy: true,
+    timeout: 5000,
+    maximumAge: 0
+  }
+
+  var reqcount = 0
+  navigator.geolocation.watchPosition(successCallback, errorCallback, options)
+
+  function successCallback(position) {
+    const {accuracy, latitude,  longitude, heading, speed } = position.coords
+    reqcount++
+    let speedKmh = speed !== null ? (speed * 3.6).toFixed(2) + "km/h" : "No disponible"
+    console.log("Exactitud:", accuracy, 
+                "Latitud:", latitude, 
+                "Longitud:", longitude, 
+                "Heading:", heading ?? "No disponible", 
+                "Velocidad:", speedKmh);
+   
+    detalles.innerHTML = "Accuracy: " + accuracy + "</br>"
+    detalles.innerHTML += "Latitude: " + latitude + " | Longitude: " + longitude + "</br>"
+    detalles.innerHTML += "Heading: " + heading + "</br>"
+    detalles.innerHTML += "Speed: " + speedKmh + "</br>"
+    detalles.innerHTML += "reqcount: " + reqcount + "</br>"
+
+  }
+  function errorCallback(error){
+    console.error("Error obteniendo la ubicación:", error);
+  }
+
+
+
+  navigator.geolocation.getCurrentPosition(position => {
+    let { latitude, longitude } = position.coords;
+    console.log("lat:", latitude, "long:", longitude);
+
+    // Inicializar el mapa
+    let map = new google.maps.Map(document.getElementById("map"), {
+      center: { lat: latitude, lng: longitude },
+      zoom: 13
+    });
+
+    // Agregar marcador en la ubicación actual
+    let marker = new google.maps.Marker({
+      position: { lat: latitude, lng: longitude },
+      map: map,
+      title: "Ubicación actual"
+    });
+  }, error => {
+    console.error("Error obteniendo la ubicación:", error);
+  });
+</script> -->
+
+<script>
+
+  let ws_scheme = window.location.protocol === "https:" ? "wss" : "ws";
+  var socket = new WebSocket(`${ws_scheme}://${window.location.host}/ws/location/`);
+
+  socket.onopen = () => console.log("WebSocket conectado");
+  socket.onerror = (error) => console.log("Error en WebSocket:", error);
+  socket.onmessage = (event) => console.log("Mensaje recibido:", event.data);
+  socket.onclose = () => console.log("WebSocket cerrado");
+
+
+  let detalle = document.getElementById("details")
+  // Cuando se conecta
+  socket.onopen = function() {
+      console.log("Conectado al WebSocket");
+  };
+
+  // Cuando recibe datos desde el servidor
+  socket.onmessage = function(e) {
+      var data = JSON.parse(e.data);
+      var lat = data.latitude;
+      var lng = data.longitude;
+      var speed = data.speed;
+      var heading = data.heading;
+
+      detalle.innerHTML = "Latitud: " + lat + "</br>"
+      detalle.innerHTML += "Longitud: " + lng + "</br>"
+      detalle.innerHTML += "Velocidad: " + speed*3.6 + "km/h </br>"
+
+      console.log("Nueva ubicación: ", lat, lng);
+      console.log("Velocidad:", speed, "Heading:", heading);
+
+      // Actualiza el mapa aquí con los nuevos datos
+      updateMap(lat, lng);
+  };
+
+  // Enviar ubicación al servidor cada vez que cambie
+  navigator.geolocation.watchPosition(function(position) {
+      const { latitude, longitude, heading, speed } = position.coords;
+
+      // Enviar al WebSocket
+      socket.send(JSON.stringify({
+          'latitude': latitude,
+          'longitude': longitude,
+          'speed': speed,
+          'heading': heading,
+      }));
+  });
+
+  function updateMap(lat, lng) {
+      var map = new google.maps.Map(document.getElementById("map"), {
+          center: { lat: lat, lng: lng },
+          zoom: 13
+      });
+
+      var marker = new google.maps.Marker({
+          position: { lat: lat, lng: lng },
+          map: map,
+          title: "Ubicación actual"
+      });
+  }
+</script>
+
+
+{% endblock %}

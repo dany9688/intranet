@@ -17,6 +17,9 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import include, path
 from planilla.views import custom_404_view
+from django.conf import settings
+from django.conf.urls.static import static
+
 handler404 = custom_404_view
 
 
@@ -25,3 +28,4 @@ urlpatterns = [
     path("", include("planilla.urls")),
     path('admin/', admin.site.urls),
 ]
+urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

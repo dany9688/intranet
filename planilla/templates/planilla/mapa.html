@@ -2,8 +2,6 @@
 {% load static %}
 {% block title %}Mapa{% endblock title %}
 {% block css_block %}
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <style>
   #map {
       height: 500px;
@@ -47,6 +45,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/OverlappingMarkerSpiderfier/1.0.3/oms.min.js"></script>
 
 <script>
+
     // Inicializa el mapa y el geocodificador
     var map;
     var geocoder;
@@ -67,7 +66,7 @@
       });
   
       cargarServicios();
-
+      gpsMovil()
 
       setInterval(cargarServicios, 5000); // Recargar cada 5 segundos
 
@@ -211,6 +210,29 @@
         });
         console.log("Nuevo estado de hidrantesLayer:", hidrantesLayer.getMap());
 
+
+}
+
+function gpsMovil(){
+    var socket = new WebSocket('ws://' + window.location.host + '/ws/location/');
+    socket.onmessage = function(e) {
+    var data = JSON.parse(e.data);
+    var lat = data.latitude;
+    var lng = data.longitude;
+    var speed = data.speed
+    
+    console.log("data: ", data)
+
+    let marker = new google.maps.Marker({
+        position: { lat: lat, lng: lng },
+        map: map,
+        title: "Móvil"
+    });
+
+    marker.addListener("click", function () {
+        infowindow.open(map, marker);
+    });
+};
 
 }
 

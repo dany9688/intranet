@@ -15,7 +15,8 @@ from pathlib import Path
 from django.contrib.messages import constants as messages
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
-BASE_DIR = Path(__file__).resolve().parent.parent
+# BASE_DIR = Path(__file__).resolve().parent.parent
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
 # Quick-start development settings - unsuitable for production
@@ -27,13 +28,14 @@ SECRET_KEY = os.environ.get("SECRET_KEY")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = bool(os.environ.get("DEBUG", default=0))
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['192.168.0.251', 'localhost', 'b00f-2800-810-54d-ad3-141a-e347-6167-2d9.ngrok-free.app']
 
 
 # Application definition
 
 INSTALLED_APPS = [
     'planilla.apps.PlanillaConfig',
+    'channels',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -52,6 +54,18 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            "hosts": [('redis', 6379)],  # Configura el host de Redis
+        },
+    },
+}
+
+
+ASGI_APPLICATION = 'mysite.asgi.application'
+
 MESSAGE_TAGS = {
     messages.DEBUG: "secondary",
     messages.INFO: "info",
@@ -67,10 +81,12 @@ SESSION_COOKIE_AGE = 86400  # 1 día de duración
 
 ROOT_URLCONF = 'mysite.urls'
 
+BASE_DIR = Path(__file__).resolve().parent.parent
+
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / "planilla/templates"],
+        'DIRS': [os.path.join(BASE_DIR / "planilla" / "templates")],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -135,7 +151,12 @@ USE_TZ = False
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
-STATIC_URL = 'static/'
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, "planilla/static"),  # Agrega la carpeta estática de la app
+]
+
+STATIC_URL = '/planilla/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'planilla/static/')  # Ruta donde se guardarán los estáticos en producción
 
 MEDIA_ROOT = os.path.join(BASE_DIR, 'planilla/media')
 MEDIA_URL = '/media/'

@@ -40,6 +40,9 @@ def index(request):
 def mapa(request):
     return render (request, 'planilla/mapa.html')
 
+def gps(request):
+    return render (request, 'planilla/mobile.html')
+
 def get_geojson(request):
     # Ruta donde tienes el archivo GeoJSON en tu proyecto Django
     geojson_path = static('planilla/hidrantes.json')
