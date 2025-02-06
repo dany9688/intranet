@@ -28,97 +28,97 @@ Para que funciones se debe tener instalado  [Docker](https://www.docker.com/) en
 Lo ideal es cargar la base de datos con los siguientes datos y de la siguiente forma a fin de no tener problemas.
 
 - [ ] Bases
-    Cuartel Central
-    Destacamento N°1
-    Destacamento N°2
+-    Cuartel Central
+-    Destacamento N°1
+-    Destacamento N°2
 
 - [ ] Cuarteles
-    Mariano Acosta
-	José C. Paz
-	Ituzaingo
-	Tortuguitas
-	Morón
-	Hurlingham
-	Villa Ballester
-	3 de Febrero
-	Merlo
-	Moreno
-	General Sarmiento
-	San Isidro
-	Matanza
-	VIcente López
-	General San Martín
+-    Mariano Acosta
+-	José C. Paz
+-	Ituzaingo
+-	Tortuguitas
+-	Morón
+-	Hurlingham
+-	Villa Ballester
+-	3 de Febrero
+-	Merlo
+-	Moreno
+-	General Sarmiento
+-	San Isidro
+-	Matanza
+-	VIcente López
+-	General San Martín
 
 - [ ] Jerarquías
-    Comandante General
-	Comandante Mayor
-	Comandante
-	Subcomandante
-	Oficial Auxiliar de Dotación
-	Oficial Auxiliar de Escuadra
-	Oficial Auxiliar
-	Ayudante Mayor
-	Ayudante Principal
-	Ayudante de 1ra
-	Ayudante
-	Subayudante
-	Bombero
+-    Comandante General
+-	Comandante Mayor
+-	Comandante
+-	Subcomandante
+-	Oficial Auxiliar de Dotación
+-	Oficial Auxiliar de Escuadra
+-	Oficial Auxiliar
+-	Ayudante Mayor
+-	Ayudante Principal
+-	Ayudante de 1ra
+-	Ayudante
+-	Subayudante
+-	Bombero
 
 - [ ] Tipos de movil
-    En servicio
-    Condicional
-    Fuera de servicio
-    Ocupado
+-    En servicio
+-    Condicional
+-    Fuera de servicio
+-    Ocupado
 
 - [ ] Tipos de movil
-    Hidroelevador
-	Cascada
-	Transporte de personal
-	Comando
-	Cisterna
-	Primera dotación
+-    Hidroelevador
+-	Cascada
+-	Transporte de personal
+-	Comando
+-	Cisterna
+-	Primera dotación
 
 - [ ] Tipos de servicios
-    Técnico
-	Comando
-	Suministro de agua
-	Materiales Peligrosos
-	Forestal
-	Colaboración
-	Auxilio
-	Incendio
+-    Técnico
+-	Comando
+-	Suministro de agua
+-	Materiales Peligrosos
+-	Forestal
+-	Colaboración
+-	Auxilio
+-	Incendio
 
 - [ ] Móviles
 
 - [ ] Bomberos
 
 - [ ] Tipo de motores
-    Eléctrico 220v
-    Eléctrico 19v
-    Combustión 2T
-    Combustión 4T
+-    Eléctrico 220v
+-    Eléctrico 19v
+-    Combustión 2T
+-    Combustión 4T
 
 - [ ] Tipo de materiales
-    Manga
-    Corte
-    Acople
+-    Manga
+-    Corte
+-    Acople
 
 - [ ] Ubicaciones
-    Sección materiales - Cuartel Central
-    Sección materiales - Destacamento N°1
-    Sección materiales - Destacamento N°2
+-    Sección materiales - Cuartel Central
+-    Sección materiales - Destacamento N°1
+-    Sección materiales - Destacamento N°2
 
 - [ ] Grupos
-    Cuartel Central
-    Destacamento N°1
-    Destacamento N°2
-    Jefatura
+-    Cuartel Central
+-    Destacamento N°1
+-    Destacamento N°2
+-    Jefatura
 
 - [ ] Usuarios
-    usuario: central - password: guardia147 - grupo: Cuartel Central
-    usuario: destacamento1 - password: guardia147 - grupo: Destacamento N°1
-    usuario: destacamento2 - password: guardia147 - grupo: Destacamento N°2
-    usuario: jefatura - password: jguardia147 - grupo: Jefatura
+-    usuario: central - password: guardia147 - grupo: Cuartel Central
+-    usuario: destacamento1 - password: guardia147 - grupo: Destacamento N°1
+-    usuario: destacamento2 - password: guardia147 - grupo: Destacamento N°2
+-    usuario: jefatura - password: jguardia147 - grupo: Jefatura
 
 Con estos datos ya podemos tener en funcionamiento el proyecto. Cerrar sesión en el panel de administración para finalizar.
 
