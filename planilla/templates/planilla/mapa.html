@@ -57,6 +57,7 @@
     var cuartelesMarkers = [];  // Array para almacenar los marcadores de cuarteles
     var cuartelesLayer;  // Capa para cuarteles
     var infoWindow; // Ventana emergente para mostrar información
+    var staticUrl = "{% static '/planilla/images/' %}";
 
     async function initMap() {
       // Crear el mapa y centrarlo en una ubicación predeterminada
@@ -274,7 +275,7 @@ function cargarServicios() {
                     let moviltipo = tipomovil.find(tipo => movilEncontrado.IDTipo === tipo.id)
                     let serviciotipo = tiposervicio.find(tipo => servicio.tipo === tipo.id)
                     let icono = movilEncontrado ? {
-                        url: `/static/planilla/images/${moviltipo.tipo}.png`,
+                        url: staticUrl + moviltipo.tipo + ".png",
                         scaledSize: new google.maps.Size(35, 30),
                         origin: new google.maps.Point(0, 0),
                         anchor: new google.maps.Point(10, 10)
@@ -311,9 +312,7 @@ function cargarServicios() {
             });
 
         })
-        .catch(error => console.error("Error al obtener los servicios:", error));
-
-        
+        .catch(error => console.error("Error al obtener los servicios:", error));      
 }
 
 

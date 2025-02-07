@@ -15,8 +15,8 @@ from pathlib import Path
 from django.contrib.messages import constants as messages
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
-# BASE_DIR = Path(__file__).resolve().parent.parent
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+BASE_DIR = Path(__file__).resolve().parent.parent
+# BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
 # Quick-start development settings - unsuitable for production
@@ -26,7 +26,10 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = os.environ.get("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = bool(os.environ.get("DEBUG", default=0))
+# DEBUG = bool(os.environ.get("DEBUG", default=1))
+DEBUG = bool(int(os.environ.get("DEBUG", 1)))
+print(DEBUG)
+
 
 ALLOWED_HOSTS = ['192.168.0.251', 'localhost', 'b00f-2800-810-54d-ad3-141a-e347-6167-2d9.ngrok-free.app']
 
@@ -46,6 +49,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware', # para servir archivos estáticos en desarrollo
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -151,12 +155,15 @@ USE_TZ = False
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
-STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, "planilla/static"),  # Agrega la carpeta estática de la app
-]
+if DEBUG:
+    STATICFILES_DIRS = [
+        os.path.join(BASE_DIR, 'planilla', 'static')  # 📌 Apunta a la carpeta local de desarrollo
+    ]
+else:
+    STATIC_ROOT = os.path.join(BASE_DIR, 'static')  # 📌 Solo en producción
 
 STATIC_URL = '/planilla/static/'
-STATIC_ROOT = os.path.join(BASE_DIR, 'planilla/static/')  # Ruta donde se guardarán los estáticos en producción
+STATIC_ROOT = os.path.join(BASE_DIR, "planilla", "staticfiles")  # Ruta donde se guardarán los estáticos en producción
 
 MEDIA_ROOT = os.path.join(BASE_DIR, 'planilla/media')
 MEDIA_URL = '/media/'

@@ -18,30 +18,54 @@ logger = logging.getLogger(__name__)
 
 
 def index(request):
-    
-    hace_10_dias = timezone.now() - timedelta(days=10)
-    bases = Base.objects.all().order_by('id')
-    novedades = Planilla.objects.filter(fecha__gte=hace_10_dias)
-    moviles = Movil.objects.all().order_by('numero')
     grupo_usuario = request.user.groups.values_list('name', flat=True).first()
-    servicios = Servicio.objects.filter(estado='Abierto')
+    movil = int(request.user.last_name.strip())
+    print(movil)
+    if grupo_usuario == "Movil":
 
-    # Contexto de la plantilla
-    context = {
-        "base": bases,
-        "novedades": novedades,
-        "moviles": moviles,
-        "group": grupo_usuario,
-        "servicios": servicios,
+        movil = Movil.objects.get(numero=movil)
+        servicio = Servicio.objects.filter(estado='En curso', movil_id=movil.id)
+        print(servicio)
+        context ={
+            "servicio" : servicio,
+            "movil": movil,
         }
+        return render (request, 'planilla/mobile.html', context)
+    else:
+        hace_10_dias = timezone.now() - timedelta(days=10)
+        bases = Base.objects.all().order_by('id')
+        novedades = Planilla.objects.filter(fecha__gte=hace_10_dias)
+        moviles = Movil.objects.all().order_by('numero')
+        servicios = Servicio.objects.filter(estado='En curso')
 
-    return render (request, 'planilla/index.html', context)
+        # Contexto de la plantilla
+        context = {
+            "base": bases,
+            "novedades": novedades,
+            "moviles": moviles,
+            "group": grupo_usuario,
+            "servicios": servicios,
+            }
+
+        return render (request, 'planilla/index.html', context)
 
 def mapa(request):
     return render (request, 'planilla/mapa.html')
 
 def gps(request):
-    return render (request, 'planilla/mobile.html')
+    grupo_usuario = request.user.groups.values_list('name', flat=True).first()
+    movil = int(request.user.last_name.strip())
+    print(movil)
+    if grupo_usuario == "Movil":
+
+        movil = Movil.objects.get(numero=movil)
+        servicio = Servicio.objects.filter(estado='En curso', movil_id=movil.id).first()
+        print(servicio)
+        context ={
+            "servicio" : servicio,
+            "movil": movil,
+        }
+        return render (request, 'planilla/mobile.html', context)
 
 def get_geojson(request):
     # Ruta donde tienes el archivo GeoJSON en tu proyecto Django
@@ -280,7 +304,7 @@ class CargarServicio(View):
                 direccion=address,
                 latitud=latitude,
                 longitud=longitude,
-                estado="Abierto", 
+                estado="En curso", 
                 numero=numero,
                 movil=movil,
                 salida=salida,
@@ -340,7 +364,7 @@ class ModificarServicio(View):
         anterior.longitud = request.POST['longitude']
         print('latitud', request.POST['latitude'])
         print('longitud', request.POST['longitude'])
-        anterior.estado="Abierto"
+        anterior.estado="En curso"
         anterior.numero = request.POST['numero']
         anterior.movil_id = int(request.POST['movil'])
         anterior.salida = request.POST['salida']
@@ -352,7 +376,15 @@ class ModificarServicio(View):
         return redirect ('guardia')
     
 def obtener_servicios(request):
-    servicios = list(Servicio.objects.filter(estado="Abierto").values("direccion", "latitud", "longitud", "movil", "tipo"))
+    servicios = list(Servicio.objects.filter(estado="En curso").values("direccion", "latitud", "longitud", "movil", "tipo"))
+    moviles = list(Movil.objects.values("id", "numero", "IDTipo"))
+    tipomovil = list(TipoMovil.objects.values("id", "tipo"))
+    tiposervicio = list(TipoServicio.objects.values("id", "tipo"))
+    print(servicios)
+    return JsonResponse({"servicios": servicios, "moviles": moviles, "tipomovil": tipomovil, "tiposervicio": tiposervicio})
+
+def servicio_movil(request, movil):
+    servicios = list(Servicio.objects.filter(estado="En curso", movil=movil).values("direccion", "latitud", "longitud", "movil", "tipo"))
     moviles = list(Movil.objects.values("id", "numero", "IDTipo"))
     tipomovil = list(TipoMovil.objects.values("id", "tipo"))
     tiposervicio = list(TipoServicio.objects.values("id", "tipo"))

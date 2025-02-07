@@ -3,3 +3,4 @@ Pillow==11.1.0
 channels==4.2.0
 uvicorn[standard]
 channels_redis==4.2.1
+whitenoise==6.9.0

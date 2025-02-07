@@ -22,6 +22,7 @@ urlpatterns = [
     path("cargar_servicio/", CargarServicio.as_view(), name="cargar_servicios"), 
     path("modificar_servicio/<int:id>/", ModificarServicio.as_view(), name="modificar_servicio"), 
     path("obtener_servicios/", views.obtener_servicios, name="obtener_servicios"),
+    path("servicio_movil/<int:movil>", views.servicio_movil, name="servicio_movil"),
     path('finalizar_servicio/<int:servicio_id>/', finalizar_servicio, name='finalizar_servicio'),
     path("cargar_planilla/", CargarPlanilla.as_view(), name="cargar_planilla"), 
     path("verificar-numero/", views.verificar_numero, name="verificar_numero"),

@@ -146,7 +146,7 @@
                   </thead>
                   <tbody>
                     {% for servicio in servicios %}
-                    {% if servicio.estado == "Abierto" %}
+                    {% if servicio.estado == "En curso" %}
                         <tr>
                           <td>{{ servicio.numero }} </td>
                           <td>Móvil {{ servicio.movil.numero}}</td>
@@ -173,7 +173,7 @@
         </div>
         </div>
     </div>
-    </div>
+        </div>
 
 {% endblock %}
 {% block js_block %}
