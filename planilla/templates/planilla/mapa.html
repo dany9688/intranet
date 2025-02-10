@@ -108,9 +108,9 @@
 
         // Diccionario de colores por nombre de zona
         const zonaColors = {
-            "Zona Dto 2": "#FF0000",
-            "Zona Cuartel Central": "#00FF00",
-            "Zona Dto 1": "#0000FF",
+            "Destacamento N°2": "#FF0000",
+            "Cuartel Central": "#00FF00",
+            "Destacamento N°1": "#0000FF",
         };
 
         // Aplicar estilo dinámicamente
@@ -215,7 +215,7 @@
 }
 
 function gpsMovil(){
-    var socket = new WebSocket('ws://' + window.location.host + '/ws/location/');
+    var socket = new WebSocket('wss://' + window.location.host + '/ws/location/');
     socket.onmessage = function(e) {
     var data = JSON.parse(e.data);
     var lat = data.latitude;

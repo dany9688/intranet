@@ -1,4 +1,6 @@
 from django.shortcuts import get_object_or_404, render, redirect
+from django.conf import settings
+from django.http import HttpResponse
 from .models import *
 from django.views import generic, View
 from django.contrib.auth import login, authenticate, logout
@@ -19,10 +21,10 @@ logger = logging.getLogger(__name__)
 
 def index(request):
     grupo_usuario = request.user.groups.values_list('name', flat=True).first()
-    movil = int(request.user.last_name.strip())
-    print(movil)
-    if grupo_usuario == "Movil":
-
+    print("user: ", request.user)
+    print("grupo: ",grupo_usuario)
+    if grupo_usuario == "Móviles":
+        movil = int(request.user.last_name.strip())
         movil = Movil.objects.get(numero=movil)
         servicio = Servicio.objects.filter(estado='En curso', movil_id=movil.id)
         print(servicio)
@@ -54,10 +56,10 @@ def mapa(request):
 
 def gps(request):
     grupo_usuario = request.user.groups.values_list('name', flat=True).first()
-    movil = int(request.user.last_name.strip())
-    print(movil)
-    if grupo_usuario == "Movil":
 
+    if grupo_usuario == "Móviles":
+        movil = int(request.user.last_name.strip())
+        print(movil)
         movil = Movil.objects.get(numero=movil)
         servicio = Servicio.objects.filter(estado='En curso', movil_id=movil.id).first()
         print(servicio)
@@ -66,7 +68,9 @@ def gps(request):
             "movil": movil,
         }
         return render (request, 'planilla/mobile.html', context)
-
+    else:
+        return render (request, 'planilla/signin.html', {'error': 'El usuario no tiene permisos para entrar en ese sitio.'})
+    
 def get_geojson(request):
     # Ruta donde tienes el archivo GeoJSON en tu proyecto Django
     geojson_path = static('planilla/hidrantes.json')
