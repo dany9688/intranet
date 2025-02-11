@@ -24,8 +24,10 @@
           </div>
         <!-- 1ra fila -->
         <div class="row mb-2 ml-1 mr-2 d-flex">
-            <h2 class="p-2">Panel de guardia - {{request.user.first_name}} {{request.user.last_name}}</h2>
+            <h2 class="p-2">Panel de guardia</h2>
+            {% if request.user.groups.all.0.name == "Guardia central"  %}
             <button type="button" data-toggle="modal" data-target="#cambiarcuartel"  class="btn btn-xs btn-secondary ml-auto">Cambiar estado<br>de cuartel</button>
+            {% endif %}
         </div>
 
         <div class="modal fade" id="cambiarcuartel" tabindex="-1" aria-labelledby="cambiarcuartel" aria-hidden="true">
@@ -126,7 +128,9 @@
             <div class="card card-navy">  
               <div class="card-header d-flex">
                 <h3 class="card-title mr-auto p-2">Servicios en curso</h3>
+                {% if request.user.groups.all.0.name == "Guardia central"  %}
                 <a class="btn btn-danger ml-auto p-2" href="/cargar_servicio"><i class="fa-regular fa-bell"></i> Nuevo servicio</a>
+                {% endif %}
               </div>
               
               <!-- /.card-header -->
@@ -156,7 +160,9 @@
                           <td>{{ servicio.tipo.tipo }}</td>
                           <td>
                             <a href="/modificar_servicio/{{servicio.id}}" class="btn bg-warning"><i class="fa-solid fa-pen-to-square"></i></a>
+                            {% if request.user.groups.all.0.name == "Guardia central"  %}
                             <a href="/finalizar_servicio/{{servicio.id}}" class="btn bg-danger">Finalizar</a>
+                            {% endif %}
                           </td>
                         </tr>
                       {% endif %}

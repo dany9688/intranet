@@ -7,7 +7,8 @@ services:
     restart: always
     env_file: ./.env.dev
     environment:
-      - SESSION_COOKIE_DOMAIN=192.168.0.251
+    #  - SESSION_COOKIE_DOMAIN=localhost
+      - SESSION_COOKIE_DOMAIN=192.168.0.252
     depends_on:
       - db
       - redis

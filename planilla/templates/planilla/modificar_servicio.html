@@ -42,7 +42,7 @@
                                 <label for="">Dirección de la intervención</label>
                                 <div class="row col-md-12">
                                     <input class="form-control col-sm-8" type="text" name="address" id="address" placeholder="Ingrese una dirección" value="{{servicio.direccion}}" required>
-                                    <button class="btn btn-success" onclick="geocodeAddress(event)">Buscar Dirección</button>
+                                    <button id="buscarDireccion" class="btn btn-success" onclick="geocodeAddress(event)">Buscar Dirección</button>
                                 </div>
                             </div>
                             <div class="row col-md-12">
@@ -57,6 +57,10 @@
                             </div>
                             <div class="row col-md-12">
                                 <div class="form-group col-md-3 row mr-3">
+                                    <label for="exampleInputPassword1">Zona</label>
+                                    <input class="form-control" type="text" name="zona" id="zona">
+                                </div>
+                                <div class="form-group col-md-3 row mr-3">
                                 <label for="exampleInputPassword1">Móvil</label>
                                 <select class="form-control" name="movil" id="movil">
                                     <option value="{{ servicio.movil.id }}" selected>Móvil {{ servicio.movil.numero }}</option>
@@ -67,7 +71,7 @@
                                 {% endfor %}
                                 </select>
                                 </div>
-                                <div class="form-group col-md-6 row">
+                                <div class="form-group col-md-4 row">
                                     <label for="exampleInputPassword1">Hora de salida</label>
                                     <input type="datetime-local" class="form-control" name="salida" value="{{ fecha }}" required>
                                 </div>
@@ -92,9 +96,28 @@
                                     </select>
                                 </div>
                             </div>
+                            <div class="row col-md-12">
+                                <div class="form-group col-md-12 row mr-3">
+                                    <label class="mr-4" for="row-count">Selecciona el número de bomberos presentes:</label>
+                                    <select class="form-control col-md-2" id="row-countA">
+                                        <option value="0">0</option>
+                                        <option value="1">1</option>
+                                        <option value="2">2</option>
+                                        <option value="3">3</option>
+                                        <option value="4">4</option>
+                                        <option value="5">5</option>
+                                        <option value="6">6</option>
+                                        <option value="7">7</option>
+                                        <option value="8">8</option>
+                                        <option value="9">9</option>
+                                        <option value="10">10</option>
+                                    </select>
+                                </div>
+                                <div id="fields-presente" class="row col-md-12 wrapper"></div>
+                            </div>
                             <input type="hidden" id="latitude" name="latitude" value="{{servicio.latitud}}">
                             <input type="hidden" id="longitude" name="longitude" value="{{servicio.longitud}}">
-                            <button type='submit' class="btn btn-danger">Modificar intervención</button>
+                            <button type='button' data-toggle="modal" data-target="#checkModal" class="btn btn-danger">Modificar intervención</button>
                         </div>
                         <div class="col-md-6">                   
                             <div class="col-md-12 d-flex justify-content-center mt-3 mb-3">
@@ -108,8 +131,28 @@
             </div>
         </div>
 
+            <!-- Modal de confirmación -->
+            <div class="modal fade" id="checkModal" tabindex="-1" role="dialog" aria-labelledby="checkModalLabel" aria-hidden="true">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="checkModalLabel">Confirmar modificación</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Cerrar">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            ¿Estás seguro de que deseas modificar esta intervención?
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                            <button type="button" class="btn btn-danger" id="confirmarModificacion">Modificar</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-    </div>
+
     </div>
     </div>
 
@@ -118,10 +161,58 @@
 <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDgZ9iDyLaJEwAAYUcuN7MgVWN2alaLd1s&libraries=places"></script>
 
 <script>
+    document.getElementById("confirmarModificacion").addEventListener("click", function() {
+        // Aquí puedes enviar el formulario o hacer la acción deseada
+        document.getElementById("form_servicio").submit(); // Si hay un formulario con id "miFormulario"
+    });
+</script>
+
+
+<script>
+    const rowCountSelectA = document.getElementById("row-countA");
+    const fieldsContainerA = document.getElementById("fields-presente");
+
+    rowCountSelectA.addEventListener("change", function () {
+      const rowCount = parseInt(rowCountSelectA.value, 10);
+
+      // Limpiar el contenedor antes de agregar nuevos campos
+      fieldsContainerA.innerHTML = "";
+
+      // Generar las filas dinámicamente
+      for (let i = 0; i < rowCount; i++) {
+        const row = document.createElement("div");
+        row.className = "form-group row col-md-6";
+
+        // Crear un select
+        const selectLabel = document.createElement("label");
+        selectLabel.innerText = "Bombero"
+        selectLabel.className = "col-sm-4 col-form-label"
+        const select = document.createElement("select");
+        select.name = `presente-${i}`;
+        select.className = "form-control col-8"
+        select.innerHTML = `<option value="Null">Sin bombero</option>
+        {%for bombero in bomberos %}
+        <label>Bombero:</label>
+        <option class="mr-3" value="{{bombero.id}}">{{bombero.jerarquia}} {{bombero.apellido}}, {{bombero.nombre}}</option>
+        {% endfor %}
+        `;
+
+        // Agregar los elementos al contenedor de la fila
+        row.appendChild(selectLabel);
+        row.appendChild(select);
+
+        // Agregar la fila al contenedor principal
+        fieldsContainerA.appendChild(row);
+      }
+    });
+  </script>
+
+<script>
     // Inicializa el mapa y el geocodificador
     var map;
     var geocoder;
     var marker;
+    let zonas = [];
   
     function initMap() {
       // Crear el mapa y centrarlo en una ubicación predeterminada
@@ -137,6 +228,20 @@
         map: map,
       });
   
+       // Cargar zonas desde el archivo JSON (pero sin dibujar en el mapa)
+       fetch("{% static 'planilla/zonas.json' %}")
+            .then(response => response.json())
+            .then(data => {
+                data.features.forEach(feature => {
+                    let zonaCoords = feature.geometry.coordinates[0].map(coord => ({ 
+                        lat: parseFloat(coord[1]), 
+                        lng: parseFloat(coord[0]) 
+                    }));
+                    let zona = new google.maps.Polygon({ paths: zonaCoords }); // Solo se usa para verificar, no se dibuja
+                    zonas.push({ nombre: feature.properties.Name, poligono: zona });
+                });
+            });
+      
       // Crear el servicio de autocompletado
       var input = document.getElementById("address");
       var autocomplete = new google.maps.places.Autocomplete(input);
@@ -165,12 +270,12 @@
     }
 
     function geocodeAddress(event) {
-        event.preventDefault()
-        console.log("Evento cancelado correctamente");
+        if (event) event.preventDefault()
 
         var address = document.getElementById("address").value;
         geocoder.geocode({ 'address': address }, function (results, status) {
             if (status === 'OK') {
+                let location = results[0].geometry.location;
                 map.setCenter(results[0].geometry.location);
                 marker.setPosition(results[0].geometry.location);
                 marker.setVisible(true);
@@ -178,14 +283,39 @@
                 // Guardar latitud y longitud en los inputs ocultos
                 document.getElementById("latitude").value = results[0].geometry.location.lat();
                 document.getElementById("longitude").value = results[0].geometry.location.lng();
+
+            // Verificar en qué zona se encuentra
+            let zonaEncontrada = "Fuera de las zonas definidas";
+                zonas.forEach(zona => {
+                    if (google.maps.geometry.poly.containsLocation(location, zona.poligono)) {
+                        zonaEncontrada = zona.nombre;
+                    }
+                });
+
+                document.getElementById("zona").value = zonaEncontrada;
+                console.log("zona", zonaEncontrada)
             } else {
                 alert('No se pudo encontrar la dirección: ' + status);
             }
+
         });
+
     }
+
     // Cargar el mapa cuando la página esté lista
     google.maps.event.addDomListener(window, "load", initMap);
 
 
   </script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    setTimeout(() => {
+        if (document.getElementById("address").value.trim() !== "") {
+            geocodeAddress(); // Llamar la función automáticamente si hay una dirección en el input
+        }
+    }, 1000); // Pequeño retraso para asegurar que el mapa se haya cargado correctamente
+});
+</script>
+
 {% endblock %}

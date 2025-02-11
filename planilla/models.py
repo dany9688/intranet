@@ -195,6 +195,7 @@ class Servicio(models.Model):
     salida = models.DateTimeField(blank=True, null=True, verbose_name="Horario de salida")
     regreso = models.DateTimeField(blank=True, null=True, verbose_name="Horario de regreso")
     estado = models.CharField(max_length=50, blank=True, null=True, verbose_name="estado")
+    zona = models.CharField(max_length=40, blank=True, null=True)
     encargado = models.ForeignKey(Bombero, blank = True, on_delete=models.SET_NULL, null=True, verbose_name="Encargado")
     def __str__(self):
         return str(self.numero)
@@ -202,6 +203,16 @@ class Servicio(models.Model):
     class Meta:
         verbose_name = "Servicio"
         verbose_name_plural = "Servicios"
+
+class ServicioPresentes(models.Model):
+    servicio = models.ForeignKey(Servicio, blank=True, on_delete=models.SET_NULL, null=True)
+    bombero = models.ForeignKey(Bombero, blank=True, on_delete=models.SET_NULL, null=True)
+    def __str__(self):
+        return str(self.bombero)
+
+    class Meta:
+        verbose_name = "Presente en servicio"
+        verbose_name_plural = "Presentes en servicio"
 
 class Ubicacion(models.Model):
     base = models.ForeignKey(Base, null=True, on_delete=models.SET_NULL, verbose_name="Base")

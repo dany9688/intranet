@@ -59,6 +59,9 @@
                 <div class="callout callout-info">
                   <h5>Dirección</h5>
                   <p>{{servicio.direccion}}</p>
+                  <button class="btn btn-secondary" onclick="iniciarNavegacion(-34.657713, -58.632396); monitorearUbicacion(-34.657713, -58.632396);">
+                    Iniciar Navegación
+                </button>
                 </div>
                 <div class="callout callout-warning">
                   <h5>Número de servicio</h5>
@@ -106,63 +109,10 @@
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.4.1/dist/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/admin-lte@3.1/dist/js/adminlte.min.js"></script>
 
-<script async src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDgZ9iDyLaJEwAAYUcuN7MgVWN2alaLd1s&libraries=places"></script>
-<!-- <script>
-let detalles = document.getElementById("details")
-var options = {
-    enableHighAccuracy: true,
-    timeout: 5000,
-    maximumAge: 0
-  }
-
-  var reqcount = 0
-  navigator.geolocation.watchPosition(successCallback, errorCallback, options)
-
-  function successCallback(position) {
-    const {accuracy, latitude,  longitude, heading, speed } = position.coords
-    reqcount++
-    let speedKmh = speed !== null ? (speed * 3.6).toFixed(2) + "km/h" : "No disponible"
-    console.log("Exactitud:", accuracy, 
-                "Latitud:", latitude, 
-                "Longitud:", longitude, 
-                "Heading:", heading ?? "No disponible", 
-                "Velocidad:", speedKmh);
-   
-    detalles.innerHTML = "Accuracy: " + accuracy + "</br>"
-    detalles.innerHTML += "Latitude: " + latitude + " | Longitude: " + longitude + "</br>"
-    detalles.innerHTML += "Heading: " + heading + "</br>"
-    detalles.innerHTML += "Speed: " + speedKmh + "</br>"
-    detalles.innerHTML += "reqcount: " + reqcount + "</br>"
-
-  }
-  function errorCallback(error){
-    console.error("Error obteniendo la ubicación:", error);
-  }
-
-
-
-  navigator.geolocation.getCurrentPosition(position => {
-    let { latitude, longitude } = position.coords;
-    console.log("lat:", latitude, "long:", longitude);
-
-    // Inicializar el mapa
-    let map = new google.maps.Map(document.getElementById("map"), {
-      center: { lat: latitude, lng: longitude },
-      zoom: 13
-    });
-
-    // Agregar marcador en la ubicación actual
-    let marker = new google.maps.Marker({
-      position: { lat: latitude, lng: longitude },
-      map: map,
-      title: "Ubicación actual"
-    });
-  }, error => {
-    console.error("Error obteniendo la ubicación:", error);
-  });
-</script> -->
+<script async src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDgZ9iDyLaJEwAAYUcuN7MgVWN2alaLd1s&libraries=places,geometry&callback=initMap"></script>
 
 <script>
+  var staticUrl = "{% static '/planilla/images/' %}";
 
   var socket = new WebSocket(`wss://${window.location.host}/ws/location/`);
 
@@ -170,7 +120,6 @@ var options = {
   socket.onerror = (error) => console.log("Error en WebSocket:", error);
   socket.onmessage = (event) => console.log("Mensaje recibido:", event.data);
   socket.onclose = () => console.log("WebSocket cerrado");
-
 
   let detalle = document.getElementById("details")
   // Cuando se conecta
@@ -198,94 +147,173 @@ var options = {
       updateMap(lat, lng);
   };
 
-  // Enviar ubicación al servidor cada vez que cambie
-  navigator.geolocation.watchPosition(function(position) {
-      const { latitude, longitude, heading, speed } = position.coords;
+var map;
+var currentMarker; // Guardará el marcador de la posición actual
+var markers = []
 
-      // Enviar al WebSocket
-      socket.send(JSON.stringify({
-          'latitude': latitude,
-          'longitude': longitude,
-          'speed': speed,
-          'heading': heading,
-      }));
-  });
+function initMap() {
+    console.log(typeof initMap);
+    map = new google.maps.Map(document.getElementById("map"), {
+        center: { lat: -34.657713, lng: -58.632396 }, // Centro inicial
+        zoom: 13
+    });
 
-  let movil = document.getElementById('movil').innerText
-  console.log('movil: ' , movil)
+    currentMarker = new google.maps.Marker({
+        map: map,
+        title: "Ubicación actual",
+        icon: {
+            url: "https://maps.google.com/mapfiles/ms/icons/blue-dot.png", // Icono personalizado para diferenciar ubicación
+            scaledSize: new google.maps.Size(40, 40)
+        }
+    });
 
-  function cargarServicios() {
+    cargarServicios(); // Cargar los servicios al iniciar
+}
+
+// WebSocket para actualizar la ubicación en tiempo real
+navigator.geolocation.watchPosition(function(position) {
+    const { latitude, longitude, heading, speed } = position.coords;
+    updateMap(latitude, longitude);
+    
+    // Enviar ubicación al WebSocket
+    socket.send(JSON.stringify({
+        'latitude': latitude,
+        'longitude': longitude,
+        'speed': speed,
+        'heading': heading,
+    }));
+});
+
+function updateMap(lat, lng) {
+    if (!map) return; // Evita errores si `map` no está inicializado
+    map.setCenter(new google.maps.LatLng(lat, lng));
+    currentMarker.setPosition(new google.maps.LatLng(lat, lng));
+    cargarServicios()
+}
+
+let movil = document.getElementById('movil').textContent
+console.log(movil)
+function cargarServicios() {
     fetch("/servicio_movil/"+movil)
-        .then(response => {
-            if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
-            return response.json();
-        })
+        .then(response => response.json())
         .then(data => {
-          console.log('data: ', data)
             let servicios = data.servicios;
-            let moviles = data.moviles;
-            let tipomovil = data.tipomovil
-            let tiposervicio = data.tiposervicio
+            let tiposervicio = data.tiposervicio;
+
+            if (!Array.isArray(servicios)) {
+                console.error("⚠️ Error: 'servicios' no es un array.");
+                return;
+            }
 
             servicios.forEach(servicio => {
-                let latitud = parseFloat(servicio.latitud);  // 🔍 Asegurar que sea número
+                let latitud = parseFloat(servicio.latitud);
                 let longitud = parseFloat(servicio.longitud);
-
                 if (isNaN(latitud) || isNaN(longitud)) {
-                    console.error(`⚠️ Servicio con datos inválidos: `, servicio);
-                    return; // 🔴 Si lat/lng no son números, no crea el marcador
+                    console.warn(`⚠️ Servicio con coordenadas inválidas:`, servicio);
+                    return;
                 }
 
                 let idServicio = `${servicio.direccion}-${latitud}-${longitud}`;
-
                 if (!markers[idServicio]) {
-                    let serviciotipo = tiposervicio.find(tipo => servicio.tipo === tipo.id)
-                    console.log("tipo servicio: ", servicio)
-                    let icono = servicio ? {
-                        url: staticUrl +serviciotipo + ".png",
-                        scaledSize: new google.maps.Size(35, 30),
+                    let serviciotipo = tiposervicio.find(t => t.id === servicio.tipo);
+                    let icono = {
+                        url: staticUrl + (serviciotipo ? serviciotipo.tipo : "default") + ".png",
+                        scaledSize: new google.maps.Size(40, 40),
                         origin: new google.maps.Point(0, 0),
                         anchor: new google.maps.Point(10, 10)
-                    } : null;
+                    };
 
                     let marker = new google.maps.Marker({
                         position: { lat: latitud, lng: longitud },
                         map: map,
                         icon: icono,
-                        title: servicio ? serviciotipo : "Móvil Desconocido"
+                        title: `${servicio.direccion}`
                     });
 
                     let infowindow = new google.maps.InfoWindow({
-                        content: `<strong>${servicio.direccion}</strong><br><strong>${serviciotipo.tipo}</strong>`
+                        content: `<strong>${servicio.direccion}</strong><br><strong>${serviciotipo ? serviciotipo.tipo : "Desconocido"}</strong>`
                     });
 
                     marker.addListener("click", function () {
                         infowindow.open(map, marker);
                     });
 
-
                     markers[idServicio] = marker;
                 }
             });
 
+            // Dibujar una línea desde la posición actual al servicio
+            // trazarRuta();
         })
-        .catch(error => console.error("Error al obtener los servicios:", error));      
+        .catch(error => console.error("Error al obtener los servicios:", error));
 }
 
-  function updateMap(lat, lng) {
-      var map = new google.maps.Map(document.getElementById("map"), {
-          center: { lat: lat, lng: lng },
-          zoom: 13
-      });
+// 🔹 Función para trazar una ruta desde la posición actual hasta el primer servicio disponible
+function trazarRuta() {
+    let servicioKeys = Object.keys(markers);
+    if (servicioKeys.length === 0 || !currentMarker.getPosition()) return;
 
-      var marker = new google.maps.Marker({
-          position: { lat: lat, lng: lng },
-          map: map,
-          title: "Ubicación actual"
-      });
-  }
+    let directionsService = new google.maps.DirectionsService();
+    let directionsRenderer = new google.maps.DirectionsRenderer({
+      suppressMarkers: true,
+      map: map
+     });
 
-  cargarServicios()
+    let destino = markers[servicioKeys[0]].getPosition(); // Tomar el primer servicio
+
+    let request = {
+        origin: currentMarker.getPosition(),
+        destination: destino,
+        travelMode: google.maps.TravelMode.DRIVING
+    };
+
+    directionsService.route(request, function(result, status) {
+        if (status == google.maps.DirectionsStatus.OK) {
+            directionsRenderer.setDirections(result);
+        } else {
+            console.error("Error al calcular ruta:", status);
+        }
+    });
+}
+
+function iniciarNavegacion(lat, lng) {
+    // URL para abrir Google Maps en modo conducción
+    let url = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=driving`;
+    
+    // Abrir en una nueva ventana o en la app de Google Maps
+    window.location.href = url;
+}
+
+function monitorearUbicacion(destLat, destLng) {
+    let threshold = 0.0005; // Margen de error (~50m)
+    
+    navigator.geolocation.watchPosition(position => {
+        let { latitude, longitude } = position.coords;
+        let distancia = getDistance(latitude, longitude, destLat, destLng);
+
+        console.log(`Distancia al destino: ${distancia} metros`);
+
+        if (distancia < 50) { // Si está a menos de 50 metros
+            alert("🚗 Llegaste a tu destino.");
+            // Aquí podrías hacer algo más, como mostrar un mensaje en tu app
+        }
+    });
+}
+
+// Función para calcular la distancia en metros entre dos coordenadas
+function getDistance(lat1, lon1, lat2, lon2) {
+    const R = 6371000; // Radio de la Tierra en metros
+    const dLat = (lat2 - lat1) * (Math.PI / 180);
+    const dLon = (lon2 - lon1) * (Math.PI / 180);
+    
+    const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+              Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * (Math.PI / 180)) *
+              Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    
+    return R * c; // Distancia en metros
+}
+
 
 </script>
 </body>

@@ -42,7 +42,7 @@
         <!-- Main Sidebar Container -->
         <aside class="main-sidebar sidebar-dark-primary elevation-4">
             <!-- Brand Logo -->
-            <a style="cursor: default;" href="/" class="brand-link mb-2">
+            <a style="cursor: default;" href="" class="brand-link mb-2">
             <img src="{% static '/planilla/logo.png' %}" alt="AdminLTE Logo" class="brand-image img-circle" style="opacity: .9; max-height: 45px">
             <span class="brand-text font-weight-light">Intranet - BVM</span>
             </a>
@@ -116,6 +116,17 @@
                         </li>
                         </ul>
                     </li> -->
+                    {% if request.user.groups.all.0.name == "Guardia central"  %}
+                    <li class="nav-header">GUARDIA</li>
+                    <li class="nav-item">
+                        <a href="/guardia" class="nav-link">
+                            <i class="nav-icon fa-solid fa-display"></i>
+                        <p>
+                            Panel de guardia
+                        </p>
+                        </a>
+                    </li>
+                    {% elif request.user.groups.all.0.name == "Guardia destacamento" %}
                     <li class="nav-header">GUARDIA</li>
                     <li class="nav-item">
                         <a href="/guardia" class="nav-link">
@@ -149,6 +160,8 @@
                         </p>
                         </a>
                     </li>
+                    {% endif %}
+                    {% if request.user.groups.all.0.name not in "Guardia central,Guardia destacamento" %}
                     <li class="nav-header">NOVEDADES</li>
                     <li class="nav-item">
                         <a href="#" class="nav-link">
@@ -187,6 +200,7 @@
                         </li>
                         </ul>
                     </li>
+                    {% endif %}
                     <li class="nav-item">
                         <a href="#" class="nav-link">
                         <i class="far fa-circle nav-icon"></i>

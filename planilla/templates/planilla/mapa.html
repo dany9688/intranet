@@ -147,8 +147,8 @@
                 var icon = feature.getProperty("icon") || "Sin descripción";
 
                 let icono = {
-                    url: "{% static 'planilla/images/icon-3.png' %}", // url
-                    scaledSize: new google.maps.Size(15, 22), // scaled size
+                    url: "{% static 'planilla/images/hidrante.png' %}", // url
+                    scaledSize: new google.maps.Size(40, 40), // scaled size
                     origin: new google.maps.Point(0,0), // origin
                     anchor: new google.maps.Point(0, 22) // anchor
                 };
@@ -273,10 +273,10 @@ function cargarServicios() {
                     let movilEncontrado = moviles.find(movil => movil.id === servicio.movil);
                     console.log(movilEncontrado.IDTipo)
                     let moviltipo = tipomovil.find(tipo => movilEncontrado.IDTipo === tipo.id)
-                    let serviciotipo = tiposervicio.find(tipo => servicio.tipo === tipo.id)
+                    let serviciotipo = tiposervicio.find(t => t.id === servicio.tipo);
                     let icono = movilEncontrado ? {
-                        url: staticUrl + moviltipo.tipo + ".png",
-                        scaledSize: new google.maps.Size(35, 30),
+                        url: staticUrl + (serviciotipo ? serviciotipo.tipo : "default") + ".png",
+                        scaledSize: new google.maps.Size(40, 40),
                         origin: new google.maps.Point(0, 0),
                         anchor: new google.maps.Point(10, 10)
                     } : null;

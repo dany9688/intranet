@@ -26,13 +26,32 @@ def index(request):
     if grupo_usuario == "Móviles":
         movil = int(request.user.last_name.strip())
         movil = Movil.objects.get(numero=movil)
-        servicio = Servicio.objects.filter(estado='En curso', movil_id=movil.id)
+        servicio = Servicio.objects.filter(estado='En curso', movil_id=movil.id).first()
         print(servicio)
         context ={
             "servicio" : servicio,
             "movil": movil,
         }
         return render (request, 'planilla/mobile.html', context)
+    elif grupo_usuario == "Guardia central":
+        servicios = Servicio.objects.all()
+        base = Base.objects.all().order_by('id')
+        moviles = Movil.objects.all()
+        cuentas = Base.objects.annotate(
+            en_servicio=Count('movil', filter=Q(movil__IDEstado=1)),
+            condicional=Count('movil', filter=Q(movil__IDEstado=2)),
+            ocupados=Count('movil', filter=Q(movil__IDEstado=4)),
+            fuera_servicio=Count('movil', filter=Q(movil__IDEstado=3))
+        )
+
+        context = {
+            'servicios': servicios,
+            'base': base,
+            'moviles': moviles,
+            'cuentas': cuentas
+        }
+
+        return render (request, 'planilla/guardia.html', context)
     else:
         hace_10_dias = timezone.now() - timedelta(days=10)
         bases = Base.objects.all().order_by('id')
@@ -369,6 +388,7 @@ class ModificarServicio(View):
         print('latitud', request.POST['latitude'])
         print('longitud', request.POST['longitude'])
         anterior.estado="En curso"
+        anterior.zona = request.POST['zona']
         anterior.numero = request.POST['numero']
         anterior.movil_id = int(request.POST['movil'])
         anterior.salida = request.POST['salida']
@@ -377,6 +397,33 @@ class ModificarServicio(View):
         anterior.encargado.id = int(request.POST['encargado'])
 
         anterior.save()
+
+        data = request.POST
+        resultadopresente = {}
+        index = 0
+        while True:
+            presente_key = f"presente-{index}"
+            
+            if presente_key in data:
+                # Agregar al diccionario organizado
+                resultadopresente[index] = {
+                    "bombero_id": int(data[presente_key])
+                }
+                index += 1
+            else:
+                # Salir del bucle si no hay más claves
+                break
+
+        print("presente: ", resultadopresente)
+        if resultadopresente:
+            for presente in resultadopresente.values():
+                presente_guardia = ServicioPresentes.objects.create(
+                    servicio_id=anterior.id, 
+                    bombero_id=presente["bombero_id"]
+                )
+                print(presente_guardia)
+            presente_guardia.save()
+
         return redirect ('guardia')
     
 def obtener_servicios(request):
