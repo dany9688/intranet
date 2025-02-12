@@ -97,33 +97,60 @@
                                 </div>
                             </div>
                             <div class="row col-md-12">
-                                <div class="form-group col-md-12 row mr-3">
-                                    <label class="mr-4" for="row-count">Selecciona el número de bomberos presentes:</label>
-                                    <select class="form-control col-md-2" id="row-countA">
-                                        <option value="0">0</option>
-                                        <option value="1">1</option>
-                                        <option value="2">2</option>
-                                        <option value="3">3</option>
-                                        <option value="4">4</option>
-                                        <option value="5">5</option>
-                                        <option value="6">6</option>
-                                        <option value="7">7</option>
-                                        <option value="8">8</option>
-                                        <option value="9">9</option>
-                                        <option value="10">10</option>
-                                    </select>
+                                {% if presentes %}
+                                <label for="">Bomberos que salieron en el móvil {{servicio.movil.numero}}:</label>
+                                <table class="table table-bordered nowrap mb-2">
+                                    <thead>
+                                      <tr>
+                                        <th>Bombero</th>
+                                        <th>Acciones</th>
+                                      </tr>
+                                    </thead>
+                                    <tbody>
+                                      {% for presente in presentes %}
+                                      {% if not presente.encargado == True %}
+                                          <tr id="presente-{{ presente.id }}">
+                                            <td>{{presente.bombero}}</td>
+                                            <td>
+                                                <button class="btn btn-danger eliminar-btn" data-id="{{ presente.id }}">Eliminar</button>
+                                            </td>
+                                          </tr>
+                                        {% endif %}
+                                      {% endfor %}
+                                    </tbody>
+                                  </table>
+                                {% endif %}
+                                <div class="row">
+                                    <div class="form-group col-md-12">
+                                        <label for="row-count">Selecciona el número de bomberos que deseas agregar:</label>
+                                        <select class="form-control col-md-3" id="row-countA">
+                                          <option value="0">0</option>
+                                          <option value="1">1</option>
+                                          <option value="2">2</option>
+                                          <option value="3">3</option>
+                                          <option value="4">4</option>
+                                          <option value="5">5</option>
+                                          <option value="6">6</option>
+                                          <option value="7">7</option>
+                                          <option value="8">8</option>
+                                        </select>
+                                    </div>
+                                
+                                    <div id="fields-presente" class="row col-md-12 wrapper"></div>
                                 </div>
-                                <div id="fields-presente" class="row col-md-12 wrapper"></div>
                             </div>
                             <input type="hidden" id="latitude" name="latitude" value="{{servicio.latitud}}">
                             <input type="hidden" id="longitude" name="longitude" value="{{servicio.longitud}}">
-                            <button type='button' data-toggle="modal" data-target="#checkModal" class="btn btn-danger">Modificar intervención</button>
+                            
                         </div>
                         <div class="col-md-6">                   
                             <div class="col-md-12 d-flex justify-content-center mt-3 mb-3">
                                 <div id="map" style="height: 500px; width: 900px;"></div>
                             </div>
                         </div>
+                    </div>
+                    <div class="row col-md-12 d-flex justify-content-end">
+                        <button type='button' data-toggle="modal" data-target="#checkModal" class="btn btn-danger">Modificar intervención</button>
                     </div>
                     </form>
                     </div>
@@ -167,6 +194,28 @@
     });
 </script>
 
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+      document.querySelectorAll(".eliminar-btn").forEach(button => {
+        button.addEventListener("click", function (event) {
+        event.preventDefault(); // Evita el envío del formulario si está dentro de uno
+          let presenteId = this.getAttribute("data-id");
+  
+          fetch(`/eliminarpresenteservicio/${presenteId}/`, {
+            method: "DELETE",
+            headers: {
+              "X-CSRFToken": "{{ csrf_token }}"  // Asegurar la protección CSRF
+            }
+          }).then(response => {
+            console.log(response)
+            if (response.ok) {
+              document.getElementById(`presente-${presenteId}`).remove();
+            }
+          }).catch(error => console.error("Error:", error));
+        });
+      });
+    });
+  </script>
 
 <script>
     const rowCountSelectA = document.getElementById("row-countA");
@@ -190,7 +239,7 @@
         const select = document.createElement("select");
         select.name = `presente-${i}`;
         select.className = "form-control col-8"
-        select.innerHTML = `<option value="Null">Sin bombero</option>
+        select.innerHTML = `
         {%for bombero in bomberos %}
         <label>Bombero:</label>
         <option class="mr-3" value="{{bombero.id}}">{{bombero.jerarquia}} {{bombero.apellido}}, {{bombero.nombre}}</option>

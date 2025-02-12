@@ -29,7 +29,7 @@ SECRET_KEY = os.environ.get("SECRET_KEY")
 # DEBUG = bool(os.environ.get("DEBUG", default=1))
 DEBUG = bool(int(os.environ.get("DEBUG", 1)))
 
-SESSION_COOKIE_DOMAIN = "192.168.0.252"
+# SESSION_COOKIE_DOMAIN = "192.168.0.252"
 SESSION_COOKIE_NAME = "sessionid"
 SESSION_COOKIE_SAMESITE = None  # Asegura compatibilidad
 SESSION_COOKIE_SECURE = True  # Si usas HTTPS
@@ -45,8 +45,8 @@ SECURE_SSL_REDIRECT = True
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 CSRF_COOKIE_SECURE = False
 
-ALLOWED_HOSTS = ['*']
-CSRF_TRUSTED_ORIGINS = ['https://192.168.0.252', 'https://localhost', 'https://192.168.0.130']
+ALLOWED_HOSTS = ['*', 'https://6cbf-2800-810-54d-ad3-57c-d1e6-635d-60a5.ngrok-free.app/']
+CSRF_TRUSTED_ORIGINS = ['https://192.168.0.252', 'https://localhost', 'https://192.168.0.130', 'https://6cbf-2800-810-54d-ad3-57c-d1e6-635d-60a5.ngrok-free.app/']
 
 # Application definition
 

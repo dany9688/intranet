@@ -186,7 +186,7 @@ class GuardiaRefuerzos(models.Model):
 
 class Servicio(models.Model):
     guardia_operativa = models.IntegerField(blank=True, null=True, verbose_name="Número") #cambiar a foreignkey
-    numero = models.IntegerField(blank=True, null=True, verbose_name="Número", unique=True)
+    numero = models.IntegerField(blank=True, null=True, verbose_name="Número")
     direccion = models.CharField(max_length=200, blank=True, null=True, verbose_name="direccion")
     latitud = models.CharField(max_length=200, blank=True, null=True, verbose_name="latitud")
     longitud = models.CharField(max_length=200, blank=True, null=True, verbose_name="longitud")

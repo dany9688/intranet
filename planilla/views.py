@@ -1,6 +1,4 @@
 from django.shortcuts import get_object_or_404, render, redirect
-from django.conf import settings
-from django.http import HttpResponse
 from .models import *
 from django.views import generic, View
 from django.contrib.auth import login, authenticate, logout
@@ -37,20 +35,20 @@ def index(request):
         servicios = Servicio.objects.all()
         base = Base.objects.all().order_by('id')
         moviles = Movil.objects.all()
+        presentes = ServicioPresentes.objects.all()
         cuentas = Base.objects.annotate(
             en_servicio=Count('movil', filter=Q(movil__IDEstado=1)),
             condicional=Count('movil', filter=Q(movil__IDEstado=2)),
             ocupados=Count('movil', filter=Q(movil__IDEstado=4)),
             fuera_servicio=Count('movil', filter=Q(movil__IDEstado=3))
         )
-
         context = {
             'servicios': servicios,
             'base': base,
             'moviles': moviles,
-            'cuentas': cuentas
+            'cuentas': cuentas,
+            'presentes': presentes
         }
-
         return render (request, 'planilla/guardia.html', context)
     else:
         hace_10_dias = timezone.now() - timedelta(days=10)
@@ -67,7 +65,6 @@ def index(request):
             "group": grupo_usuario,
             "servicios": servicios,
             }
-
         return render (request, 'planilla/index.html', context)
 
 def mapa(request):
@@ -285,7 +282,7 @@ class ServicioView(generic.ListView):
 
 class CargarServicio(View):
     def get(self, request):
-        moviles = Movil.objects.filter(IDBase__estado="Cubriendo zona").order_by('numero')
+        moviles = Movil.objects.all().order_by('numero')
         bomberos = Bombero.objects.all()
         tipo_servicios = TipoServicio.objects.all()
 
@@ -347,14 +344,20 @@ class ModificarServicio(View):
     def get(self, request, id):
         servicio = Servicio.objects.get(id=id)
         print('servicio', servicio)
-        moviles = Movil.objects.filter(IDBase__estado="Cubriendo zona").order_by('numero')
+        moviles = Movil.objects.all().order_by('numero')
         bomberos = Bombero.objects.all()
         tipo_servicios = TipoServicio.objects.all()
         fecha_formateada = servicio.salida.strftime("%Y-%m-%dT%H:%M") if servicio.salida else ""
-
-        print(fecha_formateada)
-
-        return render (request, 'planilla/modificar_servicio.html', {'fecha': fecha_formateada, 'moviles': moviles, 'bomberos': bomberos, 'tipo_servicios': tipo_servicios, 'servicio': servicio})
+        presentes = ServicioPresentes.objects.filter(servicio=id)
+        context = {
+            'fecha': fecha_formateada,
+            'moviles': moviles,
+            'bomberos': bomberos,
+            'tipo_servicios': tipo_servicios,
+            'servicio': servicio,
+            'presentes': presentes
+        }
+        return render (request, 'planilla/modificar_servicio.html', context)
     
     def post(self, request, id):
         print("entro a post")
@@ -892,6 +895,14 @@ def ingresos(request, id):
 def eliminar_presente(request, presente_id):
     if request.method == "DELETE":
         presente = GuardiaPresentes.objects.get(id=presente_id)
+        presente.delete()
+        return JsonResponse({"success": True})
+    return JsonResponse({"error": "Método no permitido"}, status=405)
+
+def eliminarpresenteservicio(request, presente_id):
+    if request.method == "DELETE":
+        print("paso por delete")
+        presente = ServicioPresentes.objects.get(id=presente_id)
         presente.delete()
         return JsonResponse({"success": True})
     return JsonResponse({"error": "Método no permitido"}, status=405)

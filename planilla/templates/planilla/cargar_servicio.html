@@ -72,7 +72,7 @@
                                     </div>
                                 <div class="form-group col-md-4 row">
                                     <label for="exampleInputPassword1">Hora de salida</label>
-                                    <input type="datetime-local" class="form-control" id="horasalida" name="salida" min="0" required>
+                                    <input type="datetime-local" class="form-control" id="horasalida" name="salida" required>
                                 </div>
                             </div>
                             <div class="row col-md-12">
@@ -117,6 +117,25 @@
 {% endblock %}
 {% block js_block %}
 <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDgZ9iDyLaJEwAAYUcuN7MgVWN2alaLd1s&libraries=places"></script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        let input = document.getElementById("horasalida");
+
+        // Obtener la fecha y hora actual en formato compatible con datetime-local
+        let now = new Date();
+        let year = now.getFullYear();
+        let month = String(now.getMonth() + 1).padStart(2, "0");
+        let day = String(now.getDate()).padStart(2, "0");
+        let hours = String(now.getHours()).padStart(2, "0");
+        let minutes = String(now.getMinutes()).padStart(2, "0");
+
+        let maxDateTime = `${year}-${month}-${day}T${hours}:${minutes}`;
+        
+        // Establecer el atributo max
+        input.setAttribute("max", maxDateTime);
+    });
+</script>
 
 <script>
     // Inicializa el mapa y el geocodificador

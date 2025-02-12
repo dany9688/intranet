@@ -136,6 +136,16 @@
                         </p>
                         </a>
                     </li>
+                    {% elif request.user.groups.all.0.name in "Destacamento N°1,Destacamento N°2, Cuartel Central" %}
+                    <li class="nav-item">
+                        <a href="/" class="nav-link">
+                        <i class="nav-icon fa-solid fa-people-group"></i>
+                        <p>
+                            Panel de encargado
+                        </p>
+                        </a>
+                    </li>
+                    {% endif %}
                     <li class="nav-item">
                         <a href="/personal" class="nav-link">
                         <i class="nav-icon fa-solid fa-people-group"></i>
@@ -160,7 +170,6 @@
                         </p>
                         </a>
                     </li>
-                    {% endif %}
                     {% if request.user.groups.all.0.name not in "Guardia central,Guardia destacamento" %}
                     <li class="nav-header">NOVEDADES</li>
                     <li class="nav-item">
