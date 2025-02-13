@@ -11,7 +11,7 @@ from django.http import JsonResponse
 import json
 from django.middleware.csrf import get_token
 from django.templatetags.static import static
-from django.db.models import Sum, Count, Q
+from django.db.models import Sum, Count, Q, Prefetch
 import logging
 # Configuración de logging
 logger = logging.getLogger(__name__)
@@ -32,10 +32,17 @@ def index(request):
         }
         return render (request, 'planilla/mobile.html', context)
     elif grupo_usuario == "Guardia central":
-        servicios = Servicio.objects.all()
         base = Base.objects.all().order_by('id')
         moviles = Movil.objects.all()
-        presentes = ServicioPresentes.objects.all()
+        # Obtener los servicios "En curso"
+        servicios_en_curso = Servicio.objects.filter(estado="En curso").prefetch_related(
+            Prefetch(
+                    "moviles_asignados",
+                    queryset=ServicioMovil.objects.select_related("movil").prefetch_related("bomberos"),
+                    to_attr="moviles_list"
+                )
+            )
+        print(servicios_en_curso)
         cuentas = Base.objects.annotate(
             en_servicio=Count('movil', filter=Q(movil__IDEstado=1)),
             condicional=Count('movil', filter=Q(movil__IDEstado=2)),
@@ -47,7 +54,7 @@ def index(request):
             'base': base,
             'moviles': moviles,
             'cuentas': cuentas,
-            'presentes': presentes
+            'servicios': servicios_en_curso
         }
         return render (request, 'planilla/guardia.html', context)
     else:
@@ -305,6 +312,8 @@ class CargarServicio(View):
         salida = request.POST.get("salida")
         tipo_servicio_id = request.POST.get("tiposervicio")
         encargado_id = request.POST.get("encargado")
+        nombre = request.POST.get("denunciante")
+        telefono = request.POST.get("telefono")
 
         # Validar datos requeridos
         if not (movil_id and guardia and address and latitude and longitude and numero and salida and tipo_servicio_id and encargado_id):
@@ -329,7 +338,9 @@ class CargarServicio(View):
                 movil=movil,
                 salida=salida,
                 tipo_id=tipo_servicio_id,
-                encargado_id=encargado_id
+                encargado_id=encargado_id,
+                nombre_denunciante=nombre,
+                telefono_denunciante=telefono,
             )
             servicios.save()
 
@@ -398,7 +409,8 @@ class ModificarServicio(View):
         anterior.tipo_id = int(request.POST['tiposervicio'])
         print(anterior.tipo.id)
         anterior.encargado.id = int(request.POST['encargado'])
-
+        anterior.nombre_denunciante = request.POST['denunciante']
+        anterior.telefono_denunciante = request.POST['telefono']
         anterior.save()
 
         data = request.POST

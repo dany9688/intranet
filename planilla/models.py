@@ -185,18 +185,20 @@ class GuardiaRefuerzos(models.Model):
         verbose_name_plural = "Refuerzos"
 
 class Servicio(models.Model):
-    guardia_operativa = models.IntegerField(blank=True, null=True, verbose_name="Número") #cambiar a foreignkey
-    numero = models.IntegerField(blank=True, null=True, verbose_name="Número")
+    guardia_operativa = models.IntegerField(blank=True, null=True, verbose_name="guardia operativa") #cambiar a foreignkey
+    numero = models.IntegerField(blank=True, null=True, verbose_name="número")
     direccion = models.CharField(max_length=200, blank=True, null=True, verbose_name="direccion")
     latitud = models.CharField(max_length=200, blank=True, null=True, verbose_name="latitud")
     longitud = models.CharField(max_length=200, blank=True, null=True, verbose_name="longitud")
-    movil = models.ForeignKey(Movil, blank=True, null=True, on_delete=models.SET_NULL, verbose_name="Móvil")
-    tipo = models.ForeignKey(TipoServicio, null=True, on_delete=models.SET_NULL, verbose_name="Tipo de servicio")
-    salida = models.DateTimeField(blank=True, null=True, verbose_name="Horario de salida")
-    regreso = models.DateTimeField(blank=True, null=True, verbose_name="Horario de regreso")
+    # movil = models.ForeignKey(Movil, blank=True, null=True, on_delete=models.SET_NULL, verbose_name="móvil")
+    tipo = models.ForeignKey(TipoServicio, null=True, on_delete=models.SET_NULL, verbose_name="tipo de servicio", related_name="servicios")
+    salida = models.DateTimeField(blank=True, null=True, verbose_name="horario de salida")
+    regreso = models.DateTimeField(blank=True, null=True, verbose_name="horario de regreso")
     estado = models.CharField(max_length=50, blank=True, null=True, verbose_name="estado")
     zona = models.CharField(max_length=40, blank=True, null=True)
-    encargado = models.ForeignKey(Bombero, blank = True, on_delete=models.SET_NULL, null=True, verbose_name="Encargado")
+    encargado = models.ForeignKey(Bombero, blank = True, on_delete=models.SET_NULL, null=True, verbose_name="ncargado")
+    nombre_denunciante = models.CharField(max_length=150, null=True, blank=True, verbose_name="denunciante")
+    telefono_denunciante = models.CharField(max_length=150, null=True, blank=True, verbose_name="telefono")
     def __str__(self):
         return str(self.numero)
 
@@ -204,11 +206,12 @@ class Servicio(models.Model):
         verbose_name = "Servicio"
         verbose_name_plural = "Servicios"
 
-class ServicioPresentes(models.Model):
-    servicio = models.ForeignKey(Servicio, blank=True, on_delete=models.SET_NULL, null=True)
-    bombero = models.ForeignKey(Bombero, blank=True, on_delete=models.SET_NULL, null=True)
+class ServicioMovil(models.Model):
+    servicio = models.ForeignKey(Servicio, blank=True, on_delete=models.SET_NULL, null=True, related_name="moviles_asignados")
+    movil = models.ForeignKey(Movil, on_delete=models.CASCADE)
+    bomberos = models.ManyToManyField(Bombero, blank=True)
     def __str__(self):
-        return str(self.bombero)
+        return f"{self.servicio.numero} - {self.movil.nombre}"
 
     class Meta:
         verbose_name = "Presente en servicio"

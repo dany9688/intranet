@@ -1,8 +1,8 @@
 {% extends 'planilla/base.html' %}
 {% load static %}
 {% block css_block %}
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <!-- Bootstrap4 Duallistbox -->
+  <link rel="stylesheet" href="{% static 'planilla/bootstrap-duallistbox.min.css' %}">
 <style>
   #map {
       height: 500px;
@@ -60,7 +60,7 @@
                                     <label for="exampleInputPassword1">Zona</label>
                                     <input class="form-control" type="text" name="zona" id="zona">
                                 </div>
-                                <div class="form-group col-md-3 row mr-3">
+                                <!-- <div class="form-group col-md-3 row mr-3">
                                     <label for="exampleInputPassword1">Móvil</label>
                                     <select class="form-control" name="movil" id="movil">
                                     {% for movil in moviles %}
@@ -69,7 +69,7 @@
                                     {%endif%}
                                     {% endfor %}
                                     </select>
-                                    </div>
+                                    </div> -->
                                 <div class="form-group col-md-4 row">
                                     <label for="exampleInputPassword1">Hora de salida</label>
                                     <input type="datetime-local" class="form-control" id="horasalida" name="salida" required>
@@ -93,6 +93,55 @@
                                     </select>
                                 </div>
                             </div>
+                            <div class="row col-md-12">
+                                <div class="form-group col-md-6 row mr-3">
+                                    <label for="exampleInputPassword1">Denunciante</label>
+                                    <input class="form-control" type="text" name="denunciante">
+                                </div>
+                                <div class="form-group col-md-4 row mr-3">
+                                    <label for="exampleInputPassword1">Teléfono del denunciante</label>
+                                    <input class="form-control" type="text" name="telefono">
+                                </div>
+                            </div>
+                            <div class="row col-md-12">
+                                <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#modalAsignarMovil">
+                                    Agregar Móvil
+                                </button>
+                            </div>
+
+                                                        <!-- Modal -->
+                            <div class="modal fade" id="modalAsignarMovil" tabindex="-1" role="dialog">
+                                <div class="modal-dialog modal-xl" role="document">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title">Asignar Móvil y Bomberos</h5>
+                                            <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <label for="movilSelect">Móvil:</label>
+                                            <select id="movilSelect" class="form-control">
+                                                {% for movil in moviles %}
+                                                <option value="{{movil.id}}">Móvil {{movil.numero}}</option>
+                                                {%endfor%}
+                                            </select>
+
+                                            <label for="bomberosSelect">Bomberos:</label>
+                                            <select id="bomberosSelect" class="form-control duallistbox" multiple style="height: 500px;">
+                                                {% for bombero in bomberos %}
+                                                <option value="{{bombero.id}}">{{bombero.IDJerarquia.jerarquia}} - {{bombero.apellido|upper}}, {{bombero.nombre}}</option>
+                                                {%endfor%}
+                                            </select>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-success" id="asignarMovil">Asignar</button>
+                                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div id="movilesAsignados"></div>
+
                             <input type="hidden" id="latitude" name="latitude">
                             <input type="hidden" id="longitude" name="longitude">
                             <button type='submit' class="btn btn-danger">Iniciar intervención</button>
@@ -117,6 +166,32 @@
 {% endblock %}
 {% block js_block %}
 <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDgZ9iDyLaJEwAAYUcuN7MgVWN2alaLd1s&libraries=places"></script>
+<script src="{% static 'planilla/jquery.bootstrap-duallistbox.js' %}"></script>
+<script>
+    $(function () {
+    //Bootstrap Duallistbox
+    $('.duallistbox').bootstrapDualListbox()
+    })
+</script>
+
+<script>
+document.getElementById("asignarMovil").addEventListener("click", function() {
+    let movil = document.getElementById("movilSelect");
+    let bomberos = document.getElementById("bomberosSelect");
+    let seleccionados = Array.from(bomberos.selectedOptions).map(option => option.text).join(", ");
+    
+    let div = document.createElement("div");
+    div.innerHTML = `<strong>${movil.options[movil.selectedIndex].text}:</strong> ${seleccionados}`;
+    document.getElementById("movilesAsignados").appendChild(div);
+    
+        // Limpiar selección de bomberos
+        bomberos.selectedIndex = -1;
+    
+    // Cerrar el modal correctamente
+    $('#modalAsignarMovil').modal('hide');
+});
+</script>
+
 
 <script>
     document.addEventListener("DOMContentLoaded", function () {
