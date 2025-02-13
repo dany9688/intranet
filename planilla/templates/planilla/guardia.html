@@ -1,6 +1,10 @@
 {% extends 'planilla/base.html' %}
 {% load static %}
 {% block title %}Guardia{% endblock title %}
+{% block css_block %}
+<!-- Bootstrap 5 -->
+<link rel="stylesheet" href="{% static 'planilla/bootstrap-duallistbox.min.css' %}">
+{% endblock %}
 {% block content %}
     <!-- Content Wrapper. Contains page content -->
     <div class="content-wrapper">
@@ -146,7 +150,7 @@
                     {% endif %}
                     <div class="card-header">
                       <h4 class="card-title w-100">
-                        <a class="d-block w-100" data-toggle="collapse" href="#collapse{{ servicio.numero }}">
+                        <a class="d-block w-100" style="cursor: default;" data-toggle="collapse" href="#collapse{{ servicio.numero }}">
                           Servicio {{ servicio.numero }} - {{ servicio.tipo.tipo }}
                         </a>
                       </h4>
@@ -164,29 +168,57 @@
                           </div>
                           <div class="mb-2">
                             <strong>DIRECCIÓN:</strong>
-                            <span>{{ servicio.dirección }}</span>
+                            <span>{{ servicio.direccion }}</span>
                           </div>
                           <div class="mb-2">
-                            <strong>DATOS DEL DENUNCIANTE:</strong>
-                            <span>{{ servicio.nombre_denunciante }}</span> - <span>{{ servicio.telefono_denunciante }}</span>
-                          </div>
-                          <div>
                             <strong>UNIDADES ASIGNADAS:</strong><br>
-                            {% for movil_data in servicio.moviles_list %}
-                            <button class="btn-sm btn-secondary mt-2 mr-2" data-bs-toggle="popover" data-bs-placement="right" title="Descripción de {{ movil_data.movil.numero }}" data-bs-content="•{{ movil_data.movil.tipo.tipo }}<br>
-                              <ul>
-                                {% for bombero in movil_data.bomberos.all %}
-                                  <li>{{ bombero.nombre }}</li>
-                                  {% empty %}
-                                  <li>No hay bomberos asignados</li>
+                            <div id="listaMovilesAsignados">
+                                {% for movil_data in servicio.moviles_list %}
+                                <button type="button" class="btn btn-secondary mt-2 mr-2">Móvil {{ movil_data.movil.numero }}</button>
                                 {% endfor %}
-                             </ul>
-                             <br>" data-bs-html="true">{{ movil_data.movil.numero }}</button>
-                             {%endfor%}
-                          </div>
-                        </div>      
+                            </div>
+                        </div>    
                         <div class="mt-3">
                           <a href="/modificar_servicio/{{servicio.id}}" class="btn bg-warning float-left"><i class="fa-solid fa-pen-to-square"></i></a>
+                          <button class="btn btn-success ml-2" data-toggle="modal" data-target="#modalAsignarMovil"><i class="fa-solid fa-plus"></i> <i class="fa-solid fa-truck-front"></i></button>
+
+                          <div class="modal fade" id="modalAsignarMovil" tabindex="-1" role="dialog">
+                            <div class="modal-dialog modal-xl" role="document">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">Asignar Móvil y Bomberos</h5>
+                                        <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                    </div>
+                                    <div class="modal-body">
+                                      <form action="/asignarmovil/{{servicio.id}}/" method="post">
+                                        {% csrf_token %}
+                                        <label for="movilSelect">Móvil:</label>
+                                        <select id="movilSelect" class="form-control col-md-3" name="movil">
+                                            {% for movil in moviles %}
+                                            <option value="{{movil.id}}">Móvil {{movil.numero}}</option>
+                                            {%endfor%}
+                                        </select>
+
+                                        <label for="bomberosSelect">Bomberos:</label>
+                                        {% if bomberos1 %}  
+                                        <select id="bomberosSelect" class="form-control duallistbox" multiple style="height: 300px;" name="bomberos">
+                                          {% for bombero in bomberos1 %}
+                                            <option value="{{bombero.id}}">{{bombero.IDJerarquia.jerarquia}} - {{bombero.apellido|upper}}, {{bombero.nombre}}</option>
+                                            {%endfor%}
+                                        </select>
+                                        {%else%}
+                                        <span>NO HAY BOMBEROS</span>
+                                        {%endif%}
+                                      </div>
+                                    <div class="modal-footer">
+                                        <button type="submit" class="btn btn-success" data-servicio-id="{{ servicio.id }}" id="asignarMovil">Asignar</button>
+                                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+                                    </div>
+                                  </form>
+                                </div>
+                            </div>
+                        </div>
+
                           {% if request.user.groups.all.0.name == "Guardia central"  %}
                           <a href="/finalizar_servicio/{{servicio.id}}" class="btn bg-danger float-right">Finalizar</a>
                           {% endif %}
@@ -207,91 +239,103 @@
           </div>
         </div>
 
-
-
-
-
-
-
-
-          <!-- <div class="col-md-12">
-            <div class="card card-navy">  
-              <div class="card-header d-flex">
-                <h3 class="card-title mr-auto p-2">Servicios en curso</h3>
-                {% if request.user.groups.all.0.name == "Guardia central"  %}
-                <a class="btn btn-danger ml-auto p-2" href="/cargar_servicio"><i class="fa-regular fa-bell"></i> Nuevo servicio</a>
-                {% endif %}
-              </div>
-              
-              <div class="card-body table-responsive">
-                {% if servicios %}
-                <table class="table table-bordered table-striped ">
-                  <thead>
-                    <tr>
-                      <th>Número</th>
-                      <th>Móvil</th>
-                      <th>Salida</th>
-                      <th>Domicilio</th>
-                      <th>Encargado</th>
-                      <th>Tipo de servicio</th>
-                      <th>Finalizar</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {% for servicio in servicios %}
-                    {% if servicio.estado == "En curso" %}
-                        <tr>
-                          <td>{{ servicio.numero }} </td>
-                          <td>Móvil {{ servicio.movil.numero}}</td>
-                          <td>{{ servicio.salida }}</td>
-                          <td>{{ servicio.direccion }}</td>
-                          <td>{{ servicio.encargado.legajo }} - {{ servicio.encargado.apellido }}, {{ servicio.encargado.nombre }}</td>
-                          <td>{{ servicio.tipo.tipo }}</td>
-                          <td>
-                            <a href="/modificar_servicio/{{servicio.id}}" class="btn bg-warning"><i class="fa-solid fa-pen-to-square"></i></a>
-                            {% if request.user.groups.all.0.name == "Guardia central"  %}
-                            <a href="/finalizar_servicio/{{servicio.id}}" class="btn bg-danger">Finalizar</a>
-                            {% endif %}
-                          </td>
-                        </tr>
-                      {% endif %}
-                    {% endfor %}
-                  </tbody>
-                </table>
-        </div>
-    
-          </div>
-        {% else %}
-          <p>No hay servicios cargados.</p>
-        {% endif %}
-        </div> -->
         </div>
     </div>
         </div>
 
 {% endblock %}
 {% block js_block %}
-   <!-- DATATABLES -->
-   <script src="https://cdn.datatables.net/v/dt/dt-2.1.4/datatables.min.js"></script>
-   <script src="https://cdn.datatables.net/buttons/3.1.1/js/dataTables.buttons.js"></script>
-   <script src="https://cdn.datatables.net/buttons/3.1.1/js/buttons.dataTables.js"></script>
-   <script src="https://cdn.datatables.net/buttons/3.1.1/js/buttons.html5.min.js"></script>
+<!-- 
+<script>
+  $(document).ready(function() {
+      $('[data-toggle="popover"]').popover({
+          trigger: 'hover', // Cambia a 'hover' si lo prefieres
+          html: true
+      });
+  });
+</script> -->
 
 <script>
-   $(function () {
-       $('#example1').DataTable({
-       language: {
-       url: 'https://cdn.datatables.net/plug-ins/2.2.1/i18n/es-CL.json',
-       },
-       "paging": true,
-       "lengthChange": false,
-       "ordering": true,
-           order:[[0, 'desc']],
-       "length": 40,
-       "searching": true,
-       "autoWidth": true,
-       "responsive": true,
-       });
-   });
-   </script>
+  $(document).ready(function() {
+      $(".asignarMovilBtn").click(function() {
+          var servicioId = $(this).data("servicio-id");  // Obtiene el ID desde el atributo "data-servicio-id"
+          $("#asignarMovil").data("servicio-id", servicioId);  // Lo guarda en el botón de asignación
+      });
+
+      $("#asignarMovil").click(function(event) {
+          event.preventDefault();  // Evita la recarga de la página
+
+          var servicioId = $(this).data("servicio-id");  // Obtiene el servicio ID almacenado
+          var movilId = $("#movilSelect").val();
+          var bomberosSeleccionados = $("#bomberosSelect").val(); // Obtiene los IDs de bomberos
+
+          $.ajax({
+              url: "/asignarmovil/" + servicioId + "/",  
+              type: "POST",
+              data: {
+                  movil: movilId,
+                  bomberos: bomberosSeleccionados,
+                  csrfmiddlewaretoken: "{{ csrf_token }}"
+              },
+              dataType: "json",
+              success: function(response) {
+                  if (response.success) {
+                      var bomberosList = "<ul>";
+                      response.bomberos.forEach(function(bombero) {
+                          bomberosList += "<li>" + bombero.apellido.toUpperCase() + ", " + bombero.nombre + "</li>";
+                      });
+                      bomberosList += "</ul>";
+
+                      var nuevoBoton = `
+                          <button type="button" class="btn btn-secondary mt-2 mr-2" 
+                                  data-toggle="popover" data-html="true" 
+                                  title="Bomberos Asignados" 
+                                  data-content='${bomberosList}'>
+                              Móvil ${response.movil_numero}
+                          </button>`;
+
+                      $("#listaMovilesAsignados").append(nuevoBoton);
+
+                      $("#modalAsignarMovil").modal("hide");
+                  } else {
+                      alert("Error al asignar el móvil.");
+                  }
+              },
+              error: function() {
+                  alert("Hubo un error en la petición AJAX.");
+              }
+          });
+      });
+  });
+</script>
+
+
+
+  
+ 
+<script src="{% static 'planilla/jquery.bootstrap-duallistbox.js' %}"></script>
+<script>
+  $(function () {
+  //Bootstrap Duallistbox
+  $('.duallistbox').bootstrapDualListbox()
+  })
+</script>
+
+<script>
+document.getElementById("asignarMovil").addEventListener("click", function() {
+    let movil = document.getElementById("movilSelect");
+    let bomberos = document.getElementById("bomberosSelect");
+    let seleccionados = Array.from(bomberos.selectedOptions).map(option => option.text).join(", ");
+    
+    let div = document.createElement("div");
+    div.innerHTML = `<strong>${movil.options[movil.selectedIndex].text}:</strong> ${seleccionados}`;
+    document.getElementById("movilesAsignados").appendChild(div);
+    
+        // Limpiar selección de bomberos
+        bomberos.selectedIndex = -1;
+    
+    // Cerrar el modal correctamente
+    $('#modalAsignarMovil').modal('hide');
+});
+</script>
 {% endblock %}

@@ -1,8 +1,6 @@
 {% extends 'planilla/base.html' %}
 {% load static %}
 {% block css_block %}
-  <!-- Bootstrap4 Duallistbox -->
-  <link rel="stylesheet" href="{% static 'planilla/bootstrap-duallistbox.min.css' %}">
 <style>
   #map {
       height: 500px;
@@ -166,31 +164,7 @@
 {% endblock %}
 {% block js_block %}
 <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDgZ9iDyLaJEwAAYUcuN7MgVWN2alaLd1s&libraries=places"></script>
-<script src="{% static 'planilla/jquery.bootstrap-duallistbox.js' %}"></script>
-<script>
-    $(function () {
-    //Bootstrap Duallistbox
-    $('.duallistbox').bootstrapDualListbox()
-    })
-</script>
 
-<script>
-document.getElementById("asignarMovil").addEventListener("click", function() {
-    let movil = document.getElementById("movilSelect");
-    let bomberos = document.getElementById("bomberosSelect");
-    let seleccionados = Array.from(bomberos.selectedOptions).map(option => option.text).join(", ");
-    
-    let div = document.createElement("div");
-    div.innerHTML = `<strong>${movil.options[movil.selectedIndex].text}:</strong> ${seleccionados}`;
-    document.getElementById("movilesAsignados").appendChild(div);
-    
-        // Limpiar selección de bomberos
-        bomberos.selectedIndex = -1;
-    
-    // Cerrar el modal correctamente
-    $('#modalAsignarMovil').modal('hide');
-});
-</script>
 
 
 <script>

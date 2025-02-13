@@ -18,8 +18,10 @@ logger = logging.getLogger(__name__)
 
 
 def index(request):
+
+    print("VISTA EJECUTÁNDOSE")
     grupo_usuario = request.user.groups.values_list('name', flat=True).first()
-    print("user: ", request.user)
+    print("user: ", request.user, flush=True)
     print("grupo: ",grupo_usuario)
     if grupo_usuario == "Móviles":
         movil = int(request.user.last_name.strip())
@@ -32,8 +34,10 @@ def index(request):
         }
         return render (request, 'planilla/mobile.html', context)
     elif grupo_usuario == "Guardia central":
+        print("entro a guardia central")
         base = Base.objects.all().order_by('id')
         moviles = Movil.objects.all()
+        bomberos1 = Bombero.objects.all()
         # Obtener los servicios "En curso"
         servicios_en_curso = Servicio.objects.filter(estado="En curso").prefetch_related(
             Prefetch(
@@ -42,7 +46,15 @@ def index(request):
                     to_attr="moviles_list"
                 )
             )
-        print(servicios_en_curso)
+        for servicio in servicios_en_curso:
+            for movil_data in servicio.moviles_list:
+                print(movil_data.movil)
+                if movil_data.bomberos:
+                    for bombero in movil_data.bomberos.all():  
+                        print(bombero.nombre)
+                else:
+                    print("no hay bomberos")
+
         cuentas = Base.objects.annotate(
             en_servicio=Count('movil', filter=Q(movil__IDEstado=1)),
             condicional=Count('movil', filter=Q(movil__IDEstado=2)),
@@ -50,13 +62,16 @@ def index(request):
             fuera_servicio=Count('movil', filter=Q(movil__IDEstado=3))
         )
         context = {
-            'servicios': servicios,
             'base': base,
             'moviles': moviles,
             'cuentas': cuentas,
-            'servicios': servicios_en_curso
+            'servicios': servicios_en_curso,
+            'bomberos1': bomberos1
         }
+
+        print(bomberos1)
         return render (request, 'planilla/guardia.html', context)
+    
     else:
         hace_10_dias = timezone.now() - timedelta(days=10)
         bases = Base.objects.all().order_by('id')
@@ -303,7 +318,6 @@ class CargarServicio(View):
     def post(self, request):
         print("entro a post")
 
-        movil_id = request.POST.get("movil")
         guardia = request.POST.get("guardia")
         address = request.POST.get("address")
         latitude = request.POST.get("latitude")
@@ -316,17 +330,11 @@ class CargarServicio(View):
         telefono = request.POST.get("telefono")
 
         # Validar datos requeridos
-        if not (movil_id and guardia and address and latitude and longitude and numero and salida and tipo_servicio_id and encargado_id):
+        if not (guardia and address and latitude and longitude and numero and salida and tipo_servicio_id and encargado_id):
             messages.error(request, "Todos los campos son obligatorios.")
             return redirect("cargar_servicio")
 
         try:
-
-            movil = get_object_or_404(Movil, id=movil_id)
-            movil.intervenciones +=1
-            estado = get_object_or_404(Estado, estado="Ocupado")
-            movil.IDEstado_id = int(estado.id)
-            movil.save()
 
             servicios = Servicio(
                 guardia_operativa = guardia,
@@ -335,7 +343,6 @@ class CargarServicio(View):
                 longitud=longitude,
                 estado="En curso", 
                 numero=numero,
-                movil=movil,
                 salida=salida,
                 tipo_id=tipo_servicio_id,
                 encargado_id=encargado_id,
@@ -351,6 +358,36 @@ class CargarServicio(View):
                 messages.error(request, f"Error al cargar el servicio: {e}")
                 return redirect("cargar_servicio")
         
+def asignarmovil(request, servicio_id):
+    if request.method == "POST":
+        servicio = get_object_or_404(Servicio, id=servicio_id)
+        movil_id = request.POST['movil']
+        bomberos_ids = request.POST.getlist("bomberos")  # Obtiene lista de IDs
+
+        if movil_id:
+            movil = get_object_or_404(Movil, id=movil_id)
+            servicio_movil, created = ServicioMovil.objects.get_or_create(servicio=servicio, movil=movil)
+            servicio_movil.bomberos.set(bomberos_ids)  # Asigna la lista de bomberos seleccionados
+            servicio_movil.save()
+
+            # Actualiza el estado del móvil
+            movil.intervenciones += 1
+            estado = get_object_or_404(Estado, estado="Ocupado")
+            movil.IDEstado_id = int(estado.id)
+            movil.save()
+
+            # Obtiene los datos actualizados para enviar como JSON
+            bomberos_data = list(servicio_movil.bomberos.values("id", "nombre", "apellido"))
+
+            return JsonResponse({
+                "success": True,
+                "movil_id": movil.id,
+                "movil_numero": movil.numero,
+                "bomberos": bomberos_data
+            })
+
+    return JsonResponse({"success": False, "error": "Método no permitido"}, status=400)
+
 class ModificarServicio(View):
     def get(self, request, id):
         servicio = Servicio.objects.get(id=id)
@@ -359,7 +396,15 @@ class ModificarServicio(View):
         bomberos = Bombero.objects.all()
         tipo_servicios = TipoServicio.objects.all()
         fecha_formateada = servicio.salida.strftime("%Y-%m-%dT%H:%M") if servicio.salida else ""
-        presentes = ServicioPresentes.objects.filter(servicio=id)
+        presentes = Servicio.objects.filter(id=id).prefetch_related(
+            Prefetch(
+                    "moviles_asignados",
+                    queryset=ServicioMovil.objects.select_related("movil").prefetch_related("bomberos"),
+                    to_attr="moviles_list"
+                )
+            )
+        
+
         context = {
             'fecha': fecha_formateada,
             'moviles': moviles,

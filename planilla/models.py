@@ -211,7 +211,7 @@ class ServicioMovil(models.Model):
     movil = models.ForeignKey(Movil, on_delete=models.CASCADE)
     bomberos = models.ManyToManyField(Bombero, blank=True)
     def __str__(self):
-        return f"{self.servicio.numero} - {self.movil.nombre}"
+        return f"{self.servicio.numero} - {self.movil.numero}"
 
     class Meta:
         verbose_name = "Presente en servicio"
