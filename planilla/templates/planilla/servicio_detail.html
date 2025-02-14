@@ -1,12 +1,7 @@
 {% extends 'planilla/base.html' %}
 {% load static %}
 {% block css_block %}
-<style>
-  #map {
-      height: 500px;
-      width: 100%;
-  }
-</style>
+<link rel="stylesheet" href="{% static 'planilla/bootstrap-duallistbox.min.css' %}">
 {% endblock %}
 {% block content %}
     <!-- Content Wrapper. Contains page content -->
@@ -27,56 +22,48 @@
         <!-- 1ra fila -->
          <div class="row col-sm-12 mb-3 d-flex justify-content-center">
             <div class="col-sm-12">
-                <div class="card card-info">
+                <div class="card card-navy">
                     <div class="card-header border-0">
-                      <h3 class="card-title">Nuevo servicio</h3>
+                      <h3 class="card-title float-left">Servicio N° {{servicio.numero }}</h3>
+                      <button class="btn btn-sm btn-primary float-right mr-2" data-toggle="modal" data-target="#asignarModal">Asignar móvil</button>
+                      <a href="/modificar_servicio/{{servicio.id}}" class="btn btn-sm btn-warning mr-2 float-right">Modificar</a>
+                    </div>
                     </div>
                     <div class="card-body">
-                    <form action="/cargar_servicio/" method="POST" id="form_servicio">
-                        {% csrf_token %}
                     <div class="row col-md-12">
                         <div class="col-md-6">
                             <div class="row form-group col-md-12">
-                                <label for="">Dirección de la intervención</label><span class="text-primary ml-2"> - Presione el botón para detectar la zona</span>
+                                <label for="">Dirección de la intervención</label>
                                 <div class="row col-md-12">
-                                    <input class="form-control col-sm-8" type="text" name="address" id="address" placeholder="Ingrese una dirección" required>
-                                    <button class="btn btn-success" onclick="geocodeAddress()">Buscar Dirección</button>
+                                    <input class="form-control col-sm-8" type="text" name="address" id="address" placeholder="Ingrese una dirección" value="{{servicio.direccion}}" disabled >
+                                    <button id="buscarDireccion" class="btn btn-success" onclick="geocodeAddress(event)">Buscar Dirección</button>
                                 </div>
                             </div>
                             <div class="row col-md-12">
                                 <div class="row form-group mr-3 col-md-4">
                                     <label for="exampleInputPassword1">Número de guardia operativa</label>
-                                    <input type="number" class="form-control" id="guardia" name="guardia" min="0" required>
+                                    <input type="number" class="form-control" id="guardia" name="guardia" min="0" value="{{servicio.guardia_operativa}}" disabled>
                                 </div>
                                 <div class="row form-group col-md-4">
                                     <label for="exampleInputPassword1">Número de servicio</label>
-                                    <input type="number" class="form-control" id="numeroservicio" name="numero" min="0" required>
+                                    <input type="number" class="form-control" id="numeroservicio" name="numero" min="0" value="{{servicio.numero}}" disabled>
                                 </div>
                             </div>
                             <div class="row col-md-12">
                                 <div class="form-group col-md-3 row mr-3">
                                     <label for="exampleInputPassword1">Zona</label>
-                                    <input class="form-control" type="text" name="zona" id="zona" required>
+                                    <input class="form-control" type="text" name="zona" id="zona" disabled>
                                 </div>
-                                <!-- <div class="form-group col-md-3 row mr-3">
-                                    <label for="exampleInputPassword1">Móvil</label>
-                                    <select class="form-control" name="movil" id="movil">
-                                    {% for movil in moviles %}
-                                    {% if movil.IDEstado.estado == "En servicio" or movil.IDEstado.estado == "Condicional" %}
-                                        <option value="{{ movil.id }}">Móvil {{ movil.numero }}</option>
-                                    {%endif%}
-                                    {% endfor %}
-                                    </select>
-                                    </div> -->
                                 <div class="form-group col-md-4 row">
                                     <label for="exampleInputPassword1">Hora de salida</label>
-                                    <input type="datetime-local" class="form-control" id="horasalida" name="salida" required>
+                                    <input type="datetime-local" class="form-control" name="salida" value="{{ fecha }}" disabled>
                                 </div>
                             </div>
                             <div class="row col-md-12">
                                 <div class="form-group col-md-6 row mr-3">
                                     <label for="exampleInputPassword1">Encargado</label>
-                                    <select class="form-control" name="encargado" id="encargado" required>
+                                    <select class="form-control" name="encargado" id="encargado" disabled>
+                                        <option value="{{ servicio.encargado.id }}" selected>{{ servicio.encargado.IDJerarquia.jerarquia }} {{ servicio.encargado.apellido }}, {{ servicio.encargado.nombre }}</option>
                                         {% for bombero in bomberos %}
                                             <option value="{{ bombero.id }}">{{ bombero.IDJerarquia.jerarquia }} {{ bombero.apellido }}, {{ bombero.nombre }}</option>
                                         {% endfor %}
@@ -84,7 +71,8 @@
                                 </div>
                                 <div class="form-group col-md-4 row mr-3">
                                     <label for="exampleInputPassword1">Tipo de servicio</label>
-                                    <select class="form-control" name="tiposervicio" id="tiposervicio" required>
+                                    <select class="form-control" name="tiposervicio" id="tiposervicio" disabled>
+                                        <option value="{{ servicio.tipo.id }}">{{ servicio.tipo.tipo }}</option>
                                         {% for tipo in tipo_servicios %}
                                             <option value="{{ tipo.id }}">{{ tipo.tipo }}</option>
                                         {% endfor %}
@@ -94,59 +82,132 @@
                             <div class="row col-md-12">
                                 <div class="form-group col-md-6 row mr-3">
                                     <label for="exampleInputPassword1">Denunciante</label>
-                                    <input class="form-control" type="text" name="denunciante">
+                                    <input class="form-control" type="text" name="denunciante" value="{{ servicio.nombre_denunciante }}" disabled>
                                 </div>
                                 <div class="form-group col-md-4 row mr-3">
                                     <label for="exampleInputPassword1">Teléfono del denunciante</label>
-                                    <input class="form-control" type="text" name="telefono">
+                                    <input class="form-control" type="text" name="telefono" value="{{ servicio.telefono_denunciante }}" disabled>
                                 </div>
                             </div>
 
-                            <input type="hidden" id="latitude" name="latitude">
-                            <input type="hidden" id="longitude" name="longitude">
-                            <button type='submit' class="btn btn-danger">Iniciar intervención</button>
+                            <input type="hidden" id="latitude" name="latitude" value="{{servicio.latitud}}">
+                            <input type="hidden" id="longitude" name="longitude" value="{{servicio.longitud}}">
+                        
                         </div>
                         <div class="col-md-6">                   
                             <div class="col-md-12 d-flex justify-content-center mt-3 mb-3">
-                                <div id="map" style="height: 500px; width: 900px;"></div>
+                                <div id="map" style="height: 450px; width: 900px;"></div>
                             </div>
                         </div>
                     </div>
-                    </form>
+                    <div class="row col-md-12">
+                        <h3 class="mb-3">Unidades y personal asignado</h3>
+                        <div class="row col-md-12 wrapper">
+                            {% if servicio.moviles_list %}
+                            {% for movil_data in servicio.moviles_list %}
+                            <div class="col-md-3">
+                                <div class="card card-navy">
+                                <div class="card-header">
+                                    <h3 class="card-title">
+                                    <strong>Móvil {{ movil_data.movil.numero }}</strong> - {{ movil_data.movil.IDTipo.tipo }}
+                                    </h3>
+                                </div>
+                                <!-- /.card-header -->
+                                <div class="card-body">
+                                    <ol>
+                                    {% for bombero in movil_data.bomberos.all %}
+                                    <li>{{bombero.nombre}}</li>
+                                    {%endfor%}
+                                    </ol>
+                                </div>
+                                <!-- /.card-body -->
+                                </div>
+                                <!-- /.card -->
+                            </div>
+                            {%endfor%}
+                            {%endif%}
+                        </div>
+
+                        <!-- ./col -->
+                    </div>
+
+                    <div class="modal fade" id="asignarModal" tabindex="-1" role="dialog">
+                        <div class="modal-dialog modal-xl" role="document">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title">Asignar Móvil y Bomberos</h5>
+                                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                </div>
+                                <div class="modal-body">
+                                  <form action="/asignarmovil/{{servicio.id}}/" method="post">
+                                    {% csrf_token %}
+                                    <label for="movilSelect">Móvil:</label>
+                                    <select id="movilSelect" class="form-control col-md-3" name="movil">
+                                        {% for movil in moviles %}
+                                        <option value="{{movil.id}}">Móvil {{movil.numero}}</option>
+                                        {%endfor%}
+                                    </select>
+
+                                    <label for="bomberosSelect">Bomberos:</label>
+                                    {% if bomberos %}  
+                                    <select id="bomberosSelect" class="form-control duallistbox" multiple style="height: 300px;" name="bomberos">
+                                      {% for bombero in bomberos %}
+                                        <option value="{{bombero.id}}">{{bombero.IDJerarquia.jerarquia}} - {{bombero.apellido|upper}}, {{bombero.nombre}}</option>
+                                        {%endfor%}
+                                    </select>
+                                    {%else%}
+                                    <span>NO HAY BOMBEROS</span>
+                                    {%endif%}
+                                  </div>
+                                <div class="modal-footer">
+                                    <button type="submit" class="btn btn-success" data-servicio-id="{{ servicio.id }}" id="asignarMovil">Asignar</button>
+                                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+                                </div>
+                              </form>
+                            </div>
+                        </div>
+                    </div>
                     </div>
                 </div>
             </div>
         </div>
-
-
     </div>
     </div>
     </div>
-
 {% endblock %}
 {% block js_block %}
 <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDgZ9iDyLaJEwAAYUcuN7MgVWN2alaLd1s&libraries=places"></script>
 
-
+<script src="{% static 'planilla/jquery.bootstrap-duallistbox.js' %}"></script>
+<script>
+  $(function () {
+  //Bootstrap Duallistbox
+  $('.duallistbox').bootstrapDualListbox()
+  })
+</script>
 
 <script>
     document.addEventListener("DOMContentLoaded", function () {
-        let input = document.getElementById("horasalida");
-
-        // Obtener la fecha y hora actual en formato compatible con datetime-local
-        let now = new Date();
-        let year = now.getFullYear();
-        let month = String(now.getMonth() + 1).padStart(2, "0");
-        let day = String(now.getDate()).padStart(2, "0");
-        let hours = String(now.getHours()).padStart(2, "0");
-        let minutes = String(now.getMinutes()).padStart(2, "0");
-
-        let maxDateTime = `${year}-${month}-${day}T${hours}:${minutes}`;
-        
-        // Establecer el atributo max
-        input.setAttribute("max", maxDateTime);
+      document.querySelectorAll(".eliminar-btn").forEach(button => {
+        button.addEventListener("click", function (event) {
+        event.preventDefault(); // Evita el envío del formulario si está dentro de uno
+          let presenteId = this.getAttribute("data-id");
+  
+          fetch(`/eliminarpresenteservicio/${presenteId}/`, {
+            method: "DELETE",
+            headers: {
+              "X-CSRFToken": "{{ csrf_token }}"  // Asegurar la protección CSRF
+            }
+          }).then(response => {
+            console.log(response)
+            if (response.ok) {
+              document.getElementById(`presente-${presenteId}`).remove();
+            }
+          }).catch(error => console.error("Error:", error));
+        });
+      });
     });
-</script>
+  </script>
 
 <script>
     // Inicializa el mapa y el geocodificador
@@ -159,7 +220,7 @@
       // Crear el mapa y centrarlo en una ubicación predeterminada
       map = new google.maps.Map(document.getElementById("map"), {
         center: { lat: -34.657713050818785, lng: -58.63239669756467 },
-        zoom: 13
+        zoom: 15
       });
         // Inicializar el servicio de geocodificación
         geocoder = new google.maps.Geocoder();
@@ -248,4 +309,15 @@
 
 
   </script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    setTimeout(() => {
+        if (document.getElementById("address").value.trim() !== "") {
+            geocodeAddress(); // Llamar la función automáticamente si hay una dirección en el input
+        }
+    }, 1000); // Pequeño retraso para asegurar que el mapa se haya cargado correctamente
+});
+</script>
+
 {% endblock %}

@@ -35,7 +35,7 @@
                 <thead>
                   <tr>
                     <th>Número</th>
-                    <th>Móvil</th>
+                    <th>Móviles</th>
                     <th>Salida</th>
                     <th>Domicilio</th>
                     <th>Encargado</th>
@@ -47,8 +47,16 @@
                   {% for servicio in servicios %}
                   {% if servicio.estado == "En curso" %}
                       <tr>
-                        <td>{{ servicio.numero }} </td>
-                        <td>Móvil {{ servicio.movil.numero}}</td>
+                        <td><a href="/servicio_detail/{{servicio.id}}">{{ servicio.numero }}</a>  </td>
+                        <td class="wrapper">
+                          {% if servicio.moviles_list %}
+                          <span>
+                              {% for movil_data in servicio.moviles_list %}
+                                  Móvil {{ movil_data.movil.numero }}{% if not forloop.last %} - {% endif %}
+                              {% endfor %}
+                          </span>
+                          {% endif %}
+                        </td>
                         <td>{{ servicio.salida }}</td>
                         <td>{{ servicio.direccion }}</td>
                         <td>{{ servicio.encargado.legajo }} - {{ servicio.encargado.apellido }}, {{ servicio.encargado.nombre }}</td>
@@ -81,7 +89,7 @@
               <thead>
                 <tr>
                   <th>Número</th>
-                  <th>Móvil</th>
+                  <th>Móviles</th>
                   <th>Dirección</th>
                   <th>Salida</th>
                   <th>Regreso</th>
@@ -93,8 +101,16 @@
                 {% for servicio in servicios %}
                 {% if not servicio.estado == "En curso" %}
                     <tr>
-                      <td>{{ servicio.numero }} </td>
-                      <td>Móvil {{ servicio.movil.numero}}</td>
+                      <td><a href="/servicio_detail/{{servicio.id}}">{{ servicio.numero }}</a> </td>
+                      <td class="wrapper">
+                        {% if servicio.moviles_list %}
+                        <span>
+                            {% for movil_data in servicio.moviles_list %}
+                                Móvil {{ movil_data.movil.numero }}{% if not forloop.last %} - {% endif %}
+                            {% endfor %}
+                        </span>
+                        {% endif %}
+                      </td>
                       <td>{{ servicio.direccion }}</td>
                       <td>{{ servicio.salida }}</td>
                       <td>{{ servicio.regreso }}</td>

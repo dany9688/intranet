@@ -1,14 +1,8 @@
 {% extends 'planilla/base.html' %}
 {% load static %}
+{% block title %}Modificar servicio{% endblock title %}
 {% block css_block %}
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<style>
-  #map {
-      height: 500px;
-      width: 100%;
-  }
-</style>
+
 {% endblock %}
 {% block content %}
     <!-- Content Wrapper. Contains page content -->
@@ -31,7 +25,7 @@
             <div class="col-sm-12">
                 <div class="card card-info">
                     <div class="card-header border-0">
-                      <h3 class="card-title">Nuevo servicio</h3>
+                      <h3 class="card-title">Servicio N° {{servicio.numero}}</h3>
                     </div>
                     <div class="card-body">
                     <form action="/modificar_servicio/{{servicio.id}}/" method="POST" id="form_servicio">
@@ -59,17 +53,6 @@
                                 <div class="form-group col-md-3 row mr-3">
                                     <label for="exampleInputPassword1">Zona</label>
                                     <input class="form-control" type="text" name="zona" id="zona">
-                                </div>
-                                <div class="form-group col-md-3 row mr-3">
-                                <label for="exampleInputPassword1">Móvil</label>
-                                <select class="form-control" name="movil" id="movil">
-                                    <option value="{{ servicio.movil.id }}" selected>Móvil {{ servicio.movil.numero }}</option>
-                                {% for movil in moviles %}
-                                {% if movil.IDEstado.estado == "En servicio" or movil.IDEstado.estado == "Condicional" %}
-                                    <option value="{{ movil.id }}">Móvil {{ movil.numero }}</option>
-                                {%endif%}
-                                {% endfor %}
-                                </select>
                                 </div>
                                 <div class="form-group col-md-4 row">
                                     <label for="exampleInputPassword1">Hora de salida</label>
@@ -113,72 +96,76 @@
                         </div>
                         <div class="col-md-6">                   
                             <div class="col-md-12 d-flex justify-content-center mt-3 mb-3">
-                                <div id="map" style="height: 500px; width: 900px;"></div>
+                                <div id="map" style="height: 450px; width: 900px;"></div>
                             </div>
                         </div>
-
+                        <div class="row col-md-12 d-flex justify-content-end">
+                            <button type='button' data-toggle="modal" data-target="#checkModal" class="btn btn-danger">Modificar intervención</button>
+                        </div>
+                        </form>
                     </div>
                     <div class="row col-md-12">
-                        <div class="card card-info col-md-12">
-                        <div class="card-header">
-                            <h3 class="card-title">Servicios activos</h3>
+                        <h3 class="mb-3">Unidades y personal asignado</h3>
+                        <div class="row col-md-12 wrapper">
+                            {% if servicio.moviles_list %}
+                            {% for movil_data in servicio.moviles_list %}
+                            <div class="col-md-3">
+                                <div class="card card-navy">
+                                <div class="card-header">
+                                    <h3 class="card-title">
+                                        <i class="fas fa-truck-field"></i>
+                                    Móvil {{ movil_data.movil.numero }} - {{ movil_data.movil.IDTipo.tipo }}
+                                    </h3>
+                                    <div class="card-tools">
+                                        <button class="btn btn-tool eliminar-movil-btn" type="button" id="eliminarmovil" data-servicio="{{ servicio.id }}" data-id="{{ movil_data.movil.id }}" data-toggle="modal" data-target="#eliminarMovil">
+                                            <i class="fas fa-times"></i>
+                                        </button>                                        
+                                    </div>
+                                </div>
+                                <!-- /.card-header -->
+                                <div class="card-body">
+                                    <ol>
+                                    {% for bombero in movil_data.bomberos.all %}
+                                    <li>{{bombero.nombre}}</li>
+                                    {%endfor%}
+                                    </ol>
+                                </div>
+                                <!-- /.card-body -->
+                                </div>
+                                <!-- /.card -->
+                            </div>
+                            {%endfor%}
+                            {%endif%}
                         </div>
-                          <!-- /.card-header -->
-                        <div class="card-body table-responsive">
-                            {% if presentes %}
-                            <table class="table table-sm table-bordered table-striped">
-                                <thead>
-                                    <tr>
-                                        <th>Móvil</th>
-                                        <th>Bomberos</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for presente in presentes %}
-                                        {% for movil_data in presente.moviles_list %}
-                                            <tr>
-                                                <!-- Celda combinada para el móvil -->
-                                                <td>
-                                                    {{ movil_data.movil }}
-                                                </td>
-                                                <td>
-                                                    {{ movil_data.movil.IDTipo.tipo }} <!-- Tipo del móvil -->
-                                                </td>
-                                                <tr>
-                                                    <td></td>
-                                                {% if movil_data.bomberos.all %}
-                                                    <!-- Primera fila con el primer bombero -->
-                                                    <td>{{ movil_data.bomberos.all.0.nombre }}</td>
-                                                </tr>
-                                                {% for bombero in movil_data.bomberos.all|slice:"1:" %}
-                                                    <!-- Filas adicionales para los demás bomberos -->
-                                                    <tr>
-                                                        <td></td>
-                                                        <td>{{ bombero.nombre }}</td>
-                                                    </tr>
-                                                {% endfor %}
-                                                {% else %}
-                                                    <!-- Si no hay bomberos, se muestra "No hay bomberos" -->
-                                                    <td>No hay bomberos</td>
-                                                </tr>
-                                                {% endif %}
-                                        {% endfor %}
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                            {% endif %}
-                       
-                        </div>     
-               </div>
-              </div>
-                    <div class="row col-md-12 d-flex justify-content-end">
-                        <button type='button' data-toggle="modal" data-target="#checkModal" class="btn btn-danger">Modificar intervención</button>
+
+                        <!-- ./col -->
                     </div>
-                    </form>
+
                     </div>
                 </div>
             </div>
         </div>
+
+                    <!-- Modal de eliminar movil -->
+                    <div class="modal fade" id="eliminarMovil" tabindex="-1" role="dialog" aria-labelledby="eliminarMovilLabel" aria-hidden="true">
+                        <div class="modal-dialog" role="document">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="eliminarMovilLabel">Confirmar eliminación de móvil</h5>
+                                    <button type="button" class="close" data-dismiss="modal" aria-label="Cerrar">
+                                        <span aria-hidden="true">&times;</span>
+                                    </button>
+                                </div>
+                                <div class="modal-body">
+                                    ¿Estás seguro de que deseas eliminar el móvil?
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                                    <button type="button" class="btn btn-danger" id="confirmarEliminacion">Eliminar</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
 
             <!-- Modal de confirmación -->
             <div class="modal fade" id="checkModal" tabindex="-1" role="dialog" aria-labelledby="checkModalLabel" aria-hidden="true">
@@ -218,6 +205,72 @@
 
 <script>
     document.addEventListener("DOMContentLoaded", function () {
+        let movilIdToDelete = null;
+        let servicioIdToDelete = null;
+        let cardToDelete = null;
+    
+        // Capturar el ID del móvil al abrir el modal
+        document.querySelectorAll(".eliminar-movil-btn").forEach(button => {
+            button.addEventListener("click", function (event) {
+                event.preventDefault();  
+                event.stopPropagation(); 
+                movilIdToDelete = this.getAttribute("data-id");
+                servicioIdToDelete = this.getAttribute("data-servicio");
+                cardToDelete = this.closest(".card"); 
+                console.log("Botón clickeado. ID del móvil:", movilIdToDelete); // <-- Verifica si aparece
+                console.log("Móvil a eliminar:", movilIdToDelete);
+                console.log("Servicio a eliminar:", servicioIdToDelete);
+                $("#eliminarMovil").modal("show");
+            });
+        });
+    
+        // Delegación de eventos para manejar clics en el botón de eliminación
+        document.addEventListener("click", function (event) {
+            if (event.target && event.target.id === "confirmarEliminacion") {
+                event.preventDefault();
+                event.stopPropagation(); 
+    
+                if (!movilIdToDelete) {
+                    console.log("Error: No hay ID de móvil para eliminar.");
+                return;
+                }
+    
+                fetch(`/eliminar_movil/${movilIdToDelete}/`, {
+                    method: "POST",
+                    headers: {
+                        "X-CSRFToken": "{{ csrf_token }}", // Token de seguridad de Django
+                        "Content-Type": "application/json"
+                    },
+                    body:JSON.stringify({
+                        'servicio': servicioIdToDelete
+                    }) 
+                })
+                .then(response => {
+                    if (response.ok) {
+                        console.log("Móvil eliminado correctamente.");
+                        $("#eliminarMovil").modal("hide");
+    
+                        // Elimina la tarjeta del DOM
+                        if (cardToDelete) {
+                            cardToDelete.remove();
+                        }
+                    } else {
+                        console.error("Error al eliminar el móvil.");
+                        alert("Hubo un error al eliminar el móvil.");
+                    }
+                })
+                .catch(error => console.error("Error:", error));
+            }
+        });
+    });
+    </script>
+    
+    
+    
+
+
+<!-- <script>
+    document.addEventListener("DOMContentLoaded", function () {
       document.querySelectorAll(".eliminar-btn").forEach(button => {
         button.addEventListener("click", function (event) {
         event.preventDefault(); // Evita el envío del formulario si está dentro de uno
@@ -237,9 +290,9 @@
         });
       });
     });
-  </script>
+  </script> -->
 
-<script>
+<!-- <script>
     const rowCountSelectA = document.getElementById("row-countA");
     const fieldsContainerA = document.getElementById("fields-presente");
 
@@ -276,7 +329,7 @@
         fieldsContainerA.appendChild(row);
       }
     });
-  </script>
+  </script> -->
 
 <script>
     // Inicializa el mapa y el geocodificador
@@ -289,7 +342,7 @@
       // Crear el mapa y centrarlo en una ubicación predeterminada
       map = new google.maps.Map(document.getElementById("map"), {
         center: { lat: -34.657713050818785, lng: -58.63239669756467 },
-        zoom: 13
+        zoom: 15
       });
         // Inicializar el servicio de geocodificación
         geocoder = new google.maps.Geocoder();

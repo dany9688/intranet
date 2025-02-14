@@ -3,7 +3,7 @@ from django.contrib.auth.decorators import login_required
 from django.conf import settings
 from django.conf.urls.static import static
 from . import views
-from planilla.views import CargarPlanilla, PlanillaDetailView, ServicioView, RepMaterialesView, CheckMaterialesView, CargarServicio, ModificarPlanilla, eliminar_presente, Guia, finalizar_servicio, Guardia, ModificarServicio, eliminarpresenteservicio
+from planilla.views import CargarPlanilla, PlanillaDetailView, ServicioView, RepMaterialesView, CheckMaterialesView, CargarServicio, ModificarPlanilla, eliminar_presente, Guia, finalizar_servicio, Guardia, ModificarServicio, ServicioDetail, eliminar_movil
 
 urlpatterns = [
     # path("", views.index, name="index"),
@@ -22,9 +22,10 @@ urlpatterns = [
     path("check_materiales/", login_required(CheckMaterialesView.as_view(), login_url='/signin/'), name="checklist_materiales"),
     path("servicios/", login_required(ServicioView.as_view(), login_url='/signin/'), name="servicios"),
     path("cargar_servicio/", login_required(CargarServicio.as_view(), login_url='/signin/'), name="cargar_servicios"), 
+    path("servicio_detail/<int:id>", login_required(ServicioDetail.as_view(), login_url='/signin/'), name="servicio_detail"), 
     path("modificar_servicio/<int:id>/", login_required(ModificarServicio.as_view(), login_url='/signin/'), name="modificar_servicio"), 
     path("asignarmovil/<int:servicio_id>/", login_required(views.asignarmovil, login_url='/signin/'), name="planilla"), 
-    path('eliminarpresenteservicio/<int:presente_id>/', login_required(eliminarpresenteservicio, login_url='/signin/'), name='asignar_movil'),
+    path("eliminar_movil/<int:movil_id>/", eliminar_movil, name="eliminar_movil"),
     path("obtener_servicios/", login_required(views.obtener_servicios, login_url='/signin/'), name="obtener_servicios"),
     path("servicio_movil/<int:movil>", login_required(views.servicio_movil, login_url='/signin/'), name="servicio_movil"),
     path('finalizar_servicio/<int:servicio_id>/', login_required(finalizar_servicio, login_url='/signin/'), name='finalizar_servicio'),

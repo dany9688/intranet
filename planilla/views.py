@@ -5,6 +5,7 @@ from django.contrib.auth import login, authenticate, logout
 from datetime import timedelta
 from datetime import datetime
 from django.utils import timezone
+from django.utils.timezone import get_current_timezone, is_naive, make_aware, localtime
 from django.contrib import messages
 from .forms import *
 from django.http import JsonResponse
@@ -12,6 +13,7 @@ import json
 from django.middleware.csrf import get_token
 from django.templatetags.static import static
 from django.db.models import Sum, Count, Q, Prefetch
+from django.views.decorators.csrf import csrf_exempt
 import logging
 # Configuración de logging
 logger = logging.getLogger(__name__)
@@ -289,18 +291,20 @@ class CheckMaterialesView(View): #createView
 
         return render (request, 'planilla/check_materiales.html', {'materiales': materiales, 'movil': movil})
 
-class ServicioView(generic.ListView):
-    model = Servicio
-    template_name = "planilla/servicios.html" 
-    context_object_name = "servicios"
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['moviles'] = Movil.objects.all()
-        context['bomberos'] = Bombero.objects.all()
-        context['tipo_servicios'] = TipoServicio.objects.all()
-        context['planillas'] = Planilla.objects.all()
-        return context
+class ServicioView(View):
+    def get(self, request):
+        servicios = Servicio.objects.all().prefetch_related(
+            Prefetch(
+                    "moviles_asignados",
+                    queryset=ServicioMovil.objects.select_related("movil").prefetch_related("bomberos"),
+                    to_attr="moviles_list"
+                )
+            )
+        print(servicios)
+        context = {
+            'servicios': servicios
+        }
+        return render (request, 'planilla/servicios.html', context)
 
 class CargarServicio(View):
     def get(self, request):
@@ -357,7 +361,31 @@ class CargarServicio(View):
         except Exception as e:
                 messages.error(request, f"Error al cargar el servicio: {e}")
                 return redirect("cargar_servicio")
+
+class ServicioDetail(View):
+    def get(self, request, id):
+        bomberos = Bombero.objects.all()
+        moviles = Movil.objects.all()
+        servicio = get_object_or_404(
+            Servicio.objects.prefetch_related(
+                Prefetch(
+                    "moviles_asignados",
+                    queryset=ServicioMovil.objects.select_related("movil").prefetch_related("bomberos"),
+                    to_attr="moviles_list"
+                )
+            ),
+            id=id
+        )
+        fecha_formateada = servicio.salida.strftime("%Y-%m-%dT%H:%M") if servicio.salida else ""
         
+        context = {
+            "servicio": servicio,
+            "fecha": fecha_formateada,
+            "bomberos": bomberos,
+            "moviles": moviles
+        }
+        return render (request, 'planilla/servicio_detail.html', context)
+
 def asignarmovil(request, servicio_id):
     if request.method == "POST":
         servicio = get_object_or_404(Servicio, id=servicio_id)
@@ -379,67 +407,39 @@ def asignarmovil(request, servicio_id):
             # Obtiene los datos actualizados para enviar como JSON
             bomberos_data = list(servicio_movil.bomberos.values("id", "nombre", "apellido"))
 
-            return JsonResponse({
-                "success": True,
-                "movil_id": movil.id,
-                "movil_numero": movil.numero,
-                "bomberos": bomberos_data
-            })
+            return redirect ('/servicio_detail/'+str(servicio_id))
 
     return JsonResponse({"success": False, "error": "Método no permitido"}, status=400)
 
 class ModificarServicio(View):
     def get(self, request, id):
-        servicio = Servicio.objects.get(id=id)
-        print('servicio', servicio)
         moviles = Movil.objects.all().order_by('numero')
         bomberos = Bombero.objects.all()
         tipo_servicios = TipoServicio.objects.all()
-        fecha_formateada = servicio.salida.strftime("%Y-%m-%dT%H:%M") if servicio.salida else ""
-        presentes = Servicio.objects.filter(id=id).prefetch_related(
-            Prefetch(
+        servicio = get_object_or_404(
+            Servicio.objects.prefetch_related(
+                Prefetch(
                     "moviles_asignados",
                     queryset=ServicioMovil.objects.select_related("movil").prefetch_related("bomberos"),
                     to_attr="moviles_list"
                 )
-            )
-        
+            ),
+            id=id
+        )
+        fecha_formateada = servicio.salida.strftime("%Y-%m-%dT%H:%M") if servicio.salida else ""
 
         context = {
             'fecha': fecha_formateada,
             'moviles': moviles,
             'bomberos': bomberos,
             'tipo_servicios': tipo_servicios,
-            'servicio': servicio,
-            'presentes': presentes
+            'servicio': servicio
         }
         return render (request, 'planilla/modificar_servicio.html', context)
     
     def post(self, request, id):
         print("entro a post")
         anterior = Servicio.objects.get(id=id)
-        print('movil anterior', anterior.movil.id)
-        print('movil actual', request.POST['movil'])
-        if anterior.movil.id == int(request.POST['movil']):
-            print("MISMO MOVIL")
-            movil = Movil.objects.get(id=request.POST['movil'])
-            movil.intervenciones +=1
-            estado = Estado.objects.get(estado="Ocupado")
-            movil.IDEstado_id = int(estado.id)
-            movil.save()
-        else:
-            print("DIFERENTE MOVIL")
-            movilanterior = Movil.objects.get(id=anterior.movil.id)
-            movilanterior.intervenciones -=1
-            estado = Estado.objects.get(estado="En servicio")
-            movilanterior.IDEstado_id = int(estado.id)
-
-            movil = Movil.objects.get(id=request.POST['movil'])
-            movil.intervenciones +=1
-            estado = Estado.objects.get(estado="Ocupado")
-            movil.IDEstado_id = int(estado.id)
-            movil.save()
-
         anterior.guardia_operativa = request.POST['guardia']
         anterior.direccion = request.POST['address']
         anterior.latitud = request.POST['latitude']
@@ -458,41 +458,14 @@ class ModificarServicio(View):
         anterior.telefono_denunciante = request.POST['telefono']
         anterior.save()
 
-        data = request.POST
-        resultadopresente = {}
-        index = 0
-        while True:
-            presente_key = f"presente-{index}"
-            
-            if presente_key in data:
-                # Agregar al diccionario organizado
-                resultadopresente[index] = {
-                    "bombero_id": int(data[presente_key])
-                }
-                index += 1
-            else:
-                # Salir del bucle si no hay más claves
-                break
-
-        print("presente: ", resultadopresente)
-        if resultadopresente:
-            for presente in resultadopresente.values():
-                presente_guardia = ServicioPresentes.objects.create(
-                    servicio_id=anterior.id, 
-                    bombero_id=presente["bombero_id"]
-                )
-                print(presente_guardia)
-            presente_guardia.save()
-
         return redirect ('guardia')
     
 def obtener_servicios(request):
-    servicios = list(Servicio.objects.filter(estado="En curso").values("direccion", "latitud", "longitud", "movil", "tipo"))
-    moviles = list(Movil.objects.values("id", "numero", "IDTipo"))
-    tipomovil = list(TipoMovil.objects.values("id", "tipo"))
+
+    servicios = list(Servicio.objects.filter(estado="En curso").values("direccion", "latitud", "longitud", "tipo"))
     tiposervicio = list(TipoServicio.objects.values("id", "tipo"))
     print(servicios)
-    return JsonResponse({"servicios": servicios, "moviles": moviles, "tipomovil": tipomovil, "tiposervicio": tiposervicio})
+    return JsonResponse({"servicios": servicios, "tiposervicio": tiposervicio})
 
 def servicio_movil(request, movil):
     servicios = list(Servicio.objects.filter(estado="En curso", movil=movil).values("direccion", "latitud", "longitud", "movil", "tipo"))
@@ -834,32 +807,46 @@ def verificar_numero(request):
 
 def carga_combustible(request, id):
     if request.method == "POST":
-        ahora = datetime.now().replace(microsecond=0)
         movil = Movil.objects.get(id=id)
-        servicio = Servicio.objects.filter(movil=id).order_by('regreso').first()
-        if servicio:
-            print(servicio)
-            print(servicio.regreso)
-            print(ahora)
-            
-            if servicio.regreso < request.POST['fecha']:
-                movil.ultima_carga = request.POST['fecha']
-                movil.intervenciones = 0
-            else:
-                movil.ultima_carga = request.POST['fecha']
-                movil.intervenciones += 1
-            movil.save()
-        else:
-            print('sin servicio')
-            movil.intervenciones = 0
-            movil.ultima_carga = request.POST['fecha']
-            movil.save()
+        tz = get_current_timezone()  # Obtener la zona horaria de Django
 
-        combustible = Combustible(fecha=request.POST['fecha'], cantidad=request.POST['cantidad'], movil_id=id, encargado_id=request.POST['encargado'])
+        # Convertir la fecha del formulario
+        fecha = datetime.strptime(request.POST['fecha'], "%Y-%m-%dT%H:%M")
+        if is_naive(fecha):  # Si la fecha es naive, la convertimos a aware
+            fecha = make_aware(fecha, timezone=tz)
+
+        # Verificar si movil.ultima_carga es None
+        if movil.ultima_carga is None:
+            ultima_carga = make_aware(datetime.min, timezone=tz)  # Usar fecha mínima
+        else:
+            ultima_carga = movil.ultima_carga
+            if is_naive(ultima_carga):
+                ultima_carga = make_aware(ultima_carga, timezone=tz)
+
+        # Contar los servicios desde la última carga hasta ahora
+        servicios_realizados = Servicio.objects.filter(
+            moviles_asignados__movil_id=movil.id,
+            salida__gte=ultima_carga,  # Servicios desde la última carga (asegurado que no es None)
+            regreso__lte=fecha  # Hasta la fecha del formulario
+        ).count()
+
+        print(f"Servicios realizados desde la última carga: {servicios_realizados}")
+
+        movil.ultima_carga = fecha
+        movil.intervenciones = servicios_realizados  # Actualizar con el conteo real
+        movil.save()
+
+        combustible = Combustible(
+            fecha=fecha, 
+            cantidad=request.POST['cantidad'], 
+            movil_id=id, 
+            encargado_id=request.POST['encargado']
+        )
         combustible.save()
+        
         return redirect('moviles')
     else:
-        print("NO CORRESPONDE EL METODO")
+        print("NO CORRESPONDE EL MÉTODO")
 
 def reparacion_movil(request, id):
     if request.method == "POST":
@@ -956,12 +943,30 @@ def eliminar_presente(request, presente_id):
         return JsonResponse({"success": True})
     return JsonResponse({"error": "Método no permitido"}, status=405)
 
-def eliminarpresenteservicio(request, presente_id):
-    if request.method == "DELETE":
-        print("paso por delete")
-        presente = ServicioPresentes.objects.get(id=presente_id)
-        presente.delete()
-        return JsonResponse({"success": True})
+@csrf_exempt
+def eliminar_movil(request, movil_id):
+    if request.method == "POST":
+        try:
+            data = json.loads(request.body)  # Cargar el JSON del request
+            servicio_id = data.get("servicio")  # Obtener el ID del servicio
+            # Verifica que se obtuvo el servicio_id
+            if not servicio_id:
+                return JsonResponse({"error": "No se recibió el ID del servicio"}, status=400)
+            print(list(ServicioMovil.objects.all()))
+
+            servicio_movil = ServicioMovil.objects.get(movil_id=movil_id, servicio_id=servicio_id)
+            servicio_movil.delete()
+
+            movil = get_object_or_404(Movil, id=movil_id)
+            movil.intervenciones -= 1
+            estado = get_object_or_404(Estado, estado="En servicio")
+            movil.IDEstado_id = int(estado.id)
+            movil.save()
+
+            return JsonResponse({"success": True}, status=200)
+        except ServicioMovil.DoesNotExist:
+            return JsonResponse({"error": "Móvil no encontrado"}, status=404)
+
     return JsonResponse({"error": "Método no permitido"}, status=405)
 
 def finalizar_servicio(request, servicio_id):
@@ -971,11 +976,25 @@ def finalizar_servicio(request, servicio_id):
         servicio.estado = "Cerrado"
         servicio.save()
 
-        movil = Movil.objects.get(id=servicio.movil_id)
-        estado = Estado.objects.get(estado="En servicio")
-        movil.IDEstado_id = int(estado.id)
-        movil.save()
-        return redirect ('servicios')
+        servicio_moviles = get_object_or_404(
+            Servicio.objects.prefetch_related(
+                Prefetch(
+                    "moviles_asignados",
+                    queryset=ServicioMovil.objects.select_related("movil").prefetch_related("bomberos"),
+                    to_attr="moviles_list"
+                )
+            ),
+            id=servicio_id
+        )
+
+        for movil_data in servicio_moviles.moviles_list:
+            print(movil_data.movil)
+            movil = get_object_or_404(Movil, id=movil_data.movil.id)
+            estado = get_object_or_404(Estado, estado="En servicio")
+            movil.IDEstado_id = int(estado.id)
+            movil.save()
+
+        return redirect ('/')
     return JsonResponse({"error": "Método no permitido"}, status=405)
 
 def signin(request):
