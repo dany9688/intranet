@@ -40,7 +40,6 @@
                     <th>Domicilio</th>
                     <th>Encargado</th>
                     <th>Tipo de servicio</th>
-                    <th>Finalizar</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -61,7 +60,6 @@
                         <td>{{ servicio.direccion }}</td>
                         <td>{{ servicio.encargado.legajo }} - {{ servicio.encargado.apellido }}, {{ servicio.encargado.nombre }}</td>
                         <td>{{ servicio.tipo.tipo }}</td>
-                        <td><a href="/finalizar_servicio/{{servicio.id}}" class="btn bg-danger">Finalizar</a></td>
                       </tr>
                     {% endif %}
                   {% endfor %}

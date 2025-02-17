@@ -91,8 +91,8 @@
         </div>
 
         <div class="row">
-            <div class="col-sm-12">
-                <div class="card card-danger">
+            <div class="col-sm-6">
+                <div class="card card-primary">
                     <div class="card-header border-0">
                       <h3 class="card-title">Novedades de los últimos 10 días</h3>
                     </div>
@@ -122,6 +122,55 @@
                     </div>
                 </div>
             </div>
+            <div class="col-md-6">
+              <div class="card card-danger">  
+                <div class="card-header">
+                  <h3 class="card-title">Servicios en curso</h3>
+                </div>
+                <!-- /.card-header -->
+                <div class="card-body table-responsive">
+                  {% if servicios %}
+                  <table class="table table-striped ">
+                    <thead>
+                      <tr>
+                        <th>Número</th>
+                        <th>Móviles</th>
+                        <th>Salida</th>
+                        <th>Domicilio</th>
+                        <th>Encargado</th>
+                        <th>Tipo de servicio</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {% for servicio in servicios %}
+                      {% if servicio.estado == "En curso" %}
+                          <tr>
+                            <td><a href="/servicio_detail/{{servicio.id}}">{{ servicio.numero }}</a>  </td>
+                            <td class="wrapper">
+                              {% if servicio.moviles_list %}
+                              <span>
+                                  {% for movil_data in servicio.moviles_list %}
+                                      Móvil {{ movil_data.movil.numero }}{% if not forloop.last %} - {% endif %}
+                                  {% endfor %}
+                              </span>
+                              {% endif %}
+                            </td>
+                            <td>{{ servicio.salida }}</td>
+                            <td>{{ servicio.direccion }}</td>
+                            <td>{{ servicio.encargado.legajo }} - {{ servicio.encargado.apellido }}, {{ servicio.encargado.nombre }}</td>
+                            <td>{{ servicio.tipo.tipo }}</td>
+                          </tr>
+                        {% endif %}
+                      {% endfor %}
+                    </tbody>
+                  </table>
+          </div>
+                <!-- /.card-body -->
+            </div>
+          {% else %}
+            <p>No hay servicios en curso.</p>
+          {% endif %}
+          </div>
       </div>
 
     </div>

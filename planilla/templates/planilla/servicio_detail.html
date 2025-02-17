@@ -25,10 +25,12 @@
                 <div class="card card-navy">
                     <div class="card-header border-0">
                       <h3 class="card-title float-left">Servicio N° {{servicio.numero }}</h3>
-                      {% if request.user.groups.all.0.name == "Guardia central"  %}
-                      <button class="btn btn-sm btn-primary float-right mr-2" data-toggle="modal" data-target="#asignarModal">Asignar móvil</button>
+                      {% if "Guardia" in request.user.groups.all.0.name  %}
+                      <a href="/finalizar_servicio/{{servicio.id}}" class="btn btn-sm btn-danger mr-2 float-right">Finalizar</a>
                       <a href="/modificar_servicio/{{servicio.id}}" class="btn btn-sm btn-warning mr-2 float-right">Modificar</a>
+                      <button class="btn btn-sm btn-primary float-right mr-2" data-toggle="modal" data-target="#asignarModal">Asignar móvil</button>
                       {%endif%}
+
                     </div>
                     </div>
                     <div class="card-body">
@@ -212,107 +214,150 @@
   </script>
 
 <script>
-    // Inicializa el mapa y el geocodificador
-    var map;
-    var geocoder;
-    var marker;
-    let zonas = [];
-  
-    function initMap() {
-      // Crear el mapa y centrarlo en una ubicación predeterminada
-      map = new google.maps.Map(document.getElementById("map"), {
+ // Variables globales
+var map;
+var geocoder;
+var marker;
+var autocomplete;
+let zonas = [];
+var ultimaUbicacion = null; // Almacena la última ubicación válida
+var ultimaDireccion = ""; // Almacena la última dirección seleccionada
+
+document.addEventListener("DOMContentLoaded", function () {
+    setTimeout(() => {
+        let lat = document.getElementById("latitude").value;
+        let lng = document.getElementById("longitude").value;
+
+        if (lat && lng) {
+            let ubicacionBackend = new google.maps.LatLng(parseFloat(lat), parseFloat(lng));
+            console.log("📍 Usando coordenadas del backend:", ubicacionBackend.lat(), ubicacionBackend.lng());
+            setMapLocation(ubicacionBackend, "Backend");
+        } else {
+            console.log("⚠️ No hay coordenadas en el backend, usando Geocoder.");
+            geocodeAddress(); // Solo si el backend no envió coordenadas
+        }
+    }, 1000);
+});
+
+
+// Inicializa el mapa
+function initMap() {
+    map = new google.maps.Map(document.getElementById("map"), {
         center: { lat: -34.657713050818785, lng: -58.63239669756467 },
         zoom: 15
-      });
-        // Inicializar el servicio de geocodificación
-        geocoder = new google.maps.Geocoder();
+    });
 
-      // Crea un marcador (será movido después según la dirección)
-      marker = new google.maps.Marker({
-        map: map,
-      });
-  
-       // Cargar zonas desde el archivo JSON (pero sin dibujar en el mapa)
-       fetch("{% static 'planilla/zonas.json' %}")
-            .then(response => response.json())
-            .then(data => {
-                data.features.forEach(feature => {
-                    let zonaCoords = feature.geometry.coordinates[0].map(coord => ({ 
-                        lat: parseFloat(coord[1]), 
-                        lng: parseFloat(coord[0]) 
+    geocoder = new google.maps.Geocoder();
+    marker = new google.maps.Marker({ map: map });
+
+    // Configurar Autocomplete
+    var input = document.getElementById("address");
+    autocomplete = new google.maps.places.Autocomplete(input);
+    autocomplete.bindTo("bounds", map);
+
+    autocomplete.addListener("place_changed", function () {
+        var place = autocomplete.getPlace();
+        if (!place.geometry) {
+            alert("No se encontraron coordenadas para la dirección.");
+            return;
+        }
+
+        // Guardar la ubicación y la dirección formateada
+        ultimaUbicacion = place.geometry.location;
+        ultimaDireccion = place.formatted_address;
+        document.getElementById("address").dataset.formattedAddress = ultimaDireccion;
+
+        console.log("✅ Dirección seleccionada desde Autocomplete:", ultimaDireccion);
+        console.log("✅ Coordenadas desde Autocomplete:", ultimaUbicacion.lat(), ultimaUbicacion.lng());
+
+        setMapLocation(ultimaUbicacion, "Autocompletado");
+    });
+
+    // Cargar zonas desde el archivo JSON
+    fetch("{% static 'planilla/zonas.json' %}")
+        .then(response => response.json())
+        .then(data => {
+            data.features.forEach(feature => {
+                let nombreZona = feature.properties.Name;
+                let coordenadas = feature.geometry.coordinates;
+                let poligonos = [];
+
+                if (feature.geometry.type === "Polygon") {
+                    poligonos.push(new google.maps.Polygon({
+                        paths: coordenadas[0].map(coord => ({ lat: coord[1], lng: coord[0] }))
                     }));
-                    let zona = new google.maps.Polygon({ paths: zonaCoords }); // Solo se usa para verificar, no se dibuja
-                    zonas.push({ nombre: feature.properties.Name, poligono: zona });
-                });
+                } else if (feature.geometry.type === "MultiPolygon") {
+                    coordenadas.forEach(poligono => {
+                        poligonos.push(new google.maps.Polygon({
+                            paths: poligono[0].map(coord => ({ lat: coord[1], lng: coord[0] }))
+                        }));
+                    });
+                }
+
+                zonas.push({ nombre: nombreZona, poligonos: poligonos });
             });
-      
-      // Crear el servicio de autocompletado
-      var input = document.getElementById("address");
-      var autocomplete = new google.maps.places.Autocomplete(input);
-  
-      // Asocia el autocompletado con el mapa
-      autocomplete.bindTo("bounds", map);
-  
-      // Define lo que sucede cuando se selecciona una opción del autocompletado
-      autocomplete.addListener("place_changed", function () {
-            var place = autocomplete.getPlace();
-            if (!place.geometry) {
-                alert("No se encontraron coordenadas para la dirección.");
-                return;
-            }
-
-            map.setCenter(place.geometry.location);
-            map.setZoom(15);
-
-            marker.setPosition(place.geometry.location);
-            marker.setVisible(true);
-
-            // Guardar latitud y longitud en los inputs ocultos
-            document.getElementById("latitude").value = place.geometry.location.lat();
-            document.getElementById("longitude").value = place.geometry.location.lng();
         });
+}
+
+// Función para geocodificar dirección manualmente
+function geocodeAddress(event) {
+    if (event) event.preventDefault();
+
+    var addressInput = document.getElementById("address").value.trim();
+
+    // Si ya guardamos la ubicación desde el backend, no volver a geocodificar
+    if (ultimaUbicacion && addressInput === ultimaDireccion) {
+        console.log("🔄 Usando ubicación ya almacenada en vez de geocodificar:", ultimaUbicacion.lat(), ultimaUbicacion.lng());
+        setMapLocation(ultimaUbicacion, "Backend");
+        return;
     }
 
-    function geocodeAddress(event) {
-        if (event) event.preventDefault()
+    console.log("⚠️ No se detectó ubicación previa, usando Geocoder para:", addressInput);
 
-        var address = document.getElementById("address").value;
-        geocoder.geocode({ 'address': address }, function (results, status) {
-            if (status === 'OK') {
-                let location = results[0].geometry.location;
-                map.setCenter(results[0].geometry.location);
-                marker.setPosition(results[0].geometry.location);
-                marker.setVisible(true);
+    geocoder.geocode({ 'address': addressInput }, function (results, status) {
+        if (status === 'OK') {
+            ultimaUbicacion = results[0].geometry.location; // Guardar la ubicación obtenida
+            ultimaDireccion = addressInput; // Guardar la dirección del backend
+            console.log("🌍 Coordenadas obtenidas por Geocoder:", ultimaUbicacion.lat(), ultimaUbicacion.lng());
+            setMapLocation(ultimaUbicacion, "Geocoding");
+        } else {
+            alert('No se pudo encontrar la dirección: ' + status);
+        }
+    });
+}
 
-                // Guardar latitud y longitud en los inputs ocultos
-                document.getElementById("latitude").value = results[0].geometry.location.lat();
-                document.getElementById("longitude").value = results[0].geometry.location.lng();
 
-            // Verificar en qué zona se encuentra
-            let zonaEncontrada = "Fuera de las zonas definidas";
-                zonas.forEach(zona => {
-                    if (google.maps.geometry.poly.containsLocation(location, zona.poligono)) {
-                        zonaEncontrada = zona.nombre;
-                    }
-                });
+// Función para establecer la ubicación en el mapa y verificar la zona
+function setMapLocation(location, source) {
+    console.log(`📍 Ubicación de ${source}:`, location.lat(), location.lng());
 
-                document.getElementById("zona").value = zonaEncontrada;
-                console.log("zona", zonaEncontrada)
-            } else {
-                alert('No se pudo encontrar la dirección: ' + status);
+    map.setCenter(location);
+    marker.setPosition(location);
+    marker.setVisible(true);
+
+    document.getElementById("latitude").value = location.lat();
+    document.getElementById("longitude").value = location.lng();
+
+    let zonaEncontrada = "Fuera de las zonas definidas";
+    zonas.forEach(zona => {
+        zona.poligonos.forEach(poligono => {
+            if (google.maps.geometry.poly.containsLocation(location, poligono)) {
+                zonaEncontrada = zona.nombre;
             }
-
         });
+    });
 
-    }
+    document.getElementById("zona").value = zonaEncontrada;
+    console.log("✅ Zona detectada:", zonaEncontrada);
+}
 
-    // Cargar el mapa cuando la página esté lista
-    google.maps.event.addDomListener(window, "load", initMap);
+// Cargar el mapa cuando la página esté lista
+google.maps.event.addDomListener(window, "load", initMap);
 
 
   </script>
 
-<script>
+<!-- <script>
 document.addEventListener("DOMContentLoaded", function () {
     setTimeout(() => {
         if (document.getElementById("address").value.trim() !== "") {
@@ -320,6 +365,6 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }, 1000); // Pequeño retraso para asegurar que el mapa se haya cargado correctamente
 });
-</script>
+</script> -->
 
 {% endblock %}

@@ -121,7 +121,7 @@
                           Servicio {{ servicio.numero }} - {{ servicio.tipo.tipo }}
                         </a>
                       </h4>
-                      <span class="badge bg-warning float-right" id="contador" data-inicio="{{ servicio.salida|date:'c' }}"></span>
+                      <span class="badge bg-warning float-right contador-servicio" id="contador{{servicio.numero}}" data-inicio="{{ servicio.salida|date:'c' }}"></span>
                     </div>
                     <div id="collapse{{ servicio.id }}" class="collapse">
                       <div class="card-body">
@@ -138,13 +138,12 @@
                             <strong>DIRECCIÓN:</strong>
                             <span>{{ servicio.direccion }}</span>
                           </div> 
+                          <div class="mb-2">
+                            <strong>ZONA:</strong>
+                            <span>{{ servicio.zona }}</span>
+                          </div> 
                         <div class="mt-3">
-                          {% if request.user.groups.all.0.name == "Guardia central"  %}
-                          <a href="/finalizar_servicio/{{servicio.id}}" class="btn btn-app bg-danger float-right">
-                            <i class="fas fa-rectangle-xmark"></i> Finalizar
-                          </a>
-                          {% endif %}
-                          <a href="/servicio_detail/{{servicio.id}}" class="btn btn-app bg-secondary float-right mr-1">
+                          <a href="/servicio_detail/{{servicio.id}}" class="btn bg-secondary float-right mr-1">
                             <i class="fas fa-magnifying-glass-location"></i>Ver
                           </a>
                         </div>         
@@ -227,24 +226,31 @@
 
 <script>
   document.addEventListener("DOMContentLoaded", function() {
-      function actualizarContador() {
-          let inicioStr = document.getElementById("contador").getAttribute("data-inicio");
-          let inicio = new Date(inicioStr); // Convertir a objeto Date
-          let ahora = new Date();
-          let diferencia = Math.floor((ahora - inicio) / 1000); // Diferencia en segundos
+      function actualizarContadores() {
+          document.querySelectorAll(".contador-servicio").forEach(function(elemento) {
+              let inicioStr = elemento.getAttribute("data-inicio");
+              if (!inicioStr) return; // Si no tiene data-inicio, salir
   
-          let horas = Math.floor(diferencia / 3600);
-          let minutos = Math.floor((diferencia % 3600) / 60);
-          let segundos = diferencia % 60;
+              let inicio = new Date(inicioStr);
+              let ahora = new Date();
+              let diferencia = Math.floor((ahora - inicio) / 1000); // Diferencia en segundos
   
-          document.getElementById("contador").textContent = 
-              `${horas}h ${minutos}m ${segundos}s`;
+              let horas = Math.floor(diferencia / 3600);
+              let minutos = Math.floor((diferencia % 3600) / 60);
+              let segundos = diferencia % 60;
+  
+              // Formateo con ceros a la izquierda
+              minutos = minutos.toString().padStart(2, '0');
+              segundos = segundos.toString().padStart(2, '0');
+  
+              elemento.textContent = `${horas}h ${minutos}m ${segundos}s`;
+          });
       }
   
-      actualizarContador(); // Actualizar al cargar
-      setInterval(actualizarContador, 1000); // Actualizar cada segundo
+      actualizarContadores(); // Actualizar al cargar
+      setInterval(actualizarContadores, 1000); // Actualizar cada segundo
   });
-</script>
+  </script>
 
 <script>
   let destacamento = document.getElementById('destacamento').innerText

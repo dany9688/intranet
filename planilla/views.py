@@ -408,7 +408,7 @@ class ServicioDetail(View):
         cantidad_bomberos = sum(len(movil.bomberos.all()) for movil in servicio.moviles_list)
 
         fecha_formateada = servicio.salida.strftime("%Y-%m-%dT%H:%M") if servicio.salida else ""
-        
+
         context = {
             "servicio": servicio,
             "fecha": fecha_formateada,
@@ -486,7 +486,7 @@ class ModificarServicio(View):
         anterior.estado="En curso"
         anterior.zona = request.POST['zona']
         anterior.numero = request.POST['numero']
-        anterior.movil_id = int(request.POST['movil'])
+        # anterior.movil_id = int(request.POST['movil'])
         anterior.salida = request.POST['salida']
         anterior.tipo_id = int(request.POST['tiposervicio'])
         print(anterior.tipo.id)
