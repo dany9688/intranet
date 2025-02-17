@@ -25,8 +25,10 @@
                 <div class="card card-navy">
                     <div class="card-header border-0">
                       <h3 class="card-title float-left">Servicio N° {{servicio.numero }}</h3>
+                      {% if request.user.groups.all.0.name == "Guardia central"  %}
                       <button class="btn btn-sm btn-primary float-right mr-2" data-toggle="modal" data-target="#asignarModal">Asignar móvil</button>
                       <a href="/modificar_servicio/{{servicio.id}}" class="btn btn-sm btn-warning mr-2 float-right">Modificar</a>
+                      {%endif%}
                     </div>
                     </div>
                     <div class="card-body">
@@ -101,7 +103,7 @@
                         </div>
                     </div>
                     <div class="row col-md-12">
-                        <h3 class="mb-3">Unidades y personal asignado</h3>
+                        <h4 class="col-sm-12 mb-3 d-inline">Unidades y personal asignado <span class="d-inline"> - <i class="fa-solid fa-truck-field"></i> {{cantidad_moviles}} - <i class="fa-solid fa-user-group"></i> {{cantidad_bomberos}}</span> </h4> 
                         <div class="row col-md-12 wrapper">
                             {% if servicio.moviles_list %}
                             {% for movil_data in servicio.moviles_list %}
@@ -114,11 +116,11 @@
                                 </div>
                                 <!-- /.card-header -->
                                 <div class="card-body">
-                                    <ol>
+                                    <ul>
                                     {% for bombero in movil_data.bomberos.all %}
-                                    <li>{{bombero.nombre}}</li>
+                                    <li>147/{{bombero.legajo}} - {{bombero.apellido|upper}}, {{bombero.nombre}}</li>
                                     {%endfor%}
-                                    </ol>
+                                    </ul>
                                 </div>
                                 <!-- /.card-body -->
                                 </div>

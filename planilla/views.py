@@ -1,5 +1,6 @@
 from django.shortcuts import get_object_or_404, render, redirect
 from .models import *
+import re
 from django.views import generic, View
 from django.contrib.auth import login, authenticate, logout
 from datetime import timedelta
@@ -10,6 +11,8 @@ from django.contrib import messages
 from .forms import *
 from django.http import JsonResponse
 import json
+from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync
 from django.middleware.csrf import get_token
 from django.templatetags.static import static
 from django.db.models import Sum, Count, Q, Prefetch
@@ -26,20 +29,23 @@ def index(request):
     print("user: ", request.user, flush=True)
     print("grupo: ",grupo_usuario)
     if grupo_usuario == "Móviles":
-        movil = int(request.user.last_name.strip())
+        movil = 1
         movil = Movil.objects.get(numero=movil)
-        servicio = Servicio.objects.filter(estado='En curso', movil_id=movil.id).first()
+        servicio = Servicio.objects.filter(estado='En curso').first()
         print(servicio)
         context ={
             "servicio" : servicio,
             "movil": movil,
         }
         return render (request, 'planilla/mobile.html', context)
-    elif grupo_usuario == "Guardia central":
-        print("entro a guardia central")
+    
+    elif "Guardia" in grupo_usuario:
+        print("entro a guardia")
         base = Base.objects.all().order_by('id')
         moviles = Movil.objects.all()
         bomberos1 = Bombero.objects.all()
+        destacamento = request.user.last_name
+        print("last_name: ", destacamento)
         # Obtener los servicios "En curso"
         servicios_en_curso = Servicio.objects.filter(estado="En curso").prefetch_related(
             Prefetch(
@@ -68,9 +74,11 @@ def index(request):
             'moviles': moviles,
             'cuentas': cuentas,
             'servicios': servicios_en_curso,
-            'bomberos1': bomberos1
+            'bomberos1': bomberos1,
+            'destacamento': destacamento
         }
-
+        print("destacamento last:" ,destacamento)
+        print("destacamento last:" ,type(destacamento))
         print(bomberos1)
         return render (request, 'planilla/guardia.html', context)
     
@@ -332,6 +340,8 @@ class CargarServicio(View):
         encargado_id = request.POST.get("encargado")
         nombre = request.POST.get("denunciante")
         telefono = request.POST.get("telefono")
+        base = request.POST.get('zona')
+
 
         # Validar datos requeridos
         if not (guardia and address and latitude and longitude and numero and salida and tipo_servicio_id and encargado_id):
@@ -348,6 +358,7 @@ class CargarServicio(View):
                 estado="En curso", 
                 numero=numero,
                 salida=salida,
+                zona=base,
                 tipo_id=tipo_servicio_id,
                 encargado_id=encargado_id,
                 nombre_denunciante=nombre,
@@ -355,9 +366,26 @@ class CargarServicio(View):
             )
             servicios.save()
 
-            messages.success(request, "Servicio cargado correctamente.")
-            return redirect("guardia")
-        
+            if normalizar_destacamento(request.user.last_name) == base:
+                mensaje = f'Se ha creado un nuevo servicio en {base}'
+                destacamento = normalizar_destacamento(base)  # Normaliza el nombre
+                # Enviar notificación vía WebSockets
+                channel_layer = get_channel_layer()
+                async_to_sync(channel_layer.group_send)(
+                    f'notificacion_{destacamento}',
+                    {
+                        'type': 'enviar_notificacion',
+                        'mensaje': mensaje
+                    }
+                )
+
+                messages.success(request, "Servicio cargado correctamente.")
+                messages.success(request, "Se envió la alerta.")
+                return redirect("guardia")
+            else:
+                messages.success(request, "Servicio cargado correctamente.")
+                messages.error(request, "Falló al enviar la alerta")
+                return redirect("guardia")
         except Exception as e:
                 messages.error(request, f"Error al cargar el servicio: {e}")
                 return redirect("cargar_servicio")
@@ -376,13 +404,18 @@ class ServicioDetail(View):
             ),
             id=id
         )
+        cantidad_moviles = len(servicio.moviles_list)
+        cantidad_bomberos = sum(len(movil.bomberos.all()) for movil in servicio.moviles_list)
+
         fecha_formateada = servicio.salida.strftime("%Y-%m-%dT%H:%M") if servicio.salida else ""
         
         context = {
             "servicio": servicio,
             "fecha": fecha_formateada,
             "bomberos": bomberos,
-            "moviles": moviles
+            "moviles": moviles,
+            'cantidad_moviles': cantidad_moviles,
+            'cantidad_bomberos': cantidad_bomberos
         }
         return render (request, 'planilla/servicio_detail.html', context)
 
@@ -426,6 +459,8 @@ class ModificarServicio(View):
             ),
             id=id
         )
+        cantidad_moviles = len(servicio.moviles_list)
+        cantidad_bomberos = sum(len(movil.bomberos.all()) for movil in servicio.moviles_list)
         fecha_formateada = servicio.salida.strftime("%Y-%m-%dT%H:%M") if servicio.salida else ""
 
         context = {
@@ -433,7 +468,9 @@ class ModificarServicio(View):
             'moviles': moviles,
             'bomberos': bomberos,
             'tipo_servicios': tipo_servicios,
-            'servicio': servicio
+            'servicio': servicio,
+            'cantidad_moviles': cantidad_moviles,
+            'cantidad_bomberos': cantidad_bomberos
         }
         return render (request, 'planilla/modificar_servicio.html', context)
     
@@ -1022,6 +1059,14 @@ def signout(request):
     response.delete_cookie('csrftoken')
     response.delete_cookie('sessionid')  # También eliminamos la sesión
     return response
+
+def normalizar_destacamento(nombre):
+    """ Convierte nombres como 'Destacamento N°2' en 'destacamento_2' """
+    nombre = nombre.lower()  # Minúsculas
+    nombre = nombre.replace("°", "")  # Elimina el símbolo °
+    nombre = re.sub(r"\s+", "_", nombre)  # Reemplaza espacios por "_"
+    nombre = re.sub(r"[^a-z0-9_]", "", nombre)  # Elimina caracteres no alfanuméricos excepto "_"
+    return nombre
 
 def custom_404_view(request, exception):
     return render(request, "404.html", status=404)

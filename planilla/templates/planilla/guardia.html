@@ -13,6 +13,7 @@
         <div class="container-fluid">
         <div class="col-sm-6">
             <h2 class="p-2">Panel de guardia</h2>
+            <span id="destacamento" hidden>{{destacamento}}</span>
         </div><!-- /.col -->
         </div>
         <!-- /.container-fluid -->
@@ -35,7 +36,7 @@
           {% endif %}
           {%for cuartel in base %}
           <div class="row">
-            <div class="col-md-12">
+          <div class="col-md-12">
               <!-- Widget: user widget style 2 -->
               <div class="card card-widget widget-user-2">
                 <!-- Add the bg color to the header using any of the bg-* classes -->
@@ -88,7 +89,7 @@
             {%endfor%}
           </div>
           <div class="col-md-4">
-            <div class="row col-md-12">
+          <div class="row col-md-12">
             <div class="card card-navy" style="width: 100%;">
               <div class="card-header d-flex">
                 <h3 class="card-title">Servicios activos</h3>
@@ -103,17 +104,17 @@
                 <div id="accordion">
                   {% for servicio in servicios %}
                     {% if servicio.estado == "En curso" %}
-                    {% if "Incendio" in servicio.tipo.tipo %}
-                    <div class="card card-danger mb-2" id="grupo-servicio-{{ servicio.id }}">
-                    {% elif "Auxilio" in servicio.tipo.tipo %}
-                    <div class="card card-teal mb-2" id="grupo-servicio-{{ servicio.id }}">
-                    {% elif "Colaboración" in servicio.tipo.tipo %}
-                    <div class="card card-gray mb-2" id="grupo-servicio-{{ servicio.id }}">
-                    {% elif "Accidente" in servicio.tipo.tipo %}
-                    <div class="card card-warning mb-2" id="grupo-servicio-{{ servicio.id }}">
-                    {% else %}
-                    <div class="card card-navy mb-2" id="grupo-servicio-{{ servicio.id }}">
-                    {% endif %}
+                      {% if "Incendio" in servicio.tipo.tipo %}
+                      <div class="card card-danger mb-2" id="grupo-servicio-{{ servicio.id }}">
+                      {% elif "Auxilio" in servicio.tipo.tipo %}
+                      <div class="card card-teal mb-2" id="grupo-servicio-{{ servicio.id }}">
+                      {% elif "Colaboración" in servicio.tipo.tipo %}
+                      <div class="card card-gray mb-2" id="grupo-servicio-{{ servicio.id }}">
+                      {% elif "Accidente" in servicio.tipo.tipo %}
+                      <div class="card card-warning mb-2" id="grupo-servicio-{{ servicio.id }}">
+                      {% else %}
+                      <div class="card card-navy mb-2" id="grupo-servicio-{{ servicio.id }}">
+                      {% endif %}
                     <div class="card-header d-flex">
                       <h4 class="card-title w-100">
                         <a class="d-block w-100 float-left" style="cursor: pointer;" data-toggle="collapse" data-target="#collapse{{ servicio.id }}" aria-expanded="false">
@@ -150,9 +151,10 @@
                       </div>
                     </div>
                   </div>
-                    </div>
+                  </div>
                   {% endif %}
                   {% endfor %}
+                  </div>
                 {% else %}
                 <p>No hay servicios cargados.</p>
               {% endif %}
@@ -160,9 +162,8 @@
               </div>
               <!-- /.card-body -->
             </div>
+            </div>
             <!-- /.card -->
-          </div>
-        </div>
         <div class="col-md-5">
           <div class="row col-md-12">
             <button class="btn btn-sm btn-secondary mr-2" id="hidrantes">Mostrar/Ocultar Hidrantes</button>
@@ -208,8 +209,8 @@
         <!-- MODAL CAMBIAR CUARTEL -->
         </div>
     </div>
-        </div>
-
+    
+  </div>
 {% endblock %}
 {% block js_block %}
 <script async src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDgZ9iDyLaJEwAAYUcuN7MgVWN2alaLd1s&libraries=places"></script>
@@ -243,6 +244,48 @@
       actualizarContador(); // Actualizar al cargar
       setInterval(actualizarContador, 1000); // Actualizar cada segundo
   });
+</script>
+
+<script>
+  let destacamento = document.getElementById('destacamento').innerText
+  console.log(destacamento)
+  const protocol = window.location.protocol === "https:" ? "wss" : "ws";
+  let destacamentoNormalizado = normalizarDestacamento({destacamento});
+
+  let socket = new WebSocket(`${protocol}://${window.location.host}/ws/notificaciones/${destacamentoNormalizado}/`);
+// const socket = new WebSocket("ws://127.0.0.1:8001/ws/notificaciones/destacamento_2/");
+
+
+  socket.onopen = () => console.log("Conectado");
+  socket.onerror = (error) => console.log("Error:", error);
+  socket.onmessage = (event) => console.log("Mensaje recibido:", event.data);
+
+  socket.onmessage = function(event) {
+      const data = JSON.parse(event.data);
+      alert(`🔔 Notificación: ${data.mensaje}`);
+  };
+
+  socket.onclose = function(event) {
+      console.log("WebSocket cerrado.");
+  };
+
+  function normalizarDestacamento(nombre) {
+    // Si nombre es un objeto, extraer la propiedad 'destacamento'
+    if (typeof nombre === "object" && nombre !== null && "destacamento" in nombre) {
+        nombre = nombre.destacamento;  // Obtener el valor real
+    }
+
+    // Validar que ahora sea un string antes de aplicar toLowerCase()
+    if (typeof nombre !== "string") {
+        console.error("Error: el valor no es un string", nombre);
+        return "";
+    }
+
+    return nombre.toLowerCase()
+                 .replace("°", "")
+                 .replace(/\s+/g, "_")
+                 .replace(/[^a-z0-9_]/g, "");
+}
 </script>
 
 {% endblock %}

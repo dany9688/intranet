@@ -105,7 +105,7 @@
                         </form>
                     </div>
                     <div class="row col-md-12">
-                        <h3 class="mb-3">Unidades y personal asignado</h3>
+                        <h3 class="mb-3">Unidades y personal asignado</h3> <span> - Cantidad de móviles: {{cantidad_moviles}} - Cantidad de bomberos: {{cantidad_bomberos}}</span>
                         <div class="row col-md-12 wrapper">
                             {% if servicio.moviles_list %}
                             {% for movil_data in servicio.moviles_list %}
@@ -113,7 +113,6 @@
                                 <div class="card card-navy">
                                 <div class="card-header">
                                     <h3 class="card-title">
-                                        <i class="fas fa-truck-field"></i>
                                     Móvil {{ movil_data.movil.numero }} - {{ movil_data.movil.IDTipo.tipo }}
                                     </h3>
                                     <div class="card-tools">
@@ -124,11 +123,11 @@
                                 </div>
                                 <!-- /.card-header -->
                                 <div class="card-body">
-                                    <ol>
+                                    <ul>
                                     {% for bombero in movil_data.bomberos.all %}
-                                    <li>{{bombero.nombre}}</li>
+                                    <li>147/{{bombero.legajo}} - {{bombero.apellido|upper}}, {{bombero.nombre}}</li>
                                     {%endfor%}
-                                    </ol>
+                                    </ul>
                                 </div>
                                 <!-- /.card-body -->
                                 </div>

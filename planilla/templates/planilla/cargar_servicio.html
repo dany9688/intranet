@@ -58,16 +58,6 @@
                                     <label for="exampleInputPassword1">Zona</label>
                                     <input class="form-control" type="text" name="zona" id="zona" required>
                                 </div>
-                                <!-- <div class="form-group col-md-3 row mr-3">
-                                    <label for="exampleInputPassword1">Móvil</label>
-                                    <select class="form-control" name="movil" id="movil">
-                                    {% for movil in moviles %}
-                                    {% if movil.IDEstado.estado == "En servicio" or movil.IDEstado.estado == "Condicional" %}
-                                        <option value="{{ movil.id }}">Móvil {{ movil.numero }}</option>
-                                    {%endif%}
-                                    {% endfor %}
-                                    </select>
-                                    </div> -->
                                 <div class="form-group col-md-4 row">
                                     <label for="exampleInputPassword1">Hora de salida</label>
                                     <input type="datetime-local" class="form-control" id="horasalida" name="salida" required>
@@ -234,6 +224,7 @@
                 });
 
                 document.getElementById("zona").value = zonaEncontrada;
+
                 console.log("zona", zonaEncontrada)
             } else {
                 alert('No se pudo encontrar la dirección: ' + status);
@@ -248,4 +239,48 @@
 
 
   </script>
+
+<script>
+    let destacamento = "{{ destacamento }}";  // Este valor debería venir del usuario logueado
+    console.log(destacamento)
+    const protocol = window.location.protocol === "https:" ? "wss" : "ws";
+    let destacamentoNormalizado = normalizarDestacamento({destacamento});
+  
+    let socket = new WebSocket(`${protocol}://${window.location.host}/ws/notificaciones/${destacamentoNormalizado}/`);
+  // const socket = new WebSocket("ws://127.0.0.1:8001/ws/notificaciones/destacamento_2/");
+  
+  
+    socket.onopen = () => console.log("Conectado");
+    socket.onerror = (error) => console.log("Error:", error);
+    socket.onmessage = (event) => console.log("Mensaje recibido:", event.data);
+  
+    socket.onmessage = function(event) {
+        const data = JSON.parse(event.data);
+        alert(`🔔 Notificación: ${data.mensaje}`);
+    };
+  
+    socket.onclose = function(event) {
+        console.log("WebSocket cerrado.");
+    };
+  
+    function normalizarDestacamento(nombre) {
+      // Si nombre es un objeto, extraer la propiedad 'destacamento'
+      if (typeof nombre === "object" && nombre !== null && "destacamento" in nombre) {
+          nombre = nombre.destacamento;  // Obtener el valor real
+      }
+  
+      // Validar que ahora sea un string antes de aplicar toLowerCase()
+      if (typeof nombre !== "string") {
+          console.error("Error: el valor no es un string", nombre);
+          return "";
+      }
+  
+      return nombre.toLowerCase()
+                   .replace("°", "")
+                   .replace(/\s+/g, "_")
+                   .replace(/[^a-z0-9_]/g, "");
+  }
+  </script>
+
+
 {% endblock %}

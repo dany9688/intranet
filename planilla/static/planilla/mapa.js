@@ -249,6 +249,8 @@ function cargarServicios() {
                     oms.addMarker(marker);
 
                     markers[idServicio] = marker;
+
+                    console.log(markers)
                 }
             });
 
