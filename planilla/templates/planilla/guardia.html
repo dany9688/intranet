@@ -206,12 +206,33 @@
             </div>
         </div>
         <!-- MODAL CAMBIAR CUARTEL -->
+                    <!-- Modal de Notificación -->
+              <div class="modal fade" id="alertaModal" tabindex="-1" aria-labelledby="alertaModalLabel" aria-hidden="true">
+              <div class="modal-dialog">
+              <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                  <h5 class="modal-title" id="alertaModalLabel">🚨 Alerta de Servicio</h5>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body text-center">
+                  <p id="mensajeNotificacion">¡Nueva alerta!</p>
+                  <audio id="sonidoAlarma">
+                    <source src="{% static 'planilla/audio/alarma.mp3'%}" type="audio/mp3">
+                  </audio>
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-danger" id="cerrarModal">Cerrar</button>
+                </div>
+              </div>
+              </div>
+              </div>
         </div>
     </div>
     
   </div>
 {% endblock %}
 {% block js_block %}
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script async src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDgZ9iDyLaJEwAAYUcuN7MgVWN2alaLd1s&libraries=places"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/OverlappingMarkerSpiderfier/1.0.3/oms.min.js"></script>
 <script>
@@ -253,28 +274,50 @@
   </script>
 
 <script>
-  let destacamento = document.getElementById('destacamento').innerText
-  console.log(destacamento)
-  const protocol = window.location.protocol === "https:" ? "wss" : "ws";
-  let destacamentoNormalizado = normalizarDestacamento({destacamento});
+  // Inicializa el modal manualmente
+  const alertaModal = new bootstrap.Modal(document.getElementById("alertaModal"));
 
-  let socket = new WebSocket(`${protocol}://${window.location.host}/ws/notificaciones/${destacamentoNormalizado}/`);
-// const socket = new WebSocket("ws://127.0.0.1:8001/ws/notificaciones/destacamento_2/");
+  // Función para cerrar el modal
+  document.getElementById("cerrarModal").addEventListener("click", function() {
+      alertaModal.hide();
+  });
+  const destacamento = "{{ destacamento|default:'' }}".trim();  // Asegura que la variable se pase correctamente
+
+  if (destacamento) {
+    const protocol = window.location.protocol === "https:" ? "wss" : "ws";
+    let destacamentoNormalizado = normalizarDestacamento({destacamento});
+
+    let socket = new WebSocket(`${protocol}://${window.location.host}/ws/notificaciones/${destacamentoNormalizado}/`);
+    console.log(socket)
+      socket.onopen = () => console.log(`✅ Conectado al WebSocket de ${destacamento}`);
+      socket.onerror = (error) => console.error("❌ Error en WebSocket:", error);
+      socket.onmessage = (event) => console.log("📩 Mensaje recibido:", event.data);
 
 
-  socket.onopen = () => console.log("Conectado");
-  socket.onerror = (error) => console.log("Error:", error);
-  socket.onmessage = (event) => console.log("Mensaje recibido:", event.data);
 
   socket.onmessage = function(event) {
-      const data = JSON.parse(event.data);
-      alert(`🔔 Notificación: ${data.mensaje}`);
+    const data = JSON.parse(event.data);
+    console.log("📩 Notificación recibida:", data.mensaje);
+
+    // Actualizar el mensaje en el modal
+    document.getElementById("mensajeNotificacion").textContent = data.mensaje;
+
+    // Reproducir sonido de alarma
+    const audio = document.getElementById("sonidoAlarma");
+    audio.play().catch(error => console.error("Error al reproducir el sonido:", error));
+
+    // Mostrar el modal de Bootstrap
+    const alertaModal = new bootstrap.Modal(document.getElementById("alertaModal"));
+    alertaModal.show();
   };
 
   socket.onclose = function(event) {
       console.log("WebSocket cerrado.");
   };
 
+} else {
+      console.error("❌ No se pudo conectar al WebSocket: el destacamento está vacío.");
+  }
   function normalizarDestacamento(nombre) {
     // Si nombre es un objeto, extraer la propiedad 'destacamento'
     if (typeof nombre === "object" && nombre !== null && "destacamento" in nombre) {

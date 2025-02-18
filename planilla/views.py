@@ -9,7 +9,8 @@ from django.utils import timezone
 from django.utils.timezone import get_current_timezone, is_naive, make_aware, localtime
 from django.contrib import messages
 from .forms import *
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponseRedirect
+from django.urls import reverse
 import json
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
@@ -44,8 +45,6 @@ def index(request):
         base = Base.objects.all().order_by('id')
         moviles = Movil.objects.all()
         bomberos1 = Bombero.objects.all()
-        destacamento = request.user.last_name
-        print("last_name: ", destacamento)
         # Obtener los servicios "En curso"
         servicios_en_curso = Servicio.objects.filter(estado="En curso").prefetch_related(
             Prefetch(
@@ -69,17 +68,24 @@ def index(request):
             ocupados=Count('movil', filter=Q(movil__IDEstado=4)),
             fuera_servicio=Count('movil', filter=Q(movil__IDEstado=3))
         )
+
+        destacamento_usuario = request.session.get("usuario_destacamento", normalizar_destacamento(request.user.last_name))
+        print("🔍 Destacamento del usuario:", destacamento_usuario)
+
+
         context = {
             'base': base,
             'moviles': moviles,
             'cuentas': cuentas,
             'servicios': servicios_en_curso,
             'bomberos1': bomberos1,
-            'destacamento': destacamento
+            'destacamento': destacamento_usuario
         }
-        print("destacamento last:" ,destacamento)
-        print("destacamento last:" ,type(destacamento))
+        print("destacamento last:" ,destacamento_usuario)
+        print("destacamento last:" ,type(destacamento_usuario))
         print(bomberos1)
+
+        print("🔍 Destacamento en sesión tras la redirección:", destacamento_usuario)  # Debug
         return render (request, 'planilla/guardia.html', context)
     
     else:
@@ -319,11 +325,13 @@ class CargarServicio(View):
         moviles = Movil.objects.all().order_by('numero')
         bomberos = Bombero.objects.all()
         tipo_servicios = TipoServicio.objects.all()
+        destacamento = request.session.get("destacamento", request.user.last_name)  # Recupera destacamento o usa last_name
 
         context = {
             "moviles": moviles,
             "bomberos": bomberos,
             "tipo_servicios": tipo_servicios,
+            "destacamento": destacamento
         }
         return render (request, 'planilla/cargar_servicio.html', context)
     
@@ -366,26 +374,44 @@ class CargarServicio(View):
             )
             servicios.save()
 
-            if normalizar_destacamento(request.user.last_name) == base:
-                mensaje = f'Se ha creado un nuevo servicio en {base}'
-                destacamento = normalizar_destacamento(base)  # Normaliza el nombre
-                # Enviar notificación vía WebSockets
-                channel_layer = get_channel_layer()
-                async_to_sync(channel_layer.group_send)(
-                    f'notificacion_{destacamento}',
-                    {
-                        'type': 'enviar_notificacion',
-                        'mensaje': mensaje
-                    }
-                )
+            print(f"🔍 Comparando: normalizar_destacamento({request.user.last_name}) == {base}")
+            print(f"🔍 Normalizado: {normalizar_destacamento(request.user.last_name)}")
+            print(f"🔍 Base desde el POST: {base}")
 
-                messages.success(request, "Servicio cargado correctamente.")
-                messages.success(request, "Se envió la alerta.")
-                return redirect("guardia")
-            else:
-                messages.success(request, "Servicio cargado correctamente.")
-                messages.error(request, "Falló al enviar la alerta")
-                return redirect("guardia")
+            destacamento = normalizar_destacamento(base)  # 🔥 Usa `base`, no `request.user.last_name`
+
+            mensaje = f'Se ha creado un nuevo servicio en {base}'
+
+            print(f"🔍 Intentando enviar mensaje a: notificacion_{destacamento}")  # Debug
+            print(f"🔍 Mensaje: {mensaje}")  # Debug
+
+            # Enviar notificación vía WebSockets
+            channel_layer = get_channel_layer()
+            async_to_sync(channel_layer.group_send)(
+                f'notificacion_{destacamento}',  # 🔥 Notifica al destacamento correcto
+                {
+                    'type': 'enviar_notificacion',
+                    'mensaje': mensaje
+                }
+            )
+            print("✅ `group_send()` ejecutado con éxito")  # Debug
+            messages.success(request, "Servicio cargado correctamente.")
+            messages.success(request, "Se envió la alerta.")
+            # Guarda el destacamento del usuario logueado
+            request.session["usuario_destacamento"] = normalizar_destacamento(request.user.last_name)
+
+            # Guarda el destacamento del servicio creado
+            request.session["servicio_destacamento"] = normalizar_destacamento(base)
+
+            request.session.modified = True
+            request.session.save()
+
+            print(f"✅ Sesión usuario: {request.session['usuario_destacamento']}")
+            print(f"✅ Sesión servicio: {request.session['servicio_destacamento']}")
+
+
+            return redirect ('/')
+        
         except Exception as e:
                 messages.error(request, f"Error al cargar el servicio: {e}")
                 return redirect("cargar_servicio")
@@ -1062,10 +1088,12 @@ def signout(request):
 
 def normalizar_destacamento(nombre):
     """ Convierte nombres como 'Destacamento N°2' en 'destacamento_2' """
-    nombre = nombre.lower()  # Minúsculas
-    nombre = nombre.replace("°", "")  # Elimina el símbolo °
+    if not nombre:
+        return ""  # Si es None o vacío, devuelve string vacío
+    
+    nombre = nombre.lower().replace("°", "").strip()  # Minúsculas, sin espacios extras
     nombre = re.sub(r"\s+", "_", nombre)  # Reemplaza espacios por "_"
-    nombre = re.sub(r"[^a-z0-9_]", "", nombre)  # Elimina caracteres no alfanuméricos excepto "_"
+    nombre = re.sub(r"[^a-z0-9_]", "", nombre)  # Elimina caracteres especiales excepto "_"
     return nombre
 
 def custom_404_view(request, exception):
