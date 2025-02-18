@@ -106,7 +106,7 @@ class Fluidos(models.Model):
     bomba = models.CharField(max_length=50,blank=True, null=True)
     sirena = models.CharField(max_length=50,blank=True, null=True)
     luces = models.CharField(max_length=50,blank=True, null=True)
-    
+    comentario = models.CharField(max_length=200, blank=True, null=True)
     def __str__(self):
         return str(self.movil) + ' - ' + str(self.encargado) + ' - ' +str(self.fecha)
     class Meta:

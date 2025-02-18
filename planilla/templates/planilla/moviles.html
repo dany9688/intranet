@@ -8,6 +8,16 @@
 <link rel="stylesheet" href="https://cdn.datatables.net/responsive/3.0.3/css/responsive.bootstrap5.css">
 {% endblock %}
 {% block content %}
+<style>
+  .btn-check:checked + .btn {
+      background-color: #198754; /* Verde para OK */
+      color: white;
+  }
+  .btn-check:checked + .btn.btn-fail {
+      background-color: #ffc107; /* Amarillo para Fallo */
+      color: black;
+  }
+</style>
 <!-- Content Wrapper. Contains page content -->
 <div class="content-wrapper">
     <!-- Content Header (Page header) -->
@@ -149,46 +159,77 @@
                   <form action="/fluidos/{{ movil.id }}/" method="post">
                     {% csrf_token %}
                     <label for="movil">Encargado:</label>
-                    <select class="form-control col-sm-6" name="encargado" id="">
+                    <select class="form-control col-sm-12" name="encargado" id="">
                       {% for bombero in bomberos %}
                       <option value={{bombero.id}}>{{bombero.apellido}}, {{bombero.nombre}}</option>
                       {% endfor %}
                     </select><br>
-                    <label for="movil">Litros de agua agregados al radiador:</label>
-                    <input class="form-control" type="number" name="agua" min="0" max="300" value="0"><br>
-                    <label for="movil">Litros de aceite agregados:</label>
-                    <input class="form-control" type="number" name="aceite" min="0" max="300" value="0"><br>
-                    <label for="movil">Litros de líquido hidráulico agregados:</label>
-                    <input class="form-control" type="number" name="hidraulico" min="0" max="300" value="0"><br>
-                    <label for="movil">Litros de líquido de frenos agregados:</label>
-                    <input class="form-control" type="number" name="frenos" min="0" max="300" value="0"><br>
-                    <label for="movil">Agua de tanque:</label>
-                    <select class="form-control" name="tanque">
-                      <option value="Chequeado - OK">Chequeado - OK</option>
-                      <option value="Chequeado - Faltaba">Chequeado - Faltaba</option>
-                      <option value="Sin chequear">Sin chequear</option>
-                    </select>
-                    <label for="movil">Bomba engranada:</label> 
-                    <select class="form-control" name="bomba">
-                      <option value="Chequeado - OK">Chequeado - OK</option>
-                      <option value="Chequeado - Falla">Chequeado - Falla</option>
-                      <option value="Sin chequear">Sin chequear</option>
-                    </select>
-                    <label for="movil">Luces reglamentarias/Emergencia:</label>
-                    <select class="form-control" name="luces">
-                      <option value="Chequeado - OK">Chequeado - OK</option>
-                      <option value="Chequeado - Falla">Chequeado - Falla</option>
-                      <option value="Sin chequear">Sin chequear</option>
-                    </select>
-                    <label for="movil">Sirenas/Bocina:</label>
-                    <select class="form-control" name="sirena">
-                      <option value="Chequeado - OK">Chequeado - OK</option>
-                      <option value="Chequeado - Falla">Chequeado - Falla</option>
-                      <option value="Sin chequear">Sin chequear</option>
-                    </select>
+                    <p>Cantidad de fluido agregados (en litros):</p>
+                    <div class="col-md-12 row wrapper">
+                      <div class="col-sm-6">
+                        <label for="movil">Agua en el radiador:</label>
+                        <input class="form-control" type="number" name="agua" min="0" max="300" value="0"><br>
+                      </div>
+                      <div class="col-sm-6">
+                        <label for="movil">Litros de aceite:</label>
+                        <input class="form-control" type="number" name="aceite" min="0" max="50" value="0"><br>
+                      </div>
+                    </div>
+                    <div class="col-md-12 row wrapper">
+                      <div class="col-sm-6">
+                        <label for="movil">Líquido hidráulico:</label>
+                        <input class="form-control" type="number" name="hidraulico" min="0" max="50" value="0"><br>
+                      </div>
+                      <div class="col-sm-6">
+                        <label for="movil">Líquido de frenos:</label>
+                        <input class="form-control" type="number" name="frenos" min="0" max="50" value="0"><br>
+                      </div>
+                    </div>
+                    <div class="col-md-12 row wrapper">
+                      <label for="movil">Agua de tanque:</label>
+                      <div class="col-12 mb-2">
+                        <input type="radio" class="btn-check" name="tanque" id="tanque-lleno" value="Completo" autocomplete="off" checked>
+                        <label class="btn btn-outline-success mr-2" for="pass1"><i class="fas fa-thumbs-up"></i> Completo</label>
+        
+                        <input type="radio" class="btn-check" name="tanque" id="tanque-faltaba" value="Faltaba" autocomplete="off">
+                        <label class="btn btn-outline-dark btn-fail" for="fail1"><i class="fas fa-times"></i> Faltaba</label>
+                    </div>
+                    </div>
+                    <label for="bomba">Bomba engranada:</label> 
+                    <div class="col-12 mb-2">
+                        <input type="radio" class="btn-check" name="bomba" id="bomba-funciona" value="Funciona" autocomplete="off" checked>
+                        <label class="btn btn-outline-success mr-2" for="bomba-funciona"><i class="fas fa-thumbs-up"></i> Funciona</label>
+                
+                        <input type="radio" class="btn-check" name="bomba" id="bomba-falla" value="Falla" autocomplete="off">
+                        <label class="btn btn-outline-dark btn-fail" for="bomba-falla"><i class="fas fa-times"></i> Falla</label>
+                    </div>
+                
+                    <!-- Luces reglamentarias/Emergencia -->
+                    <label for="luces">Luces reglamentarias/Emergencia:</label>
+                    <div class="col-12 mb-2">
+                        <input type="radio" class="btn-check" name="luces" id="luces-funciona" value="Funciona" autocomplete="off" checked>
+                        <label class="btn btn-outline-success mr-2" for="luces-funciona"><i class="fas fa-thumbs-up"></i> Funciona</label>
+                
+                        <input type="radio" class="btn-check" name="luces" id="luces-falla" value="Falla" autocomplete="off">
+                        <label class="btn btn-outline-dark btn-fail" for="luces-falla"><i class="fas fa-times"></i> Falla</label>
+                    </div>
+                
+                    <!-- Sirenas/Bocina -->
+                    <label for="sirena">Sirenas/Bocina:</label>
+                    <div class="col-12 mb-2">
+                        <input type="radio" class="btn-check" name="sirena" id="sirena-funciona" value="Funciona" autocomplete="off" checked>
+                        <label class="btn btn-outline-success mr-2" for="sirena-funciona"><i class="fas fa-thumbs-up"></i> Funciona</label>
+                
+                        <input type="radio" class="btn-check" name="sirena" id="sirena-falla" value="Falla" autocomplete="off">
+                        <label class="btn btn-outline-dark btn-fail" for="sirena-falla"><i class="fas fa-times"></i> Falla</label>
+                    </div>
+                    <div class="col-md-12">
+                      <label for="">Comentarios:</label>
+                      <textarea class="form-control" name="comentario" id=""></textarea>
+                    </div>
               </div>
               <div class="modal-footer">
-                <button type="submit" class="btn btn-primary">Actualizar fluidos</button>
+                <button type="submit" class="btn btn-primary">Guardar chequeo</button>
               </form>
               <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
         

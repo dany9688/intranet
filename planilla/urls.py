@@ -19,7 +19,8 @@ urlpatterns = [
     path("moviles/", login_required(views.MovilView.as_view(), login_url='/signin/'), name="moviles"), 
     path("materiales/", login_required(views.MaterialesView.as_view(), login_url='/signin/'), name="materiales"), 
     path("repmateriales/", login_required(RepMaterialesView.as_view(), login_url='/signin/'), name="reporte_materiales"),
-    path("check_materiales/", login_required(CheckMaterialesView.as_view(), login_url='/signin/'), name="checklist_materiales"),
+    path("inventario_movil/", login_required(views.InventarioMovil.as_view(), login_url='/signin/'), name="listado_moviles_materiales"),
+    path("check_material_movil/<int:id>/", login_required(views.CheckMaterialesView.as_view(), login_url='/signin/'), name="check_list_materiales"),
     path("servicios/", login_required(ServicioView.as_view(), login_url='/signin/'), name="servicios"),
     path("cargar_servicio/", login_required(CargarServicio.as_view(), login_url='/signin/'), name="cargar_servicios"), 
     path("servicio_detail/<int:id>", login_required(ServicioDetail.as_view(), login_url='/signin/'), name="servicio_detail"), 
@@ -42,7 +43,7 @@ urlpatterns = [
     path("movil_grafico/", login_required(views.movil_grafico, login_url='/signin/'), name="movil_grafico"),
     path("materiales_grafico/", login_required(views.materiales_grafico, login_url='/signin/'), name="materiales_grafico"),
     path("guia/", login_required(Guia.as_view(), login_url='/signin/'), name="guia"),
-    path("guardia/", login_required(Guardia.as_view(), login_url='/signin/'), name="guardia"), 
+    path("guardia/", login_required(Guardia.as_view(), login_url='/signin/'), name="guardia"),
     path("signin/", views.signin, name="signin"),
     path("logout/", views.signout, name="logout"),
     

@@ -1,0 +1,88 @@
+{% extends 'planilla/base.html' %}
+{% load static %}
+
+{% block title %}Móviles{% endblock %}
+{% block css_block %}
+{% endblock %}
+{% block content %}
+<!-- Content Wrapper. Contains page content -->
+<div class="content-wrapper">
+    <!-- Content Header (Page header) -->
+    <div class="content-header">
+        <div class="container-fluid">
+        <div class="col-sm-6">
+            <h1>Listado de móviles</h1>
+        </div><!-- /.col -->
+        </div>
+        <!-- /.container-fluid -->
+    </div>
+    <!-- /.content-header -->
+
+    <!-- Main content -->
+    <div class="content">
+      <div class="container col-md-12 mt-4">
+        <!-- Dropdown para filtrar por cuartel -->
+        <div class="mb-3">
+            <label for="filtroCuartel" class="form-label"><strong>Filtrar por Cuartel:</strong></label>
+            <select id="filtroCuartel" class="form-select" onchange="filtrarMoviles()">
+                <option value="todos">Todos</option>
+                {% for cuartel in cuarteles %}
+                <option value="{{ cuartel.id }}">{{ cuartel.base }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <!-- Contenedor de móviles -->
+        <div class="row" id="movilesContainer">
+          {% for movil in todo_los_moviles %}
+          <div class="col-lg-3 col-md-6 col-sm-6 col-12 movil-card" data-cuartel="{{ movil.IDBase.id }}">
+              <div class="card mb-3">
+                  <div class="card-header">
+                      <h3 class="card-title">Móvil {{ movil.numero }}</h3>
+                  </div>
+                  <div class="card-body">
+                      <div class="row col-sm-12">
+                          <div class="col-sm-10">
+                              <p class="mb-1"><strong>Tipo:</strong> {{ movil.IDTipo }}</p>
+                              <p class="mb-1"><strong>Ubicación:</strong> {{ movil.IDBase }}</p>
+                              <p class="mb-1"><strong>Estado:</strong>
+                                  {% if movil.IDEstado.estado == "En servicio" %}
+                                  <i class="fa-solid fa-circle-check text-success"></i> {{ movil.IDEstado.estado }}
+                                  {% elif movil.IDEstado.estado == "Condicional" %}
+                                  <i class="fa-solid fa-triangle-exclamation text-warning"></i> {{ movil.IDEstado.estado }}
+                                  {% else %}
+                                  <i class="fa-solid fa-circle-xmark text-danger"></i> {{ movil.IDEstado.estado }}
+                                  {% endif %}
+                              </p>
+                          </div>
+                          <div class="col-sm-2 d-flex justify-content-end">
+                              <!-- <a class="btn btn-app bg-secondary col-sm-2" style="font-size: 12px;" href="/movil/{{ movil.id }}/"><i class="fas fa-gauge"></i> Ficha</a> -->
+                              <a class="btn btn-app bg-success col-sm-2 mr-3" style="font-size: 12px;" href="/check_material_movil/{{movil.id}}/"><i class="fas fa-rectangle-list"></i> Inventario</a>
+                          </div>
+                    </div>
+                  </div>
+              </div>
+          </div>
+          {% endfor %}
+        </div>
+</div>
+
+</div>
+</div>
+{% endblock %}
+{% block js_block %}
+
+<script>
+  function filtrarMoviles() {
+      var filtro = document.getElementById("filtroCuartel").value;
+      var tarjetas = document.querySelectorAll(".movil-card");
+
+      tarjetas.forEach(function(tarjeta) {
+          if (filtro === "todos" || tarjeta.dataset.cuartel === filtro) {
+              tarjeta.style.display = "block";
+          } else {
+              tarjeta.style.display = "none";
+          }
+      });
+  }
+</script>
+{% endblock %}

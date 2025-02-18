@@ -262,14 +262,28 @@ class MovilView(generic.ListView):
     model = Movil
     template_name = "planilla/moviles.html" 
     context_object_name = "todo_los_moviles"
+    ordering = ["numero"]  # Ordena de menor a mayor
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['bomberos'] = Bombero.objects.all()
         context['servicios'] = Servicio.objects.all()
         context['estados'] = Estado.objects.all()
+        context['cuarteles'] = Base.objects.all()
         return context
-    
+
+class InventarioMovil(generic.ListView):
+    model = Movil
+    template_name = "planilla/inventario_movil.html" 
+    context_object_name = "todo_los_moviles"
+    ordering = ["numero"]  # Ordena de menor a mayor
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['estados'] = Estado.objects.all()
+        context['cuarteles'] = Base.objects.all()
+        return context
+        
 class MaterialesView(generic.ListView):
     model = Material
     template_name = "planilla/materiales.html" 
@@ -298,8 +312,8 @@ class RepMaterialesView(View): #createView
         return render (request, 'planilla/reporte_materiales.html', {'materiales': materiales})
     
 class CheckMaterialesView(View): #createView
-    def get(self, request):
-        movil=request.GET['movil']
+    def get(self, request, id):
+        movil=id
         materiales = Material.objects.filter(movil=movil).order_by('cajonera')
         print(materiales)
 
@@ -930,7 +944,7 @@ def fluidos(request, id):
         movil.ultima_fluidos = ahora
         movil.save()
 
-        fluidos = Fluidos(fecha=ahora, agua=request.POST['agua'], aceite=request.POST['aceite'], hidraulico=request.POST['hidraulico'], frenos=request.POST['frenos'], movil_id=id, encargado_id=request.POST['encargado'], tanque=request.POST['tanque'], bomba=request.POST['bomba'], luces=request.POST['luces'], sirena=request.POST['sirena'] )
+        fluidos = Fluidos(fecha=ahora, agua=request.POST['agua'], aceite=request.POST['aceite'], hidraulico=request.POST['hidraulico'], frenos=request.POST['frenos'], movil_id=id, encargado_id=request.POST['encargado'], tanque=request.POST['tanque'], bomba=request.POST['bomba'], luces=request.POST['luces'], sirena=request.POST['sirena'], comentario=request.POST['comentario'])
         fluidos.save()
         return redirect('moviles')
     else:
@@ -1076,7 +1090,7 @@ def signin(request):
         except Exception as err:
             print(f"Oops! {err}")
             return render(request, 'planilla/signin.html', {'error': 'Algo falló.'})
-
+        
 def signout(request):
     logout(request)
     
