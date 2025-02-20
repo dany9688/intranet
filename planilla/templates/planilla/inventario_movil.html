@@ -20,10 +20,10 @@
 
     <!-- Main content -->
     <div class="content">
-      <div class="container col-md-12 mt-4">
+      <div class="container col-md-12">
         <!-- Dropdown para filtrar por cuartel -->
-        <div class="mb-3">
-            <label for="filtroCuartel" class="form-label"><strong>Filtrar por Cuartel:</strong></label>
+        <div class="mb-3 d-flex justify-content-end">
+            <label for="filtroCuartel" class="form-label mr-3"><strong>Filtrar por Cuartel:</strong></label>
             <select id="filtroCuartel" class="form-select" onchange="filtrarMoviles()">
                 <option value="todos">Todos</option>
                 {% for cuartel in cuarteles %}
@@ -34,17 +34,21 @@
         <!-- Contenedor de móviles -->
         <div class="row" id="movilesContainer">
           {% for movil in todo_los_moviles %}
-          <div class="col-lg-3 col-md-6 col-sm-6 col-12 movil-card" data-cuartel="{{ movil.IDBase.id }}">
-              <div class="card mb-3">
+          <div class="col-lg-4 col-md-6 col-sm-6 col-12 movil-card" data-cuartel="{{ movil.IDBase.id }}">
+              <div class="card mb-3 {% if movil.IDEstado.estado == 'En servicio' %} card-success 
+              {% elif movil.IDEstado.estado == 'Condicional' %} card-warning 
+              {% elif movil.IDEstado.estado == 'Fuera de servicio' %} card-danger
+              {% elif movil.IDEstado.estado == 'Ocupado' %} card-secondary
+              {% endif %}">
                   <div class="card-header">
-                      <h3 class="card-title">Móvil {{ movil.numero }}</h3>
+                      <h3 class="card-title ">Móvil {{ movil.numero }} - {{movil.IDEstado.estado}}</h3>
                   </div>
                   <div class="card-body">
                       <div class="row col-sm-12">
-                          <div class="col-sm-10">
+                          <div class="col-sm-9">
                               <p class="mb-1"><strong>Tipo:</strong> {{ movil.IDTipo }}</p>
                               <p class="mb-1"><strong>Ubicación:</strong> {{ movil.IDBase }}</p>
-                              <p class="mb-1"><strong>Estado:</strong>
+                              <!-- <p class="mb-1"><strong>Estado:</strong>
                                   {% if movil.IDEstado.estado == "En servicio" %}
                                   <i class="fa-solid fa-circle-check text-success"></i> {{ movil.IDEstado.estado }}
                                   {% elif movil.IDEstado.estado == "Condicional" %}
@@ -52,16 +56,173 @@
                                   {% else %}
                                   <i class="fa-solid fa-circle-xmark text-danger"></i> {{ movil.IDEstado.estado }}
                                   {% endif %}
-                              </p>
+                              </p> -->
+                              <p class="mb-1"><strong>Última carga de combustible:</strong><br> {{ movil.ultima_carga }}</p>
+                              <p class="mb-1"><strong>Desde última carga:</strong>
+                                <span class="badge 
+                                {% if movil.intervenciones <= 4 %} bg-success 
+                                {% elif movil.intervenciones <= 7 %} bg-warning 
+                                {% else %} bg-danger 
+                                {% endif %}" style="font-size: 14px;">{{ movil.intervenciones }} intervenciones</span></p>
+                                <p class="mb-1"><strong>Último chequeo:</strong> {{ movil.ultima_fluidos }}</p>
                           </div>
-                          <div class="col-sm-2 d-flex justify-content-end">
-                              <!-- <a class="btn btn-app bg-secondary col-sm-2" style="font-size: 12px;" href="/movil/{{ movil.id }}/"><i class="fas fa-gauge"></i> Ficha</a> -->
-                              <a class="btn btn-app bg-success col-sm-2 mr-3" style="font-size: 12px;" href="/check_material_movil/{{movil.id}}/"><i class="fas fa-rectangle-list"></i> Inventario</a>
+                          <div class="col-sm-3">
+                              <a class="btn bg-olive col-12 float-right mb-1" href="/check_material_movil/{{movil.id}}/" title="Inventario" data-bs-toggle="tooltip"><i class="fas fa-clipboard-list"></i> <i class="fas fa-screwdriver-wrench"></i></a>
+                              <button type="button" data-toggle="modal" title="Carga de combustible" data-bs-toggle="tooltip" data-target="#cargar{{ movil.id }}" class="btn btn-dark col-12 float-right mb-1"><i class="fas fa-plus"></i> <i class="fas fa-gas-pump"></i></button>
+                              <button type="button" data-toggle="modal" title="Chequeo del móvil" data-bs-toggle="tooltip" data-target="#fluidos{{ movil.id }}" class="btn btn-info col-12 float-right mb-1"><i class="fas fa-list-check"></i> <i class="fas fa-oil-can"></i></button>
+                              <a class="btn bg-secondary col-12 float-right mb-1" title="Ficha del móvil" data-bs-toggle="tooltip" href="/movil/{{ movil.id }}/"><i class="fas fa-book"></i> <i class="fas fa-truck-moving"></i></a>
+                              <button type="button" data-toggle="modal" data-target="#estado{{ movil.id }}" title="Cambio de estado" data-bs-toggle="tooltip" class="btn btn-danger col-12 float-right mb-1"><i class="fas fa-arrow-down-up-across-line"></i></button>
                           </div>
                     </div>
                   </div>
               </div>
           </div>
+            <!-- MODAL COMBUSTIBLE-->
+            <div class="modal fade" id="cargar{{ movil.id }}" tabindex="-1" aria-labelledby="cargar" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="exampleModalLabel3">Carga de combustible - Móvil {{ movil.numero }}</h5>
+                    </div>
+                    <div class="modal-body">
+                        <form action="/cargarcombustible/{{ movil.id }}/" method="post">
+                            {% csrf_token %}
+                            <label for="movil">Encargado:</label>
+                            <select class="form-control col-sm-6" name="encargado" id="">
+                            {% for bombero in bomberos %}
+                            <option value={{bombero.id}}>{{bombero.apellido}}, {{bombero.nombre}}</option>
+                            {% endfor %}
+                            </select>
+                            <label for="movil">Cantidad de litros:</label>
+                            <input class="form-control col-sm-3" type="number" name="cantidad" min="0" max="300" required>
+                            <label for="">Fecha y hora del ticket de carga</label>
+                            <input class="form-control col-sm-6" name="fecha" type="datetime-local" required>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-primary">Actualizar combustible</button>
+                    </form>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+                
+                    </div>
+                    </div>
+                </div>
+            </div>
+        <!-- MODAL FLUIDOS-->
+        <div class="modal fade" id="fluidos{{ movil.id }}" tabindex="-1" aria-labelledby="fluidos" aria-hidden="true">
+            <div class="modal-dialog">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title" id="exampleModalLabel3">Carga de combustible - Móvil {{ movil.numero }}</h5>
+                </div>
+                <div class="modal-body">
+                    <form action="/fluidos/{{ movil.id }}/" method="post">
+                      {% csrf_token %}
+                      <label for="movil">Encargado:</label>
+                      <select class="form-control col-sm-12" name="encargado" id="">
+                        {% for bombero in bomberos %}
+                        <option value={{bombero.id}}>{{bombero.apellido}}, {{bombero.nombre}}</option>
+                        {% endfor %}
+                      </select><br>
+                      <p>Cantidad de fluido agregados (en litros):</p>
+                      <div class="col-md-12 row wrapper">
+                        <div class="col-sm-6">
+                          <label for="movil">Agua en el radiador:</label>
+                          <input class="form-control" type="number" name="agua" min="0" max="300" value="0"><br>
+                        </div>
+                        <div class="col-sm-6">
+                          <label for="movil">Litros de aceite:</label>
+                          <input class="form-control" type="number" name="aceite" min="0" max="50" value="0"><br>
+                        </div>
+                      </div>
+                      <div class="col-md-12 row wrapper">
+                        <div class="col-sm-6">
+                          <label for="movil">Líquido hidráulico:</label>
+                          <input class="form-control" type="number" name="hidraulico" min="0" max="50" value="0"><br>
+                        </div>
+                        <div class="col-sm-6">
+                          <label for="movil">Líquido de frenos:</label>
+                          <input class="form-control" type="number" name="frenos" min="0" max="50" value="0"><br>
+                        </div>
+                      </div>
+                      <div class="col-md-12 row wrapper">
+                        <label for="movil">Agua de tanque:</label>
+                        <div class="col-12 mb-2">
+                          <input type="radio" class="btn-check" name="tanque" id="tanque-lleno" value="Completo" autocomplete="off" checked>
+                          <label class="btn btn-outline-success mr-2" for="pass1"><i class="fas fa-thumbs-up"></i> Completo</label>
+          
+                          <input type="radio" class="btn-check" name="tanque" id="tanque-faltaba" value="Faltaba" autocomplete="off">
+                          <label class="btn btn-outline-dark btn-fail" for="fail1"><i class="fas fa-times"></i> Faltaba</label>
+                      </div>
+                      </div>
+                      <label for="bomba">Bomba engranada:</label> 
+                      <div class="col-12 mb-2">
+                          <input type="radio" class="btn-check" name="bomba" id="bomba-funciona" value="Funciona" autocomplete="off" checked>
+                          <label class="btn btn-outline-success mr-2" for="bomba-funciona"><i class="fas fa-thumbs-up"></i> Funciona</label>
+                  
+                          <input type="radio" class="btn-check" name="bomba" id="bomba-falla" value="Falla" autocomplete="off">
+                          <label class="btn btn-outline-dark btn-fail" for="bomba-falla"><i class="fas fa-times"></i> Falla</label>
+                      </div>
+                  
+                      <!-- Luces reglamentarias/Emergencia -->
+                      <label for="luces">Luces reglamentarias/Emergencia:</label>
+                      <div class="col-12 mb-2">
+                          <input type="radio" class="btn-check" name="luces" id="luces-funciona" value="Funciona" autocomplete="off" checked>
+                          <label class="btn btn-outline-success mr-2" for="luces-funciona"><i class="fas fa-thumbs-up"></i> Funciona</label>
+                  
+                          <input type="radio" class="btn-check" name="luces" id="luces-falla" value="Falla" autocomplete="off">
+                          <label class="btn btn-outline-dark btn-fail" for="luces-falla"><i class="fas fa-times"></i> Falla</label>
+                      </div>
+                  
+                      <!-- Sirenas/Bocina -->
+                      <label for="sirena">Sirenas/Bocina:</label>
+                      <div class="col-12 mb-2">
+                          <input type="radio" class="btn-check" name="sirena" id="sirena-funciona" value="Funciona" autocomplete="off" checked>
+                          <label class="btn btn-outline-success mr-2" for="sirena-funciona"><i class="fas fa-thumbs-up"></i> Funciona</label>
+                  
+                          <input type="radio" class="btn-check" name="sirena" id="sirena-falla" value="Falla" autocomplete="off">
+                          <label class="btn btn-outline-dark btn-fail" for="sirena-falla"><i class="fas fa-times"></i> Falla</label>
+                      </div>
+                      <div class="col-md-12">
+                        <label for="">Comentarios:</label>
+                        <textarea class="form-control" name="comentario" id=""></textarea>
+                      </div>
+                </div>
+                <div class="modal-footer">
+                  <button type="submit" class="btn btn-primary">Guardar chequeo</button>
+                </form>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+          
+                </div>
+              </div>
+            </div>
+          </div>
+
+                  <!-- MODAL ESTADO-->
+        <div class="modal fade" id="estado{{ movil.id }}" tabindex="-1" aria-labelledby="estado" aria-hidden="true">
+            <div class="modal-dialog">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title" id="exampleModalLabel3">Cambio de estado - Móvil {{ movil.numero }}</h5>
+                </div>
+                <div class="modal-body">
+                    <form action="/cambiarestado/{{ movil.id }}/" method="post">
+                      {% csrf_token %}
+                      <label for="movil">Nuevo estado:</label>
+                      <select class="form-control col-sm-6" name="estado" id="">
+                        {% for estado in estados %}
+                        <option value={{estado.id}}>{{estado.estado}}</option>
+                        {% endfor %}
+                      </select>
+                </div>
+                <div class="modal-footer">
+                  <button type="submit" class="btn btn-primary">Actualizar estado</button>
+                </form>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+          
+                </div>
+              </div>
+            </div>
+        </div>
           {% endfor %}
         </div>
 </div>
@@ -70,7 +231,15 @@
 </div>
 {% endblock %}
 {% block js_block %}
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+  tooltipTriggerList.forEach(function (tooltipTriggerEl) {
+    new bootstrap.Tooltip(tooltipTriggerEl);
+  });
+});
 
+</script>
 <script>
   function filtrarMoviles() {
       var filtro = document.getElementById("filtroCuartel").value;

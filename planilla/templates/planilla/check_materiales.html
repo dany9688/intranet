@@ -30,28 +30,61 @@
           <!-- /.card-header -->
           <div class="card-body">
             <ul class="todo-list" data-widget="todo-list">
-              {% for material in materiales %}
-              <li>
-                <!-- checkbox -->
-                <div  class="icheck-primary d-inline ml-2">
-                  <input type="checkbox" value="" name="todo1" id="todoCheck1">
-                  <label for="todoCheck1"></label>
-                </div>
-                <!-- todo text -->
-                <span class="text">Cajonera {{ material.cajonera}} - {{material.nombre}}</span>
-                <!-- Emphasis label -->
-                 {% if material.estado.estado == "En servicio" %}
-                <small class="badge badge-success"></i>E/S</small>
-                {% elif material.estado.estado == "Condicional" %}
-                <small class="badge badge-warning"></i>Condicional</small>
-                {% elif material.estado.estado == "Fuera de servicio" %}
-                <small class="badge badge-danger"></i> F/S</small>
-                {% endif %}
-              </li>
+              {% regroup materiales by cajonera as materiales_por_cajonera %}
+
+              {% for grupo in materiales_por_cajonera %}
+                <h5 class="mt-2"><strong>Cajonera {{ grupo.grouper }}</strong></h5>
+                <ul style="list-style: none;">
+                  {% for material in grupo.list %}
+                  <li>
+                    <div class="custom-control custom-switch 
+                        {% if material.estado.estado == 'En servicio' %}
+                          custom-switch-on-success
+                        {% elif material.estado.estado == 'Fuera de servicio' %}
+                          custom-switch-off-danger
+                        {% endif %}">
+                      
+                        <input type="checkbox" class="custom-control-input switch-control" 
+                        id="switch{{ material.id }}" 
+                        data-material-id="{{ material.id }}"
+                        data-material-name="{{ material.nombre }}"
+                        data-material-estado="{{ material.estado.estado }}"
+                        {% if material.estado.estado == "En servicio" %} checked="checked" {% endif %}>
+                 
+                      
+                      <label class="custom-control-label" for="switch{{ material.id }}"></label>
+                      
+                      <span class="text">{{ material.nombre }}</span>
+                    </div>
+                  </li>                     
+                  {% endfor %}
+                </ul>
               {% endfor %}
+              
             </ul>
           </div>
           <!-- /.card-body -->
+          <!-- Modal de Confirmación -->
+          <div class="modal fade" id="confirmModal" tabindex="-1" aria-labelledby="confirmModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title" id="confirmModalLabel">Confirmar Acción</h5>
+                  <button type="button" class="close" id="closeModalButton" data-dismiss="modal" aria-label="Cerrar">
+                    <span aria-hidden="true">&times;</span>
+                  </button>
+                </div>
+                <div class="modal-body">
+                  <p id="confirmMessage"></p>
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-secondary" id="cancelButton">Cancelar</button>
+                  <button type="button" class="btn btn-primary" id="confirmButton">Confirmar</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <div class="card-footer clearfix">
             <button type="button" class="btn btn-primary float-right"><i class="fas fa-plus"></i> Add item</button>
           </div>
@@ -69,13 +102,98 @@
 {% endblock %}
 
 {% block js_block %}
+<!-- bs-custom-file-input -->
+<script src="{% static 'planilla/bs-custom-file-input.min.js' %}"></script>
 <script>
-$('a[rel=popover]').popover({
-  html: true,
-  trigger: 'hover',
-  placement: 'bottom',
-  content: function(){return '<img src="'+$(this).data('img') + '" />';}
+document.addEventListener("DOMContentLoaded", function () {
+  let switchToChange = null; // Switch en uso
+  let previousState = null; // Estado antes del cambio
+
+  document.querySelectorAll(".switch-control").forEach(function (switchElement) {
+    let parentDiv = switchElement.closest(".custom-control");
+
+    // 🔹 Guardamos el estado inicial CORRECTO basado en el checked actual
+    switchElement.dataset.initialState = switchElement.checked; 
+
+    console.log("✅ Estado inicial del switch:", switchElement.checked);
+
+    // Aplicamos el estado inicial correcto
+    actualizarEstadoSwitch(switchElement, parentDiv);
+
+    // INTERCEPTAMOS el evento para evitar que el switch cambie antes del modal
+    switchElement.addEventListener("click", function (event) {
+      event.preventDefault(); // 🔴 Evita que el switch cambie de estado automáticamente
+
+      switchToChange = this;
+      previousState = this.dataset.initialState === "true"; // ⬅ Recuperamos el estado guardado
+
+      console.log("🔹 Estado previo (corregido):", previousState);
+      console.log("🔹 Switch detectado:", switchToChange);
+
+      let materialName = this.getAttribute("data-material-name");
+      let actionText = previousState ? "sacar de servicio" : "poner en servicio";
+
+      document.getElementById("confirmMessage").innerText = 
+        `¿Está seguro de que quiere ${actionText} el material "${materialName}"?`;
+
+      // Mostramos el modal sin cambiar nada aún
+      $("#confirmModal").modal("show");
+    });
+  });
+
+  // ✅ Si CONFIRMAMOS, cambiamos el switch
+  document.getElementById("confirmButton").addEventListener("click", function () {
+    if (switchToChange) {
+      switchToChange.checked = !previousState; // 🔄 Ahora sí cambiamos el estado
+      let parentDiv = switchToChange.closest(".custom-control");
+
+      console.log("✅ Confirmado: cambiando a", switchToChange.checked);
+      actualizarEstadoSwitch(switchToChange, parentDiv); // Aplica el color correcto
+
+      // 📌 Aquí puedes hacer una petición AJAX para actualizar en la base de datos
+
+      // Actualizamos el estado inicial al nuevo valor
+      switchToChange.dataset.initialState = switchToChange.checked; 
+
+      switchToChange = null; // Reseteamos la variable
+      $("#confirmModal").modal("hide"); // Cerramos el modal
+    }
+  });
+
+  // ❌ Si CANCELAMOS, mantenemos el estado original
+  function cancelarCambio() {
+    if (switchToChange) {
+      console.log("❌ Cancelado: restaurando a", previousState);
+      switchToChange.checked = previousState; // ⬅ Restauramos el estado original
+      let parentDiv = switchToChange.closest(".custom-control");
+
+      console.log("🎨 Estado tras cancelar:", switchToChange.checked);
+
+      actualizarEstadoSwitch(switchToChange, parentDiv); // Aplica el color correcto
+
+      switchToChange = null; // Reseteamos la variable después de actualizar el color
+    }
+
+    $("#confirmModal").modal("hide"); // Cerramos el modal
+  }
+
+  document.getElementById("cancelButton").addEventListener("click", cancelarCambio);
+  document.getElementById("closeModalButton").addEventListener("click", cancelarCambio);
+
+  // 🔹 Función para actualizar los colores del switch
+  function actualizarEstadoSwitch(switchElement, parentDiv) {
+    if (!switchElement) return; // ⛔ Evita errores si switchElement es null
+    console.log("🎨 Actualizando color, estado:", switchElement.checked);
+    if (switchElement.checked) {
+      parentDiv.classList.add("custom-switch-on-success");
+      parentDiv.classList.remove("custom-switch-off-danger");
+    } else {
+      parentDiv.classList.add("custom-switch-off-danger");
+      parentDiv.classList.remove("custom-switch-on-success");
+    }
+  }
 });
+
 
 </script>
 

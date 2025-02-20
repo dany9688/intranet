@@ -3,7 +3,7 @@ from django.contrib.auth.decorators import login_required
 from django.conf import settings
 from django.conf.urls.static import static
 from . import views
-from planilla.views import CargarPlanilla, PlanillaDetailView, ServicioView, RepMaterialesView, CheckMaterialesView, CargarServicio, ModificarPlanilla, eliminar_presente, Guia, finalizar_servicio, Guardia, ModificarServicio, ServicioDetail, eliminar_movil
+from planilla.views import CargarPlanilla, PlanillaDetailView, ServicioView, RepMaterialesView, CheckMaterialesView, CargarServicio, ModificarPlanilla, eliminar_presente, Guia, finalizar_servicio, Guardia, ModificarServicio, ServicioDetail, eliminar_movil, Calendar
 
 urlpatterns = [
     # path("", views.index, name="index"),
@@ -20,7 +20,7 @@ urlpatterns = [
     path("materiales/", login_required(views.MaterialesView.as_view(), login_url='/signin/'), name="materiales"), 
     path("repmateriales/", login_required(RepMaterialesView.as_view(), login_url='/signin/'), name="reporte_materiales"),
     path("inventario_movil/", login_required(views.InventarioMovil.as_view(), login_url='/signin/'), name="listado_moviles_materiales"),
-    path("check_material_movil/<int:id>/", login_required(views.CheckMaterialesView.as_view(), login_url='/signin/'), name="check_list_materiales"),
+    path("check_material_movil/<int:id>/", views.CheckMaterialesView.as_view(), name="check_list_materiales"),
     path("servicios/", login_required(ServicioView.as_view(), login_url='/signin/'), name="servicios"),
     path("cargar_servicio/", login_required(CargarServicio.as_view(), login_url='/signin/'), name="cargar_servicios"), 
     path("servicio_detail/<int:id>", login_required(ServicioDetail.as_view(), login_url='/signin/'), name="servicio_detail"), 
@@ -44,6 +44,7 @@ urlpatterns = [
     path("materiales_grafico/", login_required(views.materiales_grafico, login_url='/signin/'), name="materiales_grafico"),
     path("guia/", login_required(Guia.as_view(), login_url='/signin/'), name="guia"),
     path("guardia/", login_required(Guardia.as_view(), login_url='/signin/'), name="guardia"),
+    path("calendar/", login_required(Calendar.as_view(), login_url='/signin/'), name="calendar"),
     path("signin/", views.signin, name="signin"),
     path("logout/", views.signout, name="logout"),
     

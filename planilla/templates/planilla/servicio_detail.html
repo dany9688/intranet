@@ -25,12 +25,14 @@
                 <div class="card card-navy">
                     <div class="card-header border-0">
                       <h3 class="card-title float-left">Servicio N° {{servicio.numero }}</h3>
+                      {% if not servicio.estado == "Cerrado" %}
                       {% if "Guardia" in request.user.groups.all.0.name  %}
-                      <a href="/finalizar_servicio/{{servicio.id}}" class="btn btn-sm btn-danger mr-2 float-right">Finalizar</a>
+                      <button type="button" data-toggle="modal" data-target="#cerrar{{ servicio.id }}" title="Finalizar servicio" data-bs-toggle="tooltip" class="btn btn-sm btn-danger mr-2 float-right">Finalizar</button>
+                      <!-- <a href="/finalizar_servicio/{{servicio.id}}" data-toggle="modal" class="btn btn-sm btn-danger mr-2 float-right">Finalizar</a> -->
                       <a href="/modificar_servicio/{{servicio.id}}" class="btn btn-sm btn-warning mr-2 float-right">Modificar</a>
                       <button class="btn btn-sm btn-primary float-right mr-2" data-toggle="modal" data-target="#asignarModal">Asignar móvil</button>
                       {%endif%}
-
+                      {%endif%}
                     </div>
                     </div>
                     <div class="card-body">
@@ -134,6 +136,27 @@
 
                         <!-- ./col -->
                     </div>
+
+                                      <!-- MODAL ESTADO-->
+                            <div class="modal fade" id="cerrar{{ servicio.id }}" tabindex="-1" aria-labelledby="estado" aria-hidden="true">
+                                <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                    <h5 class="modal-title" id="exampleModalLabel3">Finalizar servicio</h5>
+                                    </div>
+                                    <div class="modal-body">
+                                        <form action="/finalizar_servicio/{{servicio.id}}/" method="GET">
+                                        ¿Está seguro de que quiere finalizar el servicio?
+                                    </div>
+                                    <div class="modal-footer">
+                                    <button type="submit" class="btn btn-primary">Confirmar</button>
+                                    </form>
+                                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                            
+                                    </div>
+                                </div>
+                                </div>
+                            </div>
 
                     <div class="modal fade" id="asignarModal" tabindex="-1" role="dialog">
                         <div class="modal-dialog modal-xl" role="document">

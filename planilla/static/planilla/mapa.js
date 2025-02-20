@@ -29,7 +29,7 @@
       marker = new google.maps.Marker({
         map: map,
       });
-  
+
       // Crear el servicio de autocompletado
       var input = document.getElementById("address");
       var autocomplete = new google.maps.places.Autocomplete(input);

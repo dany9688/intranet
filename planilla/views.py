@@ -18,9 +18,15 @@ from django.middleware.csrf import get_token
 from django.templatetags.static import static
 from django.db.models import Sum, Count, Q, Prefetch
 from django.views.decorators.csrf import csrf_exempt
+from twilio.rest import Client
 import logging
 # Configuración de logging
 logger = logging.getLogger(__name__)
+
+# Configuración de Twilio
+TWILIO_SID = "ACb6620b7fe4f9e013a1fbd49471253dac"
+TWILIO_AUTH_TOKEN = "e0d91990201ed4172bb715d4e51ddd11"
+TWILIO_WHATSAPP_NUMBER = "whatsapp:+16052504414"  # Número de Twilio para WhatsApp
 
 
 def index(request):
@@ -422,7 +428,6 @@ class CargarServicio(View):
 
             print(f"✅ Sesión usuario: {request.session['usuario_destacamento']}")
             print(f"✅ Sesión servicio: {request.session['servicio_destacamento']}")
-
 
             return redirect ('/')
         
@@ -865,6 +870,10 @@ class Guardia(View):
 
         return render (request, 'planilla/guardia.html', {'servicios': servicios, 'base': base, 'moviles': moviles, 'cuentas': cuentas})
 
+class Calendar(View):
+    def get(self, request):
+        return render (request, 'planilla/calendar.html')
+    
 def verificar_numero(request):
     if request.method == "POST":
         data = json.loads(request.body)

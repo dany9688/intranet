@@ -4,7 +4,7 @@
         {% load static %}
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <title>Intranet - Encargado{% block title %}{% endblock %}</title>
+        <title>Intranet - {% block title %}{% endblock %}</title>
         <link rel="icon" href="{% static 'planilla/logo.png' %}" type="image/png" />       
         <!-- Google Font: Source Sans Pro -->
         <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
@@ -178,7 +178,7 @@
                         </p>
                         </a>
                     </li>
-                    {% if request.user.groups.all.0.name not in "Guardia central,Guardia destacamento" %}
+                    {% if not "Guardia" in request.user.groups.all.0.name %}
                     <li class="nav-header">NOVEDADES</li>
                     <li class="nav-item">
                         <a href="#" class="nav-link">

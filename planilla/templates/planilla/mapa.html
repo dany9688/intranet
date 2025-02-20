@@ -21,13 +21,35 @@
         <div class="container-fluid">
         <!-- 1ra fila -->
          <div class="row col-sm-12">
-          <button class="btn btn-primary" id="hidrantes">Mostrar/Ocultar Hidrantes</button>
-         </div>
-         <div class="row col-sm-12">
-          <button class="btn btn-secondary" id="cuarteles">Mostrar/Ocultar Cuarteles</button>
-         </div>
-         <div class="row col-sm-12">
           <div id="map" style="height: 800px; width: 100%;"></div>
+          <button id="hidrantes" style="
+          position: absolute;
+          top: 60px;
+          left: 27px;
+          z-index: 1000;
+          background: #ffffff;
+          color: black;
+          border: none;
+          padding: 10px;
+          cursor: pointer;
+          font-weight:bold;
+        ">
+          <i class="fa-brands fa-hire-a-helper"></i> Hidrantes
+      </button>
+      <button id="cuarteles" style="
+          position: absolute;
+          top: 110px;
+          left: 27px;
+          z-index: 1000;
+          background: #ffffff;
+          color: black;
+          border: none;
+          padding: 10px;
+          cursor: pointer;
+          font-weight: bold;
+        ">
+          <i class="fa-solid fa-warehouse"></i> Cuarteles
+      </button>
          </div>
 
     </div>
