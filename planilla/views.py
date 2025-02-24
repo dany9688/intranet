@@ -288,6 +288,7 @@ class InventarioMovil(generic.ListView):
         context = super().get_context_data(**kwargs)
         context['estados'] = Estado.objects.all()
         context['cuarteles'] = Base.objects.all()
+        context['bomberos'] = Bombero.objects.all()
         return context
         
 class MaterialesView(generic.ListView):
@@ -426,6 +427,17 @@ class CargarServicio(View):
             request.session.modified = True
             request.session.save()
 
+            data = {
+                "tipo": "nuevo_servicio",
+                "servicio": {
+                    "numero": numero,
+                    "tipo": tipo_servicio_id,
+                    "direccion": address,
+                    "zona": base,
+                    "estado": "En curso",
+                }
+            }
+            async_to_sync(channel_layer.group_send)("servicios", {"type": "send_servicio_update", "data": data})
             print(f"✅ Sesión usuario: {request.session['usuario_destacamento']}")
             print(f"✅ Sesión servicio: {request.session['servicio_destacamento']}")
 

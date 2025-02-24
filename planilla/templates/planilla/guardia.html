@@ -12,11 +12,10 @@
     <div class="content-header">
         <div class="container-fluid">
         <div class="col-sm-6">
-            <h2 class="p-2">Panel de guardia</h2>
+            <!-- <h2 class="p-2">Panel de guardia</h2> -->
             <span id="destacamento" hidden>{{destacamento}}</span>
-        </div><!-- /.col -->
         </div>
-        <!-- /.container-fluid -->
+        </div>
     </div>
     <!-- /.content-header -->
 
@@ -38,22 +37,23 @@
           <div class="row">
           <div class="col-md-12">
               <!-- Widget: user widget style 2 -->
-              <div class="card card-widget widget-user-2">
+              <div class="card card-outline {% if cuartel.estado == 'Cubriendo zona' %} card-success {% elif cuartel.estado == 'En apoyo' %} card-warning {% elif cuartel.estado == 'Sin chofer' %} card-danger {%endif%}">
                 <!-- Add the bg color to the header using any of the bg-* classes -->
-                 {% if cuartel.estado == "Cubriendo zona" %}
+                 <!-- {% if cuartel.estado == "Cubriendo zona" %}
                 <div class="widget-user-header bg-success">
                  {% elif cuartel.estado == "En apoyo" %}
                  <div class="widget-user-header bg-warning">
                  {% elif cuartel.estado == "Sin chofer" %} 
                  <div class="widget-user-header bg-danger">
-                {%endif%}
+                {%endif%} -->
                   <!-- <div class="widget-user-image">
                     <img class="img-circle elevation-2 d-inline" src="{% static 'planilla/logo.png' %}" alt="User Avatar">
                   </div> -->
                   <!-- /.widget-user-image -->
-                  <h4 class="d-inline">{{cuartel.base|upper}} - </h4>
-                  <span class=" d-inline">{{cuartel.estado|upper}}</span>
-                </div>
+                   <div class="card-header">
+                    <h5 class="d-inline">{{cuartel.base|upper}} - </h5>
+                    <strong><span class="d-inline">{{cuartel.estado|upper}}</span></strong>
+                   </div>
                 <div class="card-footer p-0">
                   <ul class="nav flex-column">
                     <li class="nav-item">
@@ -89,12 +89,12 @@
             {%endfor%}
           </div>
           <div class="col-md-4">
-          <div class="row col-md-12">
-            <div class="card card-navy" style="width: 100%;">
+          <div class="col-md-12">
+            <div class="card card-navy card-outline overflow-auto" style="width: 100%;">
               <div class="card-header d-flex">
                 <h3 class="card-title">Servicios activos</h3>
                 {% if request.user.groups.all.0.name == "Guardia central"  %}
-                <a class="btn btn-sm btn-danger ml-auto p-2" href="/cargar_servicio"><i class="fa-regular fa-bell"></i> Nuevo servicio</a>
+                <a class="btn btn-sm btn-danger ml-auto" href="/cargar_servicio"><i class="fa-regular fa-bell"></i> Nuevo servicio</a>
                 {% endif %}
               </div>
               <!-- /.card-header -->
@@ -168,36 +168,42 @@
             <button class="btn btn-sm btn-secondary mr-2" id="hidrantes">Mostrar/Ocultar Hidrantes</button>
             <button class="btn btn-sm btn-secondary" id="cuarteles">Mostrar/Ocultar Cuarteles</button>
           </div> -->
-          <div class="row col-sm-12">
-            <div id="map" style="height: 750px; width: 100%;"></div>
-            <button id="hidrantes" style="
-                position: absolute;
-                top: 60px;
-                left: 27px;
-                z-index: 1000;
-                background: #ffffff;
-                color: black;
-                border: none;
-                padding: 10px;
-                cursor: pointer;
-                font-weight:bold;
-              ">
-                <i class="fa-brands fa-hire-a-helper"></i> Hidrantes
-            </button>
-            <button id="cuarteles" style="
-                position: absolute;
-                top: 110px;
-                left: 27px;
-                z-index: 1000;
-                background: #ffffff;
-                color: black;
-                border: none;
-                padding: 10px;
-                cursor: pointer;
-                font-weight: bold;
-              ">
-                <i class="fa-solid fa-warehouse"></i> Cuarteles
-            </button>
+          <div class="card card-primary card-outline">
+            <div class="card-header">
+              <h3 class="card-title">Mapa</h3>
+            </div>
+            <div class="card-body p-0">
+
+                <div id="map" style="height: 700px; width: 100%;"></div>
+                <button id="hidrantes" style="
+                    position: absolute;
+                    top: 112px;
+                    left: 12px;
+                    z-index: 1000;
+                    background: #ffffff;
+                    color: black;
+                    border: none;
+                    padding: 10px;
+                    cursor: pointer;
+                    font-weight:bold;
+                  ">
+                    <i class="fa-brands fa-hire-a-helper"></i> Hidrantes
+                </button>
+                <button id="cuarteles" style="
+                    position: absolute;
+                    top: 160px;
+                    left: 12px;
+                    z-index: 1000;
+                    background: #ffffff;
+                    color: black;
+                    border: none;
+                    padding: 10px;
+                    cursor: pointer;
+                    font-weight: bold;
+                  ">
+                    <i class="fa-solid fa-warehouse"></i> Cuarteles
+                </button>
+            </div>
           </div>
         </div>
 
@@ -365,5 +371,40 @@
                  .replace(/[^a-z0-9_]/g, "");
 }
 </script>
+<script>
+  const socket = new WebSocket("wss://" + window.location.host + "/ws/servicios/");
+
+  socket.onmessage = function(event) {
+      const data = JSON.parse(event.data);
+      
+      if (data.tipo === "nuevo_servicio") {
+          const servicio = data.servicio;
+          alert("Nuevo servicio: " + servicio.numero + " - " + servicio.tipo);
+
+          // Aquí puedes actualizar la lista de servicios dinámicamente
+          // Ejemplo: agregar nuevo servicio a la lista sin recargar la página
+          const serviciosContainer = document.getElementById("accordion");
+          const nuevoServicio = `
+              <div class="card card-danger mb-2">
+                  <div class="card-header d-flex">
+                      <h4 class="card-title w-100">
+                          <a class="d-block w-100 float-left" data-toggle="collapse" data-target="#collapse${servicio.id}">
+                              Servicio ${servicio.numero} - ${servicio.tipo}
+                          </a>
+                      </h4>
+                  </div>
+                  <div id="collapse${servicio.id}" class="collapse">
+                      <div class="card-body">
+                          <strong>DIRECCIÓN:</strong> ${servicio.direccion} <br>
+                          <strong>ZONA:</strong> ${servicio.zona}
+                      </div>
+                  </div>
+              </div>`;
+          
+          serviciosContainer.innerHTML += nuevoServicio;
+      }
+  };
+</script>
+
 
 {% endblock %}

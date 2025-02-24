@@ -83,3 +83,20 @@ class NotificacionConsumer(AsyncWebsocketConsumer):
         mensaje = event["mensaje"]
         print(f"🚀 Enviando mensaje: {mensaje}")  # <-- Debug
         await self.send(text_data=json.dumps({"mensaje": mensaje}))
+
+class ServicioConsumer(AsyncWebsocketConsumer):
+    async def connect(self):
+        self.group_name = "servicios"
+
+        # Unir al grupo de WebSockets
+        await self.channel_layer.group_add(self.group_name, self.channel_name)
+        await self.accept()
+
+    async def disconnect(self, close_code):
+        # Salir del grupo de WebSockets
+        await self.channel_layer.group_discard(self.group_name, self.channel_name)
+
+    async def send_servicio_update(self, event):
+        # Enviar datos al frontend
+        data = event["data"]
+        await self.send(text_data=json.dumps(data))

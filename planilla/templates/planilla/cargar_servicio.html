@@ -34,73 +34,91 @@
                     <div class="card-body">
                     <form action="/cargar_servicio/" method="POST" id="form_servicio">
                         {% csrf_token %}
-                    <div class="row col-md-12">
-                        <div class="col-md-6">
-                            <div class="row form-group col-md-12">
-                                <label for="">Dirección de la intervención</label><span class="text-primary ml-2"> - Presione el botón para detectar la zona</span>
-                                <div class="row col-md-12">
-                                    <input class="form-control col-sm-8" type="text" name="address" id="address" placeholder="Ingrese una dirección" required>
-                                    <button class="btn btn-success" onclick="geocodeAddress()">Buscar Dirección</button>
+                        <div class="container col-md-12">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    
+                                    <!-- Dirección -->
+                                    <div class="form-group">
+                                        <label>Dirección de la intervención</label> 
+                                        <span class="text-primary ml-2"> - Presione el botón para detectar la zona</span>
+                                        <div class="input-group">
+                                            <input type="text" class="form-control" name="address" id="address" placeholder="Ingrese una dirección" required>
+                                            <div class="input-group-append">
+                                                <button class="btn btn-success" onclick="geocodeAddress()">Buscar Dirección</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                        
+                                    <!-- Guardia y Número de servicio -->
+                                    <div class="form-row">
+                                        <div class="form-group col-md-6">
+                                            <label>Número de guardia operativa</label>
+                                            <input type="number" class="form-control" id="guardia" name="guardia" min="0" required>
+                                        </div>
+                                        <div class="form-group col-md-6">
+                                            <label>Número de servicio</label>
+                                            <input type="number" class="form-control" id="numeroservicio" name="numero" min="0" required>
+                                        </div>
+                                    </div>
+                        
+                                    <!-- Zona y Hora de salida -->
+                                    <div class="form-row">
+                                        <div class="form-group col-md-6">
+                                            <label>Zona</label>
+                                            <input type="text" class="form-control" name="zona" id="zona" required>
+                                        </div>
+                                        <div class="form-group col-md-6">
+                                            <label>Hora de salida</label>
+                                            <input type="datetime-local" class="form-control" id="horasalida" name="salida" required>
+                                        </div>
+                                    </div>
+                        
+                                    <!-- Encargado y Tipo de servicio -->
+                                    <div class="form-row">
+                                        <div class="form-group col-md-6">
+                                            <label>Encargado</label>
+                                            <select class="form-control" name="encargado" id="encargado" required>
+                                                {% for bombero in bomberos %}
+                                                    <option value="{{ bombero.id }}">{{ bombero.IDJerarquia.jerarquia }} {{ bombero.apellido }}, {{ bombero.nombre }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                        <div class="form-group col-md-6">
+                                            <label>Tipo de servicio</label>
+                                            <select class="form-control" name="tiposervicio" id="tiposervicio" required>
+                                                {% for tipo in tipo_servicios %}
+                                                    <option value="{{ tipo.id }}">{{ tipo.tipo }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                    </div>
+                        
+                                    <!-- Denunciante y Teléfono -->
+                                    <div class="form-row">
+                                        <div class="form-group col-md-6">
+                                            <label>Denunciante</label>
+                                            <input class="form-control" type="text" name="denunciante">
+                                        </div>
+                                        <div class="form-group col-md-6">
+                                            <label>Teléfono del denunciante</label>
+                                            <input class="form-control" type="text" name="telefono">
+                                        </div>
+                                    </div>
+                        
+                                    <!-- Campos ocultos y Botón -->
+                                    <input type="hidden" id="latitude" name="latitude">
+                                    <input type="hidden" id="longitude" name="longitude">
+                                    <button type="submit" class="btn btn-danger btn-block">Iniciar intervención</button>
+                        
                                 </div>
-                            </div>
-                            <div class="row col-md-12">
-                                <div class="row form-group mr-3 col-md-4">
-                                    <label for="exampleInputPassword1">Número de guardia operativa</label>
-                                    <input type="number" class="form-control" id="guardia" name="guardia" min="0" required>
-                                </div>
-                                <div class="row form-group col-md-4">
-                                    <label for="exampleInputPassword1">Número de servicio</label>
-                                    <input type="number" class="form-control" id="numeroservicio" name="numero" min="0" required>
-                                </div>
-                            </div>
-                            <div class="row col-md-12">
-                                <div class="form-group col-md-3 row mr-3">
-                                    <label for="exampleInputPassword1">Zona</label>
-                                    <input class="form-control" type="text" name="zona" id="zona" required>
-                                </div>
-                                <div class="form-group col-md-4 row">
-                                    <label for="exampleInputPassword1">Hora de salida</label>
-                                    <input type="datetime-local" class="form-control" id="horasalida" name="salida" required>
-                                </div>
-                            </div>
-                            <div class="row col-md-12">
-                                <div class="form-group col-md-6 row mr-3">
-                                    <label for="exampleInputPassword1">Encargado</label>
-                                    <select class="form-control" name="encargado" id="encargado" required>
-                                        {% for bombero in bomberos %}
-                                            <option value="{{ bombero.id }}">{{ bombero.IDJerarquia.jerarquia }} {{ bombero.apellido }}, {{ bombero.nombre }}</option>
-                                        {% endfor %}
-                                    </select>
-                                </div>
-                                <div class="form-group col-md-4 row mr-3">
-                                    <label for="exampleInputPassword1">Tipo de servicio</label>
-                                    <select class="form-control" name="tiposervicio" id="tiposervicio" required>
-                                        {% for tipo in tipo_servicios %}
-                                            <option value="{{ tipo.id }}">{{ tipo.tipo }}</option>
-                                        {% endfor %}
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="row col-md-12">
-                                <div class="form-group col-md-6 row mr-3">
-                                    <label for="exampleInputPassword1">Denunciante</label>
-                                    <input class="form-control" type="text" name="denunciante">
-                                </div>
-                                <div class="form-group col-md-4 row mr-3">
-                                    <label for="exampleInputPassword1">Teléfono del denunciante</label>
-                                    <input class="form-control" type="text" name="telefono">
-                                </div>
-                            </div>
-
-                            <input type="hidden" id="latitude" name="latitude">
-                            <input type="hidden" id="longitude" name="longitude">
-                            <button type='submit' class="btn btn-danger">Iniciar intervención</button>
-                        </div>
+                        
                         <div class="col-md-6">                   
                             <div class="col-md-12 d-flex justify-content-center mt-3 mb-3">
                                 <div id="map" style="height: 500px; width: 900px;"></div>
                             </div>
                         </div>
+                    </div>
                     </div>
                     </form>
                     </div>

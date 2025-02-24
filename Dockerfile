@@ -17,3 +17,7 @@ RUN pip install psycopg2-binary
 # copy project
 COPY . .
 
+EXPOSE 8000
+
+CMD ["sh", "-c", "gunicorn --bind 0.0.0.0:8000 mysite.wsgi:application & daphne -b 0.0.0.0 -p 8001 mysite.asgi:application"]
+
