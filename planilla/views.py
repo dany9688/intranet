@@ -18,15 +18,9 @@ from django.middleware.csrf import get_token
 from django.templatetags.static import static
 from django.db.models import Sum, Count, Q, Prefetch
 from django.views.decorators.csrf import csrf_exempt
-from twilio.rest import Client
 import logging
 # Configuración de logging
 logger = logging.getLogger(__name__)
-
-# Configuración de Twilio
-TWILIO_SID = "ACb6620b7fe4f9e013a1fbd49471253dac"
-TWILIO_AUTH_TOKEN = "e0d91990201ed4172bb715d4e51ddd11"
-TWILIO_WHATSAPP_NUMBER = "whatsapp:+16052504414"  # Número de Twilio para WhatsApp
 
 
 def index(request):
@@ -35,18 +29,7 @@ def index(request):
     grupo_usuario = request.user.groups.values_list('name', flat=True).first()
     print("user: ", request.user, flush=True)
     print("grupo: ",grupo_usuario)
-    if grupo_usuario == "Móviles":
-        movil = 1
-        movil = Movil.objects.get(numero=movil)
-        servicio = Servicio.objects.filter(estado='En curso').first()
-        print(servicio)
-        context ={
-            "servicio" : servicio,
-            "movil": movil,
-        }
-        return render (request, 'planilla/mobile.html', context)
-    
-    elif "Guardia" in grupo_usuario:
+    if "Guardia" in grupo_usuario:
         print("entro a guardia")
         base = Base.objects.all().order_by('id')
         moviles = Movil.objects.all()
@@ -1041,6 +1024,33 @@ def eliminar_presente(request, presente_id):
         return JsonResponse({"success": True})
     return JsonResponse({"error": "Método no permitido"}, status=405)
 
+class TabletView(View):
+    def get(self, request, movil, *args, **kwargs):
+        print("movil", movil)
+        movil = get_object_or_404(Movil, id=movil)
+        servicio = Servicio.objects.prefetch_related(
+            Prefetch(
+                "moviles_asignados",
+                queryset=ServicioMovil.objects.select_related("movil").prefetch_related("bomberos"),
+                to_attr="moviles_list"
+            )
+        ).filter(
+            moviles_asignados__movil=movil,  # Filtra servicios donde el móvil esté asignado
+            estado="En curso"  # Ajusta esto según el campo que indica si el servicio está activo
+        ).order_by("-salida").first()  # Ordena por fecha y obtiene el más reciente
+
+        if servicio:
+            context = {
+                "servicio": servicio,
+                "movil": movil,
+            }
+        else:
+            context = {
+                "servicio": None,
+                "movil": movil,
+            }
+        return render(request, 'planilla/tablet.html', context)
+
 @csrf_exempt
 def eliminar_movil(request, movil_id):
     if request.method == "POST":
@@ -1111,6 +1121,19 @@ def signin(request):
         except Exception as err:
             print(f"Oops! {err}")
             return render(request, 'planilla/signin.html', {'error': 'Algo falló.'})
+
+def signinMovil(request):
+    if request.method == "GET":
+        get_token(request)
+        moviles = Movil.objects.all()
+        return render(request, 'planilla/signin_movil.html', {'moviles': moviles})
+    elif request.method == "POST":
+        try:
+            movil = request.POST['movil']
+            return redirect(reverse('tablet_view', kwargs={'movil': movil}))
+        except Exception as err:
+            print(f"Oops! {err}")
+            return render(request, 'planilla/signin_movil.html', {'error': 'Algo falló.'})
         
 def signout(request):
     logout(request)

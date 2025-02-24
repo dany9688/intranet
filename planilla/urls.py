@@ -3,7 +3,7 @@ from django.contrib.auth.decorators import login_required
 from django.conf import settings
 from django.conf.urls.static import static
 from . import views
-from planilla.views import CargarPlanilla, PlanillaDetailView, ServicioView, RepMaterialesView, CheckMaterialesView, CargarServicio, ModificarPlanilla, eliminar_presente, Guia, finalizar_servicio, Guardia, ModificarServicio, ServicioDetail, eliminar_movil, Calendar
+from planilla.views import CargarPlanilla, PlanillaDetailView, ServicioView, RepMaterialesView, CheckMaterialesView, CargarServicio, ModificarPlanilla, eliminar_presente, Guia, finalizar_servicio, Guardia, ModificarServicio, ServicioDetail, eliminar_movil, Calendar, TabletView
 
 urlpatterns = [
     # path("", views.index, name="index"),
@@ -44,7 +44,9 @@ urlpatterns = [
     path("materiales_grafico/", login_required(views.materiales_grafico, login_url='/signin/'), name="materiales_grafico"),
     path("guia/", login_required(Guia.as_view(), login_url='/signin/'), name="guia"),
     path("guardia/", login_required(Guardia.as_view(), login_url='/signin/'), name="guardia"),
+    path("tablet/<str:movil>/", views.TabletView.as_view(), name="tablet_view"),
     path("calendar/", login_required(Calendar.as_view(), login_url='/signin/'), name="calendar"),
+    path("signin_movil/", views.signinMovil, name="signin_movil"),
     path("signin/", views.signin, name="signin"),
     path("logout/", views.signout, name="logout"),
     

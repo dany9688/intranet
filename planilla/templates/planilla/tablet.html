@@ -39,7 +39,7 @@
     <div class="content">
         <div class="container-fluid">
           {% if servicio %}
-          <span id="movil">{{movil.id}}</span>
+          <span hidden id="movil">{{movil.id}}</span>
         <!-- 1ra fila -->
          <div class="row">
           <div class="col-md-6 mt-2" style="max-height: 500px;">
@@ -58,7 +58,7 @@
                 </div>
                 <div class="callout callout-info">
                   <h5>Dirección</h5>
-                  <p>{{servicio.direccion}}</p>
+                  <p id="direccion">{{servicio.direccion}}</p>
                   <button class="btn btn-secondary" onclick="iniciarNavegacion(-34.657713, -58.632396); monitorearUbicacion(-34.657713, -58.632396);">
                     Iniciar Navegación
                 </button>
@@ -79,6 +79,34 @@
 
          <div class="col-sm-6 mt-3">
           <div id="map" style="height: 500px; width: 100%; border: 1px, solid; border-color: black;"></div>
+          <button id="toggleHidrantes" style="
+          position: absolute;
+          top: 55px;
+          left: 25px;
+          z-index: 1000;
+          background: #ffffff;
+          color: black;
+          border: none;
+          padding: 10px;
+          cursor: pointer;
+          font-weight:bold;
+        ">
+          <i class="fa-brands fa-hire-a-helper"></i> Hidrantes
+      </button>
+      <button id="toggleCuarteles" style="
+          position: absolute;
+          top: 100px;
+          left: 25px;
+          z-index: 1000;
+          background: #ffffff;
+          color: black;
+          border: none;
+          padding: 10px;
+          cursor: pointer;
+          font-weight: bold;
+        ">
+          <i class="fa-solid fa-warehouse"></i> Cuarteles
+      </button>
          </div>
          {%else%}
          <div class="alert alert-success alert-dismissible col-md-6">
@@ -88,6 +116,7 @@
         </div>
         <div class="col-md-6">
           <div id="map" style="height: 500px; width: 100%; border: 1px, solid; border-color: black;"></div>
+
         </div>
          {%endif%}
 
@@ -111,9 +140,14 @@
 
 <script async src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDgZ9iDyLaJEwAAYUcuN7MgVWN2alaLd1s&libraries=places,geometry&callback=initMap"></script>
 
-<script>
-  var staticUrl = "{% static '/planilla/images/' %}";
 
+<script>
+  const PNG_URL = "{% static 'planilla/' %}"
+  var staticUrl = "{% static '/planilla/images/' %}";
+  const HIDRANTES_PNG_URL = "{% static 'planilla/images/hidrante.png' %}"
+  const CUARTELES_JSON_URL = "{% static 'planilla/cuarteles.json' %}"
+  const HIDRANTES_JSON_URL = "{% static 'planilla/hidrantes.json' %}";
+  
   var socket = new WebSocket(`wss://${window.location.host}/ws/location/`);
   console.log(socket)
 
@@ -148,14 +182,18 @@
       updateMap(lat, lng);
   };
 
-var map;
-var currentMarker; // Guardará el marcador de la posición actual
-var markers = []
+let map;
+let currentMarker;
+let markers = [];
+let hidrantesLayer;
+let hidrantesMarkers = [];
+let cuartelesMarkers = [];
+let cuartelesLayer;
+let infoWindow;
 
 function initMap() {
-    console.log(typeof initMap);
     map = new google.maps.Map(document.getElementById("map"), {
-        center: { lat: -34.657713, lng: -58.632396 }, // Centro inicial
+        center: { lat: -34.657713, lng: -58.632396 },
         zoom: 13
     });
 
@@ -163,20 +201,32 @@ function initMap() {
         map: map,
         title: "Ubicación actual",
         icon: {
-            url: "https://maps.google.com/mapfiles/ms/icons/blue-dot.png", // Icono personalizado para diferenciar ubicación
+            url: "https://maps.google.com/mapfiles/ms/icons/blue-dot.png",
             scaledSize: new google.maps.Size(40, 40)
         }
     });
 
-    cargarServicios(); // Cargar los servicios al iniciar
+    hidrantesLayer = new google.maps.Data({ map: map });
+    cuartelesLayer = new google.maps.Data({ map: map });
+    infoWindow = new google.maps.InfoWindow();
+
+
+    hidrantesLayer.setMap(null);
+    cuartelesLayer.setMap(null);
+
+    cargarHidrantes();
+    cargarCuarteles();
+
+    document.getElementById("toggleHidrantes").addEventListener("click", toggleHidrantes);
+    document.getElementById("toggleCuarteles").addEventListener("click", toggleCuarteles);
+
+    cargarServicios();
 }
 
-// WebSocket para actualizar la ubicación en tiempo real
 navigator.geolocation.watchPosition(function(position) {
     const { latitude, longitude, heading, speed } = position.coords;
     updateMap(latitude, longitude);
     
-    // Enviar ubicación al WebSocket
     socket.send(JSON.stringify({
         'latitude': latitude,
         'longitude': longitude,
@@ -186,104 +236,193 @@ navigator.geolocation.watchPosition(function(position) {
 });
 
 function updateMap(lat, lng) {
-    if (!map) return; // Evita errores si `map` no está inicializado
+    if (!map) return;
     map.setCenter(new google.maps.LatLng(lat, lng));
     currentMarker.setPosition(new google.maps.LatLng(lat, lng));
-    cargarServicios()
+    cargarServicios();
 }
 
-let movil = document.getElementById('movil').textContent
-console.log(movil)
+let movil = document.getElementById('movil').textContent;
+
 function cargarServicios() {
-    fetch("/servicio_movil/"+movil)
+    fetch("/servicio_movil/" + movil)
         .then(response => response.json())
         .then(data => {
             let servicios = data.servicios;
             let tiposervicio = data.tiposervicio;
 
-            if (!Array.isArray(servicios)) {
-                console.error("⚠️ Error: 'servicios' no es un array.");
+            if (!Array.isArray(servicios) || servicios.length === 0) {
+                console.warn("🚨 No hay servicio en curso para este móvil.");
                 return;
             }
 
-            servicios.forEach(servicio => {
-                let latitud = parseFloat(servicio.latitud);
-                let longitud = parseFloat(servicio.longitud);
-                if (isNaN(latitud) || isNaN(longitud)) {
-                    console.warn(`⚠️ Servicio con coordenadas inválidas:`, servicio);
-                    return;
-                }
+            markers.forEach(marker => marker.setMap(null));
+            markers = [];
 
-                let idServicio = `${servicio.direccion}-${latitud}-${longitud}`;
-                if (!markers[idServicio]) {
-                    let serviciotipo = tiposervicio.find(t => t.id === servicio.tipo);
-                    let icono = {
-                        url: staticUrl + (serviciotipo ? serviciotipo.tipo : "default") + ".png",
-                        scaledSize: new google.maps.Size(40, 40),
-                        origin: new google.maps.Point(0, 0),
-                        anchor: new google.maps.Point(10, 10)
-                    };
+            let servicio = servicios[0];
+            let latitud = parseFloat(servicio.latitud);
+            let longitud = parseFloat(servicio.longitud);
+            let direccion = servicio.direccion || "Ubicación sin dirección";
+            let tipoServicio = tiposervicio.find(t => t.id === servicio.tipo) || { tipo: "Desconocido" };
 
-                    let marker = new google.maps.Marker({
-                        position: { lat: latitud, lng: longitud },
-                        map: map,
-                        icon: icono,
-                        title: `${servicio.direccion}`
-                    });
+            if (isNaN(latitud) || isNaN(longitud)) {
+                console.error("❌ Coordenadas inválidas del servicio:", servicio);
+                return;
+            }
 
-                    let infowindow = new google.maps.InfoWindow({
-                        content: `<strong>${servicio.direccion}</strong><br><strong>${serviciotipo ? serviciotipo.tipo : "Desconocido"}</strong>`
-                    });
+            let icono = {
+                url: staticUrl + tipoServicio.tipo + ".png",
+                scaledSize: new google.maps.Size(40, 40)
+            };
 
-                    marker.addListener("click", function () {
-                        infowindow.open(map, marker);
-                    });
-
-                    markers[idServicio] = marker;
-                }
+            let marker = new google.maps.Marker({
+                position: { lat: latitud, lng: longitud },
+                map: map,
+                icon: icono,
+                title: direccion
             });
 
-            // Dibujar una línea desde la posición actual al servicio
-            // trazarRuta();
+            let infowindow = new google.maps.InfoWindow({
+                content: `<strong>${direccion}</strong><br><strong>${tipoServicio.tipo}</strong><br>
+                    <button onclick="iniciarNavegacion(${latitud}, ${longitud})" class="btn btn-sm btn-primary">🗺️ Navegar</button>`
+            });
+
+            marker.addListener("click", function () {
+                infowindow.open(map, marker);
+            });
+
+            markers.push(marker);
+            map.setCenter({ lat: latitud, lng: longitud });
         })
-        .catch(error => console.error("Error al obtener los servicios:", error));
+        .catch(error => console.error("Error al obtener el servicio:", error));
 }
 
-// 🔹 Función para trazar una ruta desde la posición actual hasta el primer servicio disponible
-function trazarRuta() {
-    let servicioKeys = Object.keys(markers);
-    if (servicioKeys.length === 0 || !currentMarker.getPosition()) return;
+function cargarHidrantes() {
+    fetch(HIDRANTES_JSON_URL)
+    .then(response => response.json())
+    .then(data => {
+        console.log("📥 Datos de hidrantes recibidos:", data);
 
-    let directionsService = new google.maps.DirectionsService();
-    let directionsRenderer = new google.maps.DirectionsRenderer({
-      suppressMarkers: true,
-      map: map
-     });
-
-    let destino = markers[servicioKeys[0]].getPosition(); // Tomar el primer servicio
-
-    let request = {
-        origin: currentMarker.getPosition(),
-        destination: destino,
-        travelMode: google.maps.TravelMode.DRIVING
-    };
-
-    directionsService.route(request, function(result, status) {
-        if (status == google.maps.DirectionsStatus.OK) {
-            directionsRenderer.setDirections(result);
-        } else {
-            console.error("Error al calcular ruta:", status);
+        if (!data || !data.features || !Array.isArray(data.features)) {
+            console.error("❌ Estructura de datos inválida:", data);
+            return;
         }
-    });
+
+        // Eliminar marcadores anteriores antes de agregar nuevos
+        hidrantesMarkers.forEach(marker => marker.setMap(null));
+        hidrantesMarkers = [];
+
+        data.features.forEach(hidrante => {
+            // Verificar si la estructura de datos es correcta
+            let lat = hidrante.latitud || (hidrante.geometry ? hidrante.geometry.coordinates[1] : null);
+            let lng = hidrante.longitud || (hidrante.geometry ? hidrante.geometry.coordinates[0] : null);
+
+            if (lat === null || lng === null) {
+                console.warn("⚠️ Hidrante sin coordenadas válidas:", hidrante);
+                return;
+            }
+
+            let latLng = new google.maps.LatLng(lat, lng);
+
+            let icono = {
+                url: PNG_URL + 'images/hidrante.png',
+                scaledSize: new google.maps.Size(40, 40),
+                origin: new google.maps.Point(0, 0),
+                anchor: new google.maps.Point(20, 40)
+            };
+
+            let hidranteMarker = new google.maps.Marker({
+                position: latLng,
+                map: hidrantesVisible ? map : null,
+                icon: icono,
+                title: hidrante.nombre || "Hidrante",
+            });
+
+            google.maps.event.addListener(hidranteMarker, 'click', function () {
+                infoWindow.setContent(`<strong>${hidrante.nombre || "Hidrante"}</strong><br>${hidrante.descripcion || "Sin descripción"}`);
+                infoWindow.open(map, hidranteMarker);
+            });
+
+            hidrantesMarkers.push(hidranteMarker);
+        });
+
+        console.log(`✅ Hidrantes cargados: ${hidrantesMarkers.length}`);
+    })
+    .catch(error => console.error("❌ Error al cargar hidrantes:", error));
 }
 
-function iniciarNavegacion(lat, lng) {
-    // URL para abrir Google Maps en modo conducción
-    let url = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=driving`;
-    
-    // Abrir en una nueva ventana o en la app de Google Maps
-    window.location.href = url;
+
+
+function cargarCuarteles() {
+    fetch(CUARTELES_JSON_URL)
+    .then(response => response.json())
+    .then(data => {
+        if (!data || !data.features) {
+            console.error("❌ Datos de cuarteles inválidos:", data);
+            return;
+        }
+
+        data.features.forEach(feature => {
+            let coords = feature.geometry.coordinates;
+            let latLng = new google.maps.LatLng(coords[1], coords[0]);
+
+            let name = feature.properties.name || "Cuartel";
+            let description = feature.properties.description || "Sin descripción";
+            let icon = feature.properties.icon || "default.png";
+
+            let icono = {
+                url: PNG_URL + icon,
+                scaledSize: new google.maps.Size(40, 40),
+                origin: new google.maps.Point(0, 0),
+                anchor: new google.maps.Point(20, 40)
+            };
+            console.log(icono)
+            let cuartelMarker = new google.maps.Marker({
+                position: latLng,
+                map: cuartelesVisible ? map : null,
+                icon: icono,
+                title: name
+            });
+
+            google.maps.event.addListener(cuartelMarker, 'click', function () {
+                infoWindow.setContent(`<strong>${name}</strong><br>${description}`);
+                infoWindow.open(map, cuartelMarker);
+            });
+
+            cuartelesMarkers.push(cuartelMarker);
+        });
+
+        console.log(`✅ Cuarteles cargados: ${cuartelesMarkers.length}`);
+    })
+    .catch(error => console.error("❌ Error al cargar cuarteles:", error));
+
 }
+
+let hidrantesVisible = false;
+let cuartelesVisible = false;
+
+function toggleHidrantes() {
+    hidrantesVisible = !hidrantesVisible;
+
+    hidrantesMarkers.forEach(marker => {
+        marker.setMap(hidrantesVisible ? map : null);
+    });
+
+    console.log(`🔄 Hidrantes ${hidrantesVisible ? "mostrados" : "ocultos"}`);
+}
+
+
+
+function toggleCuarteles() {
+    cuartelesVisible = !cuartelesVisible;
+
+    cuartelesMarkers.forEach(marker => {
+        marker.setMap(cuartelesVisible ? map : null);
+    });
+
+    console.log(`🔄 Cuarteles ${cuartelesVisible ? "mostrados" : "ocultos"}`);
+}
+
 
 function monitorearUbicacion(destLat, destLng) {
     let threshold = 0.0005; // Margen de error (~50m)
@@ -314,6 +453,18 @@ function getDistance(lat1, lon1, lat2, lon2) {
     
     return R * c; // Distancia en metros
 }
+
+function iniciarNavegacion(direccion) {
+    let direccion1 = document.getElementById('direccion').innerText
+    if (navigator.userAgent.match(/Android/i)) {
+        window.location.href = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(direccion1)}`;
+    } else if (navigator.userAgent.match(/iPhone|iPad|iPod/i)) {
+        window.location.href = `maps://?q=${encodeURIComponent(direccion1)}`;
+    } else {
+        window.open(`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(direccion1)}&travelmode=driving`, "_blank");
+    }
+}
+
 
 
 </script>
