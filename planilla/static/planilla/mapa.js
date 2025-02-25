@@ -23,8 +23,6 @@
       cargarServicios();
       gpsMovil()
 
-      setInterval(cargarServicios, 5000); // Recargar cada 5 segundos
-
       // Crea un marcador (será movido después según la dirección)
       marker = new google.maps.Marker({
         map: map,
@@ -168,28 +166,50 @@
 
 }
 
-function gpsMovil(){
+let movilMarker = null;  // Variable global para el marcador del móvil
+
+function gpsMovil() {
     var socket = new WebSocket('wss://' + window.location.host + '/ws/location/');
-    socket.onmessage = function(e) {
-    var data = JSON.parse(e.data);
-    var lat = data.latitude;
-    var lng = data.longitude;
-    var speed = data.speed
     
-    console.log("data: ", data)
+    socket.onmessage = function(e) {
+        var data = JSON.parse(e.data);
+        var lat = data.latitude;
+        var lng = data.longitude;
 
-    let marker = new google.maps.Marker({
-        position: { lat: lat, lng: lng },
-        map: map,
-        title: "Móvil"
-    });
+        if (!movilMarker) {
+            movilMarker = new google.maps.Marker({
+                position: { lat: lat, lng: lng },
+                map: map,
+                title: "Móvil",
+                icon: {
+                    url: "/static/images/movil.png",
+                    scaledSize: new google.maps.Size(40, 40)
+                }
+            });
+        } else {
+            movilMarker.setPosition({ lat: lat, lng: lng });
+        }
+    };
+}
 
-    marker.addListener("click", function () {
-        infowindow.open(map, marker);
-    });
+
+var socketServicios = new WebSocket('wss://' + window.location.host + '/ws/servicios/');
+
+socketServicios.onmessage = function(e) {
+    var data = JSON.parse(e.data);
+
+    if (data.type === "servicio_finalizado") {
+        eliminarServicioMapa(data.id);
+    }
 };
 
+function eliminarServicioMapa(servicioId) {
+    if (markers[servicioId]) {
+        markers[servicioId].setMap(null);
+        delete markers[servicioId];
+    }
 }
+
 
 function cargarServicios() {
     fetch("/obtener_servicios/")

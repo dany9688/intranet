@@ -371,39 +371,102 @@
                  .replace(/[^a-z0-9_]/g, "");
 }
 </script>
+
 <script>
-  const socket = new WebSocket("wss://" + window.location.host + "/ws/servicios/");
+const socket = new WebSocket("wss://" + window.location.host + "/ws/servicios/");
 
-  socket.onmessage = function(event) {
-      const data = JSON.parse(event.data);
-      
-      if (data.tipo === "nuevo_servicio") {
-          const servicio = data.servicio;
-          alert("Nuevo servicio: " + servicio.numero + " - " + servicio.tipo);
+// Inicializar markers si no existe
+if (typeof markers === "undefined") {
+    var markers = {};
+}
 
-          // Aquí puedes actualizar la lista de servicios dinámicamente
-          // Ejemplo: agregar nuevo servicio a la lista sin recargar la página
-          const serviciosContainer = document.getElementById("accordion");
-          const nuevoServicio = `
-              <div class="card card-danger mb-2">
-                  <div class="card-header d-flex">
-                      <h4 class="card-title w-100">
-                          <a class="d-block w-100 float-left" data-toggle="collapse" data-target="#collapse${servicio.id}">
-                              Servicio ${servicio.numero} - ${servicio.tipo}
-                          </a>
-                      </h4>
-                  </div>
-                  <div id="collapse${servicio.id}" class="collapse">
-                      <div class="card-body">
-                          <strong>DIRECCIÓN:</strong> ${servicio.direccion} <br>
-                          <strong>ZONA:</strong> ${servicio.zona}
-                      </div>
-                  </div>
-              </div>`;
-          
-          serviciosContainer.innerHTML += nuevoServicio;
-      }
-  };
+// Manejar nuevos servicios en tiempo real
+socket.onmessage = function(event) {
+    const data = JSON.parse(event.data);
+
+    if (data.tipo === "nuevo_servicio") {
+        const servicio = data.servicio;
+        alert("Nuevo servicio: " + servicio.numero + " - " + servicio.tipo);
+
+        // Agregar servicio a la UI
+        const serviciosContainer = document.getElementById("accordion");
+        const nuevoServicio = `
+            <div class="card card-danger mb-2" id="grupo-servicio-${servicio.id}">
+                <div class="card-header d-flex">
+                    <h4 class="card-title w-100">
+                        <a class="d-block w-100 float-left" data-toggle="collapse" data-target="#collapse${servicio.id}">
+                            Servicio ${servicio.numero} - ${servicio.tipo}
+                        </a>
+                    </h4>
+                </div>
+                <div id="collapse${servicio.id}" class="collapse">
+                    <div class="card-body">
+                        <strong>DIRECCIÓN:</strong> ${servicio.direccion} <br>
+                        <strong>ZONA:</strong> ${servicio.zona}
+                    </div>
+                </div>
+            </div>`;
+
+        serviciosContainer.innerHTML += nuevoServicio;
+
+        // Agregar marcador al mapa con el servicioId como clave
+        agregarMarcador(servicio.id, servicio.latitud, servicio.longitud);
+    }
+};
+
+// 🗺 Agregar marcador al mapa y guardarlo correctamente en markers
+function agregarMarcador(servicioId, lat, lng) {
+    const posicion = new google.maps.LatLng(lat, lng);
+    const marcador = new google.maps.Marker({
+        position: posicion,
+        map: mapa,
+        title: `Servicio ${servicioId}`
+    });
+
+    // ✅ Guardamos el marcador con el servicioId como clave correcta
+    markers[servicioId] = marcador;
+    console.log(`✅ Marcador agregado para servicio ${servicioId}`);
+    console.log("📌 Claves actuales en markers:", Object.keys(markers)); // Debug
+}
+
+// Manejar eventos de finalización de servicio
+socket.onmessage = function(e) {
+    const data = JSON.parse(e.data);
+
+    if (data.type === "servicio_finalizado") {
+        console.log(`🔴 Servicio finalizado: ${data.id}`);
+        console.log("📌 Claves en markers antes de eliminar:", Object.keys(markers));
+
+        eliminarServicioMapa(data.id);  // ⛔ Eliminar marcador en el mapa
+        eliminarCard(data.id);          // ⛔ Eliminar la tarjeta en la UI
+    }
+};
+
+// 🗺 Eliminar marcador del mapa
+function eliminarServicioMapa(servicioId) {
+    let claveMarker = `${servicioId}`; // La clave debe coincidir con la usada al guardar
+
+    if (markers[claveMarker]) {
+        markers[claveMarker].setMap(null);
+        delete markers[claveMarker];
+        console.log(`✅ Eliminado marcador con clave: ${claveMarker}`);
+    } else {
+        console.warn(`⚠️ Marcador ${servicioId} no encontrado en markers.`);
+        console.log(`📌 Claves actuales en markers:`, Object.keys(markers));
+    }
+}
+
+// 🗂 Eliminar tarjeta del servicio en la UI
+function eliminarCard(servicioId) {
+    const card = document.getElementById(`grupo-servicio-${servicioId}`);
+    if (card) {
+        card.remove();
+        console.log(`✅ Card ${servicioId} eliminada.`);
+    } else {
+        console.warn(`⚠️ No se encontró el card ${servicioId}.`);
+    }
+}
+
 </script>
 
 

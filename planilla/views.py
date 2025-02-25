@@ -1102,6 +1102,12 @@ def finalizar_servicio(request, servicio_id):
             movil.IDEstado_id = int(estado.id)
             movil.save()
 
+        channel_layer = get_channel_layer()
+        async_to_sync(channel_layer.group_send)(
+            "servicios",
+            {"type": "servicio_finalizado", "id": servicio_id}
+        )
+
         return redirect ('/')
     return JsonResponse({"error": "Método no permitido"}, status=405)
 
