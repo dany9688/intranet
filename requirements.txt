@@ -6,4 +6,4 @@ channels_redis==4.2.1
 whitenoise==6.9.0
 gunicorn
 daphne
-twilio
+heyoo

@@ -24,46 +24,54 @@
           <div class="card-header">
             <h3 class="card-title">
               <i class="ion ion-clipboard mr-1"></i>
-              Checklist de materiales - Móvil {{movil}}
+              Checklist de materiales - Móvil {{movil.numero}}
             </h3>
           </div>
-          <!-- /.card-header -->
-          <div class="card-body">
-            <ul class="todo-list" data-widget="todo-list">
-              {% regroup materiales by cajonera as materiales_por_cajonera %}
+                <!-- ./card-header -->
+                <div class="card-body p-0">
+                  <table class="table table-hover">
+                    <tbody>
+                      {% regroup materiales by cajonera as materiales_por_cajonera %}
+                
+                      {% for grupo in materiales_por_cajonera %}
+                      <!-- Fila del Grupo Expandible -->
+                      <tr data-bs-toggle="collapse" data-bs-target="#grupo-{{ grupo.grouper|slugify }}" aria-expanded="false" style="cursor:pointer;">
+                        <td>
+                          <i class="fas fa-caret-right fa-fw"></i>
+                          {{ grupo.grouper }}
+                        </td>
+                      </tr>
+                
+                      <!-- Filas de Materiales del Grupo -->
+                      <tbody id="grupo-{{ grupo.grouper|slugify }}" class="collapse">
+                        {% for material in grupo.list %}
+                        <tr>
+                          <td>
+                            <div class="custom-control custom-switch 
+                                {% if material.estado.estado == 'En servicio' %}
+                                  custom-switch-on-success
+                                {% elif material.estado.estado == 'Fuera de servicio' %}
+                                  custom-switch-off-danger
+                                {% endif %}">
+                              <input type="checkbox" class="custom-control-input switch-control" 
+                                id="switch{{ material.id }}" 
+                                data-material-id="{{ material.id }}"
+                                data-material-name="{{ material.nombre }}"
+                                data-material-estado="{{ material.estado.estado }}"
+                                {% if material.estado.estado == "En servicio" %} checked="checked" {% endif %}>
+                              <label class="custom-control-label" for="switch{{ material.id }}"></label>
+                              <span class="text">{{ material.nombre }} - Cantidad {{ material.cantidad }}</span>
+                            </div>
+                          </td>
+                        </tr>
+                        {% endfor %}
+                      </tbody>
+                
+                      {% endfor %}
+                    </tbody>
+                  </table>
+                </div>
 
-              {% for grupo in materiales_por_cajonera %}
-                <h5 class="mt-2"><strong>Cajonera {{ grupo.grouper }}</strong></h5>
-                <ul style="list-style: none;">
-                  {% for material in grupo.list %}
-                  <li>
-                    <div class="custom-control custom-switch 
-                        {% if material.estado.estado == 'En servicio' %}
-                          custom-switch-on-success
-                        {% elif material.estado.estado == 'Fuera de servicio' %}
-                          custom-switch-off-danger
-                        {% endif %}">
-                      
-                        <input type="checkbox" class="custom-control-input switch-control" 
-                        id="switch{{ material.id }}" 
-                        data-material-id="{{ material.id }}"
-                        data-material-name="{{ material.nombre }}"
-                        data-material-estado="{{ material.estado.estado }}"
-                        {% if material.estado.estado == "En servicio" %} checked="checked" {% endif %}>
-                 
-                      
-                      <label class="custom-control-label" for="switch{{ material.id }}"></label>
-                      
-                      <span class="text">{{ material.nombre }}</span>
-                    </div>
-                  </li>                     
-                  {% endfor %}
-                </ul>
-              {% endfor %}
-              
-            </ul>
-          </div>
-          <!-- /.card-body -->
           <!-- Modal de Confirmación -->
           <div class="modal fade" id="confirmModal" tabindex="-1" aria-labelledby="confirmModalLabel" aria-hidden="true">
             <div class="modal-dialog">
@@ -85,11 +93,7 @@
             </div>
           </div>
 
-          <div class="card-footer clearfix">
-            <button type="button" class="btn btn-primary float-right"><i class="fas fa-plus"></i> Add item</button>
-          </div>
         </div>
-          <!-- /.card-body -->
         </div>
 
     {% else %}

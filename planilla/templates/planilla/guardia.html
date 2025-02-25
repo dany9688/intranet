@@ -105,13 +105,13 @@
                   {% for servicio in servicios %}
                     {% if servicio.estado == "En curso" %}
                       {% if "Incendio" in servicio.tipo.tipo %}
-                      <div class="card card-danger mb-2" id="grupo-servicio-{{ servicio.id }}">
+                      <div class="card card-danger card-outline mb-2" id="grupo-servicio-{{ servicio.id }}">
                       {% elif "Auxilio" in servicio.tipo.tipo %}
-                      <div class="card card-teal mb-2" id="grupo-servicio-{{ servicio.id }}">
+                      <div class="card card-teal card-outline mb-2" id="grupo-servicio-{{ servicio.id }}">
                       {% elif "Colaboración" in servicio.tipo.tipo %}
-                      <div class="card card-gray mb-2" id="grupo-servicio-{{ servicio.id }}">
+                      <div class="card card-gray card-outline mb-2" id="grupo-servicio-{{ servicio.id }}">
                       {% elif "Accidente" in servicio.tipo.tipo %}
-                      <div class="card card-warning mb-2" id="grupo-servicio-{{ servicio.id }}">
+                      <div class="card card-warning card-outline mb-2" id="grupo-servicio-{{ servicio.id }}">
                       {% else %}
                       <div class="card card-navy mb-2" id="grupo-servicio-{{ servicio.id }}">
                       {% endif %}

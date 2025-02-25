@@ -6,7 +6,7 @@ from django.contrib.auth import login, authenticate, logout
 from datetime import timedelta
 from datetime import datetime
 from django.utils import timezone
-from django.utils.timezone import get_current_timezone, is_naive, make_aware, localtime
+from django.utils.timezone import get_current_timezone, is_naive, make_aware
 from django.contrib import messages
 from .forms import *
 from django.http import JsonResponse, HttpResponseRedirect
@@ -18,6 +18,7 @@ from django.middleware.csrf import get_token
 from django.templatetags.static import static
 from django.db.models import Sum, Count, Q, Prefetch
 from django.views.decorators.csrf import csrf_exempt
+import requests
 import logging
 # Configuración de logging
 logger = logging.getLogger(__name__)
@@ -303,7 +304,8 @@ class RepMaterialesView(View): #createView
     
 class CheckMaterialesView(View): #createView
     def get(self, request, id):
-        movil=id
+        movil=get_object_or_404(Movil, id=id)
+
         materiales = Material.objects.filter(movil=movil).order_by('cajonera')
         print(materiales)
 
@@ -389,41 +391,74 @@ class CargarServicio(View):
             print(f"🔍 Intentando enviar mensaje a: notificacion_{destacamento}")  # Debug
             print(f"🔍 Mensaje: {mensaje}")  # Debug
 
-            # Enviar notificación vía WebSockets
-            channel_layer = get_channel_layer()
-            async_to_sync(channel_layer.group_send)(
-                f'notificacion_{destacamento}',  # 🔥 Notifica al destacamento correcto
-                {
-                    'type': 'enviar_notificacion',
-                    'mensaje': mensaje
-                }
-            )
-            print("✅ `group_send()` ejecutado con éxito")  # Debug
-            messages.success(request, "Servicio cargado correctamente.")
-            messages.success(request, "Se envió la alerta.")
-            # Guarda el destacamento del usuario logueado
-            request.session["usuario_destacamento"] = normalizar_destacamento(request.user.last_name)
+            # # Enviar notificación vía WebSockets
+            # channel_layer = get_channel_layer()
+            # async_to_sync(channel_layer.group_send)(
+            #     f'notificacion_{destacamento}',  # 🔥 Notifica al destacamento correcto
+            #     {
+            #         'type': 'enviar_notificacion',
+            #         'mensaje': mensaje
+            #     }
+            # )
+            # print("✅ `group_send()` ejecutado con éxito")  # Debug
+            # messages.success(request, "Servicio cargado correctamente.")
+            # messages.success(request, "Se envió la alerta.")
+            # # Guarda el destacamento del usuario logueado
+            # request.session["usuario_destacamento"] = normalizar_destacamento(request.user.last_name)
 
-            # Guarda el destacamento del servicio creado
-            request.session["servicio_destacamento"] = normalizar_destacamento(base)
+            # # Guarda el destacamento del servicio creado
+            # request.session["servicio_destacamento"] = normalizar_destacamento(base)
 
-            request.session.modified = True
-            request.session.save()
+            # request.session.modified = True
+            # request.session.save()
 
+            # data = {
+            #     "tipo": "nuevo_servicio",
+            #     "servicio": {
+            #         "numero": numero,
+            #         "tipo": tipo_servicio_id,
+            #         "direccion": address,
+            #         "zona": base,
+            #         "estado": "En curso",
+            #     }
+            # }
+            # async_to_sync(channel_layer.group_send)("servicios", {"type": "send_servicio_update", "data": data})
+            # print(f"✅ Sesión usuario: {request.session['usuario_destacamento']}")
+            # print(f"✅ Sesión servicio: {request.session['servicio_destacamento']}")
+
+            token = "EAAIugAMEhZA0BOz0vhVOpQ8TJYbdlBPWXMZCUJyKOZBflXZCqeiZA6p8sFia81bYZCjFzDZBQwHXy4DWJUhdZAZCSSVnD3mugx6IO3pRRZBqRcigsh5eLhodryvZBBS1tMhOw4h0HnzZAi4wES8GDE2oN2AN9CMZCzIJKPLKM81rM9rsuZCnRnez6msohSkq5Pjzfbh95RXrXj5paiizJaGY354iht0Xmc"  # Token de Facebook válido
+            id_numero_telefono = "500203196519111"  # ID de número de teléfono en WhatsApp Business
+            telefono_envia = "541165564694"  # Número de destino en formato internacional
+            mensaje = "Hola novato, saludos"
+
+            # URL de la API de WhatsApp Cloud
+            url = f"https://graph.facebook.com/v18.0/{id_numero_telefono}/messages"
+
+            # Encabezados de la petición
+            headers = {
+                "Authorization": f"Bearer {token}",
+                "Content-Type": "application/json"
+            }
+
+            # Cuerpo del mensaje (con el parámetro 'messaging_product')
             data = {
-                "tipo": "nuevo_servicio",
-                "servicio": {
-                    "numero": numero,
-                    "tipo": tipo_servicio_id,
-                    "direccion": address,
-                    "zona": base,
-                    "estado": "En curso",
+                "messaging_product": "whatsapp",
+                "recipient_type": "individual",
+                "to": telefono_envia,
+                "type": "location",
+                "location": {
+                "latitude": latitude,
+                "longitude": longitude,
+                "name": tipo_servicio_id,
+                "address": address
                 }
             }
-            async_to_sync(channel_layer.group_send)("servicios", {"type": "send_servicio_update", "data": data})
-            print(f"✅ Sesión usuario: {request.session['usuario_destacamento']}")
-            print(f"✅ Sesión servicio: {request.session['servicio_destacamento']}")
 
+            # Enviar mensaje
+            response = requests.post(url, headers=headers, json=data)
+
+            # Ver respuesta
+            print(response.json())
             return redirect ('/')
         
         except Exception as e:
@@ -865,9 +900,9 @@ class Guardia(View):
 
         return render (request, 'planilla/guardia.html', {'servicios': servicios, 'base': base, 'moviles': moviles, 'cuentas': cuentas})
 
-class Calendar(View):
+class TV(View):
     def get(self, request):
-        return render (request, 'planilla/calendar.html')
+        return render (request, 'planilla/tv.html')
     
 def verificar_numero(request):
     if request.method == "POST":
@@ -1102,11 +1137,11 @@ def finalizar_servicio(request, servicio_id):
             movil.IDEstado_id = int(estado.id)
             movil.save()
 
-        channel_layer = get_channel_layer()
-        async_to_sync(channel_layer.group_send)(
-            "servicios",
-            {"type": "servicio_finalizado", "id": servicio_id}
-        )
+        # channel_layer = get_channel_layer()
+        # async_to_sync(channel_layer.group_send)(
+        #     "servicios",
+        #     {"type": "servicio_finalizado", "id": servicio_id}
+        # )
 
         return redirect ('/')
     return JsonResponse({"error": "Método no permitido"}, status=405)
