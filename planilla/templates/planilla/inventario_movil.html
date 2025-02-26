@@ -48,7 +48,13 @@
               {% elif movil.IDEstado.estado == 'Ocupado' %} card-secondary
               {% endif %}">
                   <div class="card-header">
-                      <h3 class="card-title ">Móvil {{ movil.numero }} - {{movil.IDEstado.estado}}</h3>
+                      <h3 class="card-title "><strong>
+                        {% if movil.IDEstado.estado == 'En servicio' %} <i class="fa-solid fa-circle-check text-green"></i>
+                        {% elif movil.IDEstado.estado == 'Condicional' %} <i class="fa-solid fa-triangle-exclamation text-yellow"></i>
+                        {% elif movil.IDEstado.estado == 'Fuera de servicio' %} <i class="fa-solid fa-circle-xmark text-red"></i>
+                        {% elif movil.IDEstado.estado == 'Ocupado' %} <i class="fa-solid fa-circle-xmark text-secondary"></i>
+                        {% endif %}
+                        Móvil {{ movil.numero }} - {{movil.IDEstado.estado}}</strong></h3>
                   </div>
                   <div class="card-body">
                       <div class="col-sm-12">
@@ -56,11 +62,15 @@
                               <p><strong>Última carga de combustible:</strong> {{ movil.ultima_carga }}</p>
                               <p><strong>Desde última carga:</strong>
                                 <span class="badge 
-                                {% if movil.intervenciones <= 4 %} bg-success 
-                                {% elif movil.intervenciones <= 7 %} bg-warning 
+                                {% if movil.intervenciones == 0 %} bg-secondary
+                                {% elif movil.intervenciones <= 4 %} bg-success 
+                                {% elif movil.intervenciones <= 6 %} bg-warning 
                                 {% else %} bg-danger 
                                 {% endif %}" style="font-size: 14px;">{{ movil.intervenciones }} intervenciones</span></p>
-                                <p><strong>Último chequeo:</strong> {{ movil.ultima_fluidos }}</p>
+                                <p><strong>Último chequeo:</strong>
+                                  {% if movil.ultima_fluidos == None %} Sin datos </p>
+                                  {% else %} {{ movil.ultima_fluidos }}</p>
+                                  {%endif%}
                           </div>
                           <div class="row col-sm-12 d-flex justify-content-center">
                               <a class="btn bg-olive col-2 float-right mr-1" href="/check_material_movil/{{movil.id}}/" title="Inventario" data-bs-toggle="tooltip"><i class="fas fa-clipboard-list"></i> <i class="fas fa-screwdriver-wrench"></i></a>

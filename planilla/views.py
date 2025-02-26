@@ -391,81 +391,102 @@ class CargarServicio(View):
             print(f"🔍 Intentando enviar mensaje a: notificacion_{destacamento}")  # Debug
             print(f"🔍 Mensaje: {mensaje}")  # Debug
 
-            # Enviar notificación vía WebSockets
-            channel_layer = get_channel_layer()
-            # Enviar notificación a todos los clientes en "servicios"
-            async_to_sync(channel_layer.group_send)(
-                "servicios",  # 🔥 Notifica a todos los clientes
-                {
-                    "type": "send_servicio_update",
-                    "data" : {
-                        "tipo": "nuevo_servicio",
-                        "servicio": {
-                            "id": servicios.id,
-                            "numero": numero,
-                            "tipo": {
-                                "id": servicios.tipo.id,
-                                "tipo": servicios.tipo.tipo,  # ✅ Ahora envía el tipo de servicio completo
-                            },
-                            "direccion": address,
-                            "zona": base,
-                            "latitud": latitude,
-                            "longitud": longitude,
-                            "estado": "En curso",
-                            "salida": salida
-                        }
-                    }
-                }
-            )
-            print("✅ `group_send()` ejecutado con éxito")  # Debug
-            messages.success(request, "Servicio cargado correctamente.")
-            messages.success(request, "Se envió la alerta.")
-            # Guarda el destacamento del usuario logueado
-            request.session["usuario_destacamento"] = normalizar_destacamento(request.user.last_name)
-
-            # Guarda el destacamento del servicio creado
-            request.session["servicio_destacamento"] = normalizar_destacamento(base)
-
-            request.session.modified = True
-            request.session.save()
-
-
-            # # ENVIAR MENSAJE POR WHATSAPP
-            # token = "EAAIugAMEhZA0BO8U9qlH7glO7qAo2l3gwq0VqHblVE2nr1Piaat9pRFoo6jUnyAETOsZAQsRHjLIw3k8j770r5lVYRC3EgigEERSBhud7mblILiB1MQc16ZAnhfsN8zKFGzW0ETrpxdYLkruL8IzpakfhQ7XtRZBpZCP8Uxo8sqN1q9w6W4RBFcc3gokv6ZAlRebx2fGr11zA76o5EFDDrttwB"  # Token de Facebook válido
-            # id_numero_telefono = "500203196519111"  # ID de número de teléfono en WhatsApp Business
-            # telefono_envia = "541165564694"  # Número de destino en formato internacional
-            # mensaje = "Hola novato, saludos"
-
-            # # URL de la API de WhatsApp Cloud
-            # url = f"https://graph.facebook.com/v18.0/{id_numero_telefono}/messages"
-
-            # # Encabezados de la petición
-            # headers = {
-            #     "Authorization": f"Bearer {token}",
-            #     "Content-Type": "application/json"
-            # }
-
-            # # Cuerpo del mensaje (con el parámetro 'messaging_product')
-            # data = {
-            #     "messaging_product": "whatsapp",
-            #     "recipient_type": "individual",
-            #     "to": telefono_envia,
-            #     "type": "location",
-            #     "location": {
-            #     "latitude": latitude,
-            #     "longitude": longitude,
-            #     "name": tipo_servicio_id,
-            #     "address": address
+            # # Enviar notificación vía WebSockets
+            # channel_layer = get_channel_layer()
+            # # Enviar notificación a todos los clientes en "servicios"
+            # async_to_sync(channel_layer.group_send)(
+            #     "servicios",  # 🔥 Notifica a todos los clientes
+            #     {
+            #         "type": "send_servicio_update",
+            #         "data" : {
+            #             "tipo": "nuevo_servicio",
+            #             "servicio": {
+            #                 "id": servicios.id,
+            #                 "numero": numero,
+            #                 "tipo": {
+            #                     "id": servicios.tipo.id,
+            #                     "tipo": servicios.tipo.tipo,  # ✅ Ahora envía el tipo de servicio completo
+            #                 },
+            #                 "direccion": address,
+            #                 "zona": base,
+            #                 "latitud": latitude,
+            #                 "longitud": longitude,
+            #                 "estado": "En curso",
+            #                 "salida": salida
+            #             }
+            #         }
             #     }
-            # }
+            # )
+            # print("✅ `group_send()` ejecutado con éxito")  # Debug
+            # messages.success(request, "Servicio cargado correctamente.")
+            # messages.success(request, "Se envió la alerta.")
+            # # Guarda el destacamento del usuario logueado
+            # request.session["usuario_destacamento"] = normalizar_destacamento(request.user.last_name)
 
-            # # Enviar mensaje
-            # response = requests.post(url, headers=headers, json=data)
+            # # Guarda el destacamento del servicio creado
+            # request.session["servicio_destacamento"] = normalizar_destacamento(base)
 
-            # # Ver respuesta
-            # print(response.json())
+            # request.session.modified = True
+            # request.session.save()
 
-            
+
+            # Datos de autenticación
+            token = "EAAIugAMEhZA0BOZBdZBSBca76uunzMnDpKQSlGrHQC1lceZA7KJPwtgBrM8EWaedOOBUnsPnAWZA5TiJo0hTKNTok4DlrJ8cn64V82RNB22IVcyZC9Sre2gyA5OFyLy8SCYZCxnV3KKfrOtkeqyxG6TR5WZA3N3D5iWfbKn14Gs3TNq6hYN4kyHsZAa6ZB30fxn2Gua6rXyiUzRTG2ZAJhbwwITLcnS"  # Reemplázalo con tu token válido
+            id_numero_telefono = "500203196519111"  # ID del número de teléfono en WhatsApp Business
+            telefono_envia = "541165564694"  # Número de destino en formato internacional SIN "+"
+
+            # Nombre exacto de la plantilla en WhatsApp Manager (debe coincidir 100%)
+            nombre_plantilla = "nuevoservicio"
+
+            # Código de idioma correcto ("es_AR" o "es", según WhatsApp Manager)
+            idioma_plantilla = "es_AR"  # Si da error, prueba con "es"
+
+            # Parámetros de la plantilla (verifica que no sean None o vacíos)
+            parametros = [
+                {"type": "text", "text": "Incendio"},
+                {"type": "text", "text": "Destacamento N°1"},
+                {"type": "text", "text": "Hospital Posadas"}
+            ]
+
+            # URL de la API de WhatsApp Cloud
+            url = f"https://graph.facebook.com/v18.0/{id_numero_telefono}/messages"
+
+            # Encabezados de la petición
+            headers = {
+                "Authorization": f"Bearer {token}",
+                "Content-Type": "application/json"
+            }
+
+            # 🔴 🔴 🔴 IMPORTANTE: Verifica que los parámetros sean correctos 🔴 🔴 🔴
+            if not parametros or any(p.get("text") in [None, ""] for p in parametros):
+                print("⚠️ ERROR: Hay parámetros vacíos o incorrectos. Revisa los valores antes de enviar.")
+                exit()
+
+            # 📌 JSON con la estructura corregida
+            data = {
+                "messaging_product": "whatsapp",
+                "to": telefono_envia,
+                "type": "template",
+                "template": {
+                    "name": nombre_plantilla,  # 🔹 Verifica que el nombre de la plantilla es EXACTO
+                    "language": {"code": idioma_plantilla},  # 🔹 Verifica que el idioma sea correcto
+                    "components": [
+                        {
+                            "type": "body",
+                            "parameters": parametros  # 🔹 Verifica que este array tenga datos
+                        }
+                    ]
+                }
+            }
+
+            # Mostrar JSON antes de enviarlo
+            print("📌 JSON Enviado a WhatsApp:", data)
+
+            # Enviar mensaje
+            response = requests.post(url, headers=headers, json=data)
+
+            # Ver respuesta
+            print("📌 Respuesta de WhatsApp API:", response.json())
             return redirect ('/')
         
         except Exception as e:
