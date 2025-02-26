@@ -68,7 +68,49 @@
 
 </script>
 <script src="{% static 'planilla/mapa.js' %}"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const protocol = window.location.protocol === "https:" ? "wss" : "ws";
+        const socket = new WebSocket(`${protocol}://${window.location.host}/ws/servicios/`);
+        console.log("conectado: ", socket)
+        socket.onmessage = function(event) {
+            const data = JSON.parse(event.data);
+    
+            if (data.tipo === "nuevo_servicio") {
+                console.log("📩 Nueva alerta de servicio:", data.servicio);
+                agregarNuevoMarcador(data.servicio);
+            }
+        };
+    });
 
+function agregarNuevoMarcador(servicio) {
+    let idServicio = servicio.id;
 
+    // 🔥 Verificar si el marcador ya existe antes de agregarlo
+    if (markers[idServicio]) {
+        console.log(`⚠️ El marcador para el servicio ${idServicio} ya existe.`);
+        return; // Si ya existe, salir de la función
+    }
 
+    let tipoServicio = servicio.tipo ? (typeof servicio.tipo === "object" ? servicio.tipo.tipo : servicio.tipo) : "default";
+
+    let icono = {
+        url: "/static/planilla/images/" + tipoServicio + ".png",  
+        scaledSize: new google.maps.Size(40, 40),
+        origin: new google.maps.Point(0, 0),
+        anchor: new google.maps.Point(20, 20)
+    };
+
+    let marker = new google.maps.Marker({
+        position: { lat: parseFloat(servicio.latitud), lng: parseFloat(servicio.longitud) },
+        map: map,
+        icon: icono,
+        title: `Servicio ${servicio.numero}`
+    });
+
+    markers[idServicio] = marker;  // 🔥 Guardar el marcador en `markers`
+    console.log(`📍 Nuevo marcador agregado en (${servicio.latitud}, ${servicio.longitud})`);
+}
+
+</script>
 {% endblock %}

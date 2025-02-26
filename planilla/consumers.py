@@ -52,59 +52,25 @@ class LocationConsumer(AsyncWebsocketConsumer):
             'heading': heading,
         }))
 
-class NotificacionConsumer(AsyncWebsocketConsumer):
+class ServicioConsumer(AsyncWebsocketConsumer):
     async def connect(self):
-        self.destacamento = self.scope['url_route']['kwargs'].get('destacamento', 'default')
-        self.group_name = f"notificacion_{self.destacamento}"
-
-        print(f"📡 Intentando conectar al grupo: {self.group_name}")  # <-- Debug
+        """Conectar al WebSocket global de servicios."""
+        self.group_name = "servicios"
         await self.channel_layer.group_add(self.group_name, self.channel_name)
         await self.accept()
-        print(f"✅ Conectado a {self.group_name}")  # <-- Debug
 
     async def disconnect(self, close_code):
-        print(f"❌ Desconectando del grupo: {self.group_name}")  # <-- Debug
+        """Salir del grupo al desconectarse."""
         await self.channel_layer.group_discard(self.group_name, self.channel_name)
 
     async def receive(self, text_data):
-        print(f"📥 Mensaje recibido: {text_data}")  # <-- Debug
+        """Manejar mensajes entrantes."""
         data = json.loads(text_data)
-        mensaje = data.get("mensaje", "Sin mensaje")
-
         await self.channel_layer.group_send(
             self.group_name,
-            {
-                "type": "enviar_notificacion",
-                "mensaje": mensaje,
-            }
+            {"type": "send_servicio_update", "data": data}
         )
 
-    async def enviar_notificacion(self, event):
-        mensaje = event["mensaje"]
-        print(f"🚀 Enviando mensaje: {mensaje}")  # <-- Debug
-        await self.send(text_data=json.dumps({"mensaje": mensaje}))
-
-
-class ServicioConsumer(AsyncWebsocketConsumer):
-    async def connect(self):
-        await self.channel_layer.group_add("servicios", self.channel_name)
-        await self.accept()
-
-    async def disconnect(self, close_code):
-        await self.channel_layer.group_discard("servicios", self.channel_name)
-
-    async def receive(self, text_data):
-        data = json.loads(text_data)
-
-        if data["type"] == "finalizar_servicio":
-            # Enviar a todos los clientes que un servicio fue eliminado
-            await self.channel_layer.group_send(
-                "servicios",
-                {
-                    "type": "servicio_finalizado",
-                    "id": data["id"],
-                }
-            )
-
-    async def servicio_finalizado(self, event):
-        await self.send(text_data=json.dumps(event))
+    async def send_servicio_update(self, event):
+        """Enviar actualización de servicio a los clientes."""
+        await self.send(text_data=json.dumps(event["data"]))

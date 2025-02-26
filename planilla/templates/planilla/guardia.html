@@ -27,7 +27,6 @@
             <div id="toastContainer" class="toast-container"></div>
           </div>
         <!-- 1ra fila -->
-
       <div class="row">
         <div class="col-md-3">
           {% if request.user.groups.all.0.name == "Guardia central"  %}
@@ -240,26 +239,26 @@
             </div>
         </div>
         <!-- MODAL CAMBIAR CUARTEL -->
-                    <!-- Modal de Notificación -->
-              <div class="modal fade" id="alertaModal" tabindex="-1" aria-labelledby="alertaModalLabel" aria-hidden="true">
-              <div class="modal-dialog">
-              <div class="modal-content">
-                <div class="modal-header bg-danger text-white">
-                  <h5 class="modal-title" id="alertaModalLabel">🚨 Alerta de Servicio</h5>
-                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-                </div>
-                <div class="modal-body text-center">
-                  <p id="mensajeNotificacion">¡Nueva alerta!</p>
-                  <audio id="sonidoAlarma">
-                    <source src="{% static 'planilla/audio/alarma.mp3'%}" type="audio/mp3">
-                  </audio>
-                </div>
-                <div class="modal-footer">
-                  <button type="button" class="btn btn-danger" id="cerrarModal">Cerrar</button>
-                </div>
+        <!-- Modal de Notificación -->
+        <div class="modal fade" id="alertaModal" tabindex="-1" aria-labelledby="alertaModalLabel" aria-hidden="true">
+          <div class="modal-dialog">
+            <div class="modal-content">
+              <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="alertaModalLabel">🚨 Alerta de Servicio</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
               </div>
+              <div class="modal-body text-center">
+                <p id="mensajeNotificacion">¡Nueva alerta!</p>
+                <audio id="sonidoAlarma">
+                  <source src="{% static 'planilla/audio/alarma.mp3'%}" type="audio/mp3">
+                </audio>
               </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-danger" id="cerrarModal" data-bs-dismiss="modal">Cerrar</button>
               </div>
+            </div>
+          </div>
+        </div>
         </div>
     </div>
     
@@ -307,13 +306,13 @@
   });
   </script>
 
-<script>
-  // Inicializa el modal manualmente
-  const alertaModal = new bootstrap.Modal(document.getElementById("alertaModal"));
+<!-- <script>
+  // Crear una instancia del modal
+  var alertaModalInstance = new bootstrap.Modal(document.getElementById('alertaModal'));
 
   // Función para cerrar el modal
   document.getElementById("cerrarModal").addEventListener("click", function() {
-      alertaModal.hide();
+      alertaModalInstance.hide();
   });
   
   const destacamento = "{{ destacamento|default:'' }}".trim();  // Asegura que la variable se pase correctamente
@@ -370,101 +369,134 @@
                  .replace(/\s+/g, "_")
                  .replace(/[^a-z0-9_]/g, "");
 }
-</script>
+</script> -->
 
 <script>
-const socket = new WebSocket("wss://" + window.location.host + "/ws/servicios/");
+document.addEventListener("DOMContentLoaded", function() {
+    const protocol = window.location.protocol === "https:" ? "wss" : "ws";
+    const socket = new WebSocket(`${protocol}://${window.location.host}/ws/servicios/`);
 
-// Inicializar markers si no existe
-if (typeof markers === "undefined") {
-    var markers = {};
+    socket.onmessage = function(event) {
+        const data = JSON.parse(event.data);
+
+        if (data.tipo === "nuevo_servicio") {
+            console.log("📩 Nueva alerta de servicio:", data.servicio);
+            mostrarModalAlerta(data.servicio);
+            agregarNuevoServicio(data.servicio);
+            agregarNuevoMarcador(data.servicio);
+        }
+    };
+});
+
+function mostrarModalAlerta(servicio) {
+    document.getElementById("mensajeNotificacion").textContent = `Nuevo servicio en ${servicio.zona}`;
+    const audio = document.getElementById("sonidoAlarma");
+    audio.play().catch(err => console.error("🔊 Error al reproducir sonido:", err));
+
+    const alertaModal = new bootstrap.Modal(document.getElementById("alertaModal"));
+    alertaModal.show();
 }
 
-// Manejar nuevos servicios en tiempo real
-socket.onmessage = function(event) {
-    const data = JSON.parse(event.data);
 
-    if (data.tipo === "nuevo_servicio") {
-        const servicio = data.servicio;
-        alert("Nuevo servicio: " + servicio.numero + " - " + servicio.tipo);
 
-        // Agregar servicio a la UI
-        const serviciosContainer = document.getElementById("accordion");
-        const nuevoServicio = `
-            <div class="card card-danger mb-2" id="grupo-servicio-${servicio.id}">
-                <div class="card-header d-flex">
-                    <h4 class="card-title w-100">
-                        <a class="d-block w-100 float-left" data-toggle="collapse" data-target="#collapse${servicio.id}">
-                            Servicio ${servicio.numero} - ${servicio.tipo}
-                        </a>
-                    </h4>
-                </div>
-                <div id="collapse${servicio.id}" class="collapse">
-                    <div class="card-body">
-                        <strong>DIRECCIÓN:</strong> ${servicio.direccion} <br>
-                        <strong>ZONA:</strong> ${servicio.zona}
-                    </div>
-                </div>
-            </div>`;
+function agregarNuevoServicio(servicio) {
+    const serviciosContainer = document.getElementById("accordion");
 
-        serviciosContainer.innerHTML += nuevoServicio;
-
-        // Agregar marcador al mapa con el servicioId como clave
-        agregarMarcador(servicio.id, servicio.latitud, servicio.longitud);
+    if (!serviciosContainer) {
+        console.error("❌ No se encontró el contenedor de servicios ('accordion').");
+        return;
     }
-};
 
-// 🗺 Agregar marcador al mapa y guardarlo correctamente en markers
-function agregarMarcador(servicioId, lat, lng) {
-    const posicion = new google.maps.LatLng(lat, lng);
-    const marcador = new google.maps.Marker({
-        position: posicion,
-        map: mapa,
-        title: `Servicio ${servicioId}`
+    // 🔥 Verificar si la card ya existe antes de agregarla
+    if (document.getElementById(`grupo-servicio-${servicio.id}`)) {
+        console.log(`⚠️ Servicio ${servicio.id} ya existe en la UI.`);
+        return; // Si ya existe, salir de la función
+    }
+
+    let tipoServicio = servicio.tipo && typeof servicio.tipo === "object" ? servicio.tipo.tipo : "Desconocido";
+
+    const nuevoServicioHTML = `
+    <div class="card card-danger card-outline mb-2" id="grupo-servicio-${servicio.id}">
+        <div class="card-header d-flex">
+            <h4 class="card-title w-100">
+                <a class="d-block w-100 float-left" data-toggle="collapse" data-target="#collapse${servicio.id}">
+                    Servicio ${servicio.numero} - ${tipoServicio}
+                </a>
+            </h4>
+            <span class="badge bg-warning float-right contador-servicio" id="contador${servicio.numero}" data-inicio="${servicio.salida}"></span>
+        </div>
+        <div id="collapse${servicio.id}" class="collapse">
+            <div class="card-body">
+                <div class="ml-2">
+                <div class="mb-2">
+                  <strong>TIPO DE SERVICIO:</strong>
+                  <span>${tipoServicio}</span>
+                </div>
+                <div class="mb-2">
+                  <strong>HORARIO DE SALIDA:</strong>
+                  <span>${servicio.salida}</span>
+                </div>
+                <div class="mb-2">
+                  <strong>DIRECCIÓN:</strong>
+                  <span>${servicio.direccion}</span>
+                </div> 
+                <div class="mb-2">
+                  <strong>ZONA:</strong>
+                  <span>${servicio.zona}</span>
+                </div> 
+              <div class="mt-3">
+                <a href="/servicio_detail/${servicio.id}" class="btn bg-secondary float-right mr-1">
+                  <i class="fas fa-magnifying-glass-location"></i>Ver
+                </a>
+              </div>         
+            </div>
+        </div>
+    </div>`;
+
+    serviciosContainer.insertAdjacentHTML("afterbegin", nuevoServicioHTML);
+    console.log(`✅ Nuevo servicio agregado: ${servicio.numero}`);
+}
+
+
+
+
+
+function agregarNuevoMarcador(servicio) {
+    let idServicio = servicio.id;
+
+    // 🔥 Verificar si el marcador ya existe antes de agregarlo
+    if (markers[idServicio]) {
+        console.log(`⚠️ El marcador para el servicio ${idServicio} ya existe.`);
+        return; // Si ya existe, salir de la función
+    }
+
+    let tipoServicio = servicio.tipo ? (typeof servicio.tipo === "object" ? servicio.tipo.tipo : servicio.tipo) : "default";
+
+    let icono = {
+        url: "/static/planilla/images/" + tipoServicio + ".png",  
+        scaledSize: new google.maps.Size(40, 40),
+        origin: new google.maps.Point(0, 0),
+        anchor: new google.maps.Point(20, 20)
+    };
+
+    let marker = new google.maps.Marker({
+        position: { lat: parseFloat(servicio.latitud), lng: parseFloat(servicio.longitud) },
+        map: map,
+        icon: icono,
+        title: `Servicio ${servicio.numero}`
     });
 
-    // ✅ Guardamos el marcador con el servicioId como clave correcta
-    markers[servicioId] = marcador;
-    console.log(`✅ Marcador agregado para servicio ${servicioId}`);
-    console.log("📌 Claves actuales en markers:", Object.keys(markers)); // Debug
+    markers[idServicio] = marker;  // 🔥 Guardar el marcador en `markers`
+    console.log(`📍 Nuevo marcador agregado en (${servicio.latitud}, ${servicio.longitud})`);
 }
 
-// Manejar eventos de finalización de servicio
-socket.onmessage = function(e) {
-    const data = JSON.parse(e.data);
+function mostrarModalAlerta(servicio) {
+    document.getElementById("mensajeNotificacion").textContent = `Nuevo servicio en ${servicio.zona}`;
+    const audio = document.getElementById("sonidoAlarma");
+    audio.play().catch(err => console.error("🔊 Error al reproducir sonido:", err));
 
-    if (data.type === "servicio_finalizado") {
-        console.log(`🔴 Servicio finalizado: ${data.id}`);
-        console.log("📌 Claves en markers antes de eliminar:", Object.keys(markers));
-
-        eliminarServicioMapa(data.id);  // ⛔ Eliminar marcador en el mapa
-        eliminarCard(data.id);          // ⛔ Eliminar la tarjeta en la UI
-    }
-};
-
-// 🗺 Eliminar marcador del mapa
-function eliminarServicioMapa(servicioId) {
-    let claveMarker = `${servicioId}`; // La clave debe coincidir con la usada al guardar
-
-    if (markers[claveMarker]) {
-        markers[claveMarker].setMap(null);
-        delete markers[claveMarker];
-        console.log(`✅ Eliminado marcador con clave: ${claveMarker}`);
-    } else {
-        console.warn(`⚠️ Marcador ${servicioId} no encontrado en markers.`);
-        console.log(`📌 Claves actuales en markers:`, Object.keys(markers));
-    }
-}
-
-// 🗂 Eliminar tarjeta del servicio en la UI
-function eliminarCard(servicioId) {
-    const card = document.getElementById(`grupo-servicio-${servicioId}`);
-    if (card) {
-        card.remove();
-        console.log(`✅ Card ${servicioId} eliminada.`);
-    } else {
-        console.warn(`⚠️ No se encontró el card ${servicioId}.`);
-    }
+    const alertaModal = new bootstrap.Modal(document.getElementById("alertaModal"));
+    alertaModal.show();
 }
 
 </script>

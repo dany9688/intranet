@@ -391,74 +391,81 @@ class CargarServicio(View):
             print(f"🔍 Intentando enviar mensaje a: notificacion_{destacamento}")  # Debug
             print(f"🔍 Mensaje: {mensaje}")  # Debug
 
-            # # Enviar notificación vía WebSockets
-            # channel_layer = get_channel_layer()
-            # async_to_sync(channel_layer.group_send)(
-            #     f'notificacion_{destacamento}',  # 🔥 Notifica al destacamento correcto
-            #     {
-            #         'type': 'enviar_notificacion',
-            #         'mensaje': mensaje
-            #     }
-            # )
-            # print("✅ `group_send()` ejecutado con éxito")  # Debug
-            # messages.success(request, "Servicio cargado correctamente.")
-            # messages.success(request, "Se envió la alerta.")
-            # # Guarda el destacamento del usuario logueado
-            # request.session["usuario_destacamento"] = normalizar_destacamento(request.user.last_name)
+            # Enviar notificación vía WebSockets
+            channel_layer = get_channel_layer()
+            # Enviar notificación a todos los clientes en "servicios"
+            async_to_sync(channel_layer.group_send)(
+                "servicios",  # 🔥 Notifica a todos los clientes
+                {
+                    "type": "send_servicio_update",
+                    "data" : {
+                        "tipo": "nuevo_servicio",
+                        "servicio": {
+                            "id": servicios.id,
+                            "numero": numero,
+                            "tipo": {
+                                "id": servicios.tipo.id,
+                                "tipo": servicios.tipo.tipo,  # ✅ Ahora envía el tipo de servicio completo
+                            },
+                            "direccion": address,
+                            "zona": base,
+                            "latitud": latitude,
+                            "longitud": longitude,
+                            "estado": "En curso",
+                            "salida": salida
+                        }
+                    }
+                }
+            )
+            print("✅ `group_send()` ejecutado con éxito")  # Debug
+            messages.success(request, "Servicio cargado correctamente.")
+            messages.success(request, "Se envió la alerta.")
+            # Guarda el destacamento del usuario logueado
+            request.session["usuario_destacamento"] = normalizar_destacamento(request.user.last_name)
 
-            # # Guarda el destacamento del servicio creado
-            # request.session["servicio_destacamento"] = normalizar_destacamento(base)
+            # Guarda el destacamento del servicio creado
+            request.session["servicio_destacamento"] = normalizar_destacamento(base)
 
-            # request.session.modified = True
-            # request.session.save()
+            request.session.modified = True
+            request.session.save()
 
+
+            # # ENVIAR MENSAJE POR WHATSAPP
+            # token = "EAAIugAMEhZA0BO8U9qlH7glO7qAo2l3gwq0VqHblVE2nr1Piaat9pRFoo6jUnyAETOsZAQsRHjLIw3k8j770r5lVYRC3EgigEERSBhud7mblILiB1MQc16ZAnhfsN8zKFGzW0ETrpxdYLkruL8IzpakfhQ7XtRZBpZCP8Uxo8sqN1q9w6W4RBFcc3gokv6ZAlRebx2fGr11zA76o5EFDDrttwB"  # Token de Facebook válido
+            # id_numero_telefono = "500203196519111"  # ID de número de teléfono en WhatsApp Business
+            # telefono_envia = "541165564694"  # Número de destino en formato internacional
+            # mensaje = "Hola novato, saludos"
+
+            # # URL de la API de WhatsApp Cloud
+            # url = f"https://graph.facebook.com/v18.0/{id_numero_telefono}/messages"
+
+            # # Encabezados de la petición
+            # headers = {
+            #     "Authorization": f"Bearer {token}",
+            #     "Content-Type": "application/json"
+            # }
+
+            # # Cuerpo del mensaje (con el parámetro 'messaging_product')
             # data = {
-            #     "tipo": "nuevo_servicio",
-            #     "servicio": {
-            #         "numero": numero,
-            #         "tipo": tipo_servicio_id,
-            #         "direccion": address,
-            #         "zona": base,
-            #         "estado": "En curso",
+            #     "messaging_product": "whatsapp",
+            #     "recipient_type": "individual",
+            #     "to": telefono_envia,
+            #     "type": "location",
+            #     "location": {
+            #     "latitude": latitude,
+            #     "longitude": longitude,
+            #     "name": tipo_servicio_id,
+            #     "address": address
             #     }
             # }
-            # async_to_sync(channel_layer.group_send)("servicios", {"type": "send_servicio_update", "data": data})
-            # print(f"✅ Sesión usuario: {request.session['usuario_destacamento']}")
-            # print(f"✅ Sesión servicio: {request.session['servicio_destacamento']}")
 
-            token = "EAAIugAMEhZA0BOz0vhVOpQ8TJYbdlBPWXMZCUJyKOZBflXZCqeiZA6p8sFia81bYZCjFzDZBQwHXy4DWJUhdZAZCSSVnD3mugx6IO3pRRZBqRcigsh5eLhodryvZBBS1tMhOw4h0HnzZAi4wES8GDE2oN2AN9CMZCzIJKPLKM81rM9rsuZCnRnez6msohSkq5Pjzfbh95RXrXj5paiizJaGY354iht0Xmc"  # Token de Facebook válido
-            id_numero_telefono = "500203196519111"  # ID de número de teléfono en WhatsApp Business
-            telefono_envia = "541165564694"  # Número de destino en formato internacional
-            mensaje = "Hola novato, saludos"
+            # # Enviar mensaje
+            # response = requests.post(url, headers=headers, json=data)
 
-            # URL de la API de WhatsApp Cloud
-            url = f"https://graph.facebook.com/v18.0/{id_numero_telefono}/messages"
+            # # Ver respuesta
+            # print(response.json())
 
-            # Encabezados de la petición
-            headers = {
-                "Authorization": f"Bearer {token}",
-                "Content-Type": "application/json"
-            }
-
-            # Cuerpo del mensaje (con el parámetro 'messaging_product')
-            data = {
-                "messaging_product": "whatsapp",
-                "recipient_type": "individual",
-                "to": telefono_envia,
-                "type": "location",
-                "location": {
-                "latitude": latitude,
-                "longitude": longitude,
-                "name": tipo_servicio_id,
-                "address": address
-                }
-            }
-
-            # Enviar mensaje
-            response = requests.post(url, headers=headers, json=data)
-
-            # Ver respuesta
-            print(response.json())
+            
             return redirect ('/')
         
         except Exception as e:
@@ -1137,11 +1144,11 @@ def finalizar_servicio(request, servicio_id):
             movil.IDEstado_id = int(estado.id)
             movil.save()
 
-        # channel_layer = get_channel_layer()
-        # async_to_sync(channel_layer.group_send)(
-        #     "servicios",
-        #     {"type": "servicio_finalizado", "id": servicio_id}
-        # )
+        channel_layer = get_channel_layer()
+        async_to_sync(channel_layer.group_send)(
+            "servicios",
+            {"type": "servicio_finalizado", "id": servicio_id}
+        )
 
         return redirect ('/')
     return JsonResponse({"error": "Método no permitido"}, status=405)

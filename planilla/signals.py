@@ -9,22 +9,23 @@ import json
 def servicio_guardado(sender, instance, created, **kwargs):
     channel_layer = get_channel_layer()
     data = {
-        "id": instance.id,
-        "numero": instance.numero,
-        "tipo": instance.tipo.tipo,
-        "estado": instance.estado,
-        "direccion": instance.direccion,
-        "zona": instance.zona,
-        "latitud": instance.latitud,  # Asegúrate de tener la latitud y longitud en el modelo
-        "longitud": instance.longitud,
+        "tipo": "nuevo_servicio",
+        "servicio": {
+            "id": instance.id,
+            "numero": instance.numero,
+            "tipo": instance.tipo.tipo,
+            "estado": instance.estado,
+            "direccion": instance.direccion,
+            "zona": instance.zona,
+            "latitud": instance.latitud,
+            "longitud": instance.longitud,
+        }
     }
-    
-    async_to_sync(channel_layer.group_send)(
-        "servicios", {"type": "servicio_actualizado", "data": data}
-    )
 
-    # Si el servicio cambia a "Finalizado", notificarlo
+    async_to_sync(channel_layer.group_send)("servicios", {"type": "send_servicio_update", "data": data})
+
     if instance.estado == "Finalizado":
         async_to_sync(channel_layer.group_send)(
             "servicios", {"type": "servicio_finalizado", "id": instance.id}
         )
+
