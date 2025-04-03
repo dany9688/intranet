@@ -1,5 +1,6 @@
 {% extends 'planilla/base.html' %}
 {% load static %}
+{% block title %}Checklist{% endblock title %}
 {% block content %}
 <!-- Content Wrapper. Contains page content -->
 <div class="content-wrapper">
@@ -53,13 +54,13 @@
                                 {% elif material.estado.estado == 'Fuera de servicio' %}
                                   custom-switch-off-danger
                                 {% endif %}">
-                              <input type="checkbox" class="custom-control-input switch-control" 
+                              <!-- <input type="checkbox" class="custom-control-input switch-control" 
                                 id="switch{{ material.id }}" 
                                 data-material-id="{{ material.id }}"
                                 data-material-name="{{ material.nombre }}"
                                 data-material-estado="{{ material.estado.estado }}"
                                 {% if material.estado.estado == "En servicio" %} checked="checked" {% endif %}>
-                              <label class="custom-control-label" for="switch{{ material.id }}"></label>
+                              <label class="custom-control-label" for="switch{{ material.id }}"></label> -->
                               <span class="text">{{ material.nombre }} - Cantidad {{ material.cantidad }}</span>
                             </div>
                           </td>

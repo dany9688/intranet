@@ -4,7 +4,7 @@
 
 ## Comenzando
 
-El sistema se encuentra dockerizado con dos imagenes: una de python3 y otra de la base de datos postgres.
+El sistema se encuentra dockerizado con tres imagenes: una de python, una de redis y otra de la base de datos postgres.
 
 Todo esto se encuentra en un docker compose con sus respectivos volúmenes.
 

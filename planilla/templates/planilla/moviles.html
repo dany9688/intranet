@@ -43,17 +43,17 @@
           </div>
           <!-- /.card-header -->
           <div class="card-body table-responsive">
-            <table id="example1" class="table table-bordered table-striped ">
+            <table id="example1" class="table table-bordered ">
               <thead>
-                <tr>
-                  <th>Número</th>
-                  <th>Tipo</th>
-                  <th>Base</th>
-                  <th>Intevenciones</th>
-                  <th>Última carga <br>combustible</th>
-                  <th>Última revisión <br>de fluidos</th>
-                  <th>Estado</th>
-                  <th>Acciones</th>
+                <tr class="text-center">
+                  <th class="text-center">Número</th>
+                  <th class="text-center">Tipo</th>
+                  <th class="text-center">Base</th>
+                  <th class="text-center">Intevenciones</th>
+                  <th class="text-center">Última carga <br>combustible</th>
+                  <th class="text-center">Última revisión <br>de fluidos</th>
+                  <th class="text-center">Estado</th>
+                  <th class="text-center">Acciones</th>
                 </tr>
               </thead>
               <tbody class="text-center">
@@ -84,159 +84,10 @@
                         <td class="text-red">{{movil.IDEstado.estado}}</td>  
                       {% endif %}
                       <td>
-                        <button type="button" data-toggle="modal" data-target="#cargar{{ movil.id }}" class="btn btn-primary">Actualizar carga</button>
-                        <button type="button" data-toggle="modal" data-target="#fluidos{{ movil.id }}" class="btn btn-success">Actualizar fluidos</button>
-                        <button type="button" data-toggle="modal" data-target="#estado{{ movil.id }}" class="btn btn-danger">Actualizar estado</button>
-                        <a class="btn btn-secondary" href="/movil/{{ movil.id }}/">Ficha</a>
+                        <a class="btn btn-secondary" href="/movil/{{ movil.id }}/">Ver</a>
                       </td>
                     </tr>
-                              <!-- MODAL COMBUSTIBLE-->
-          <div class="modal fade" id="cargar{{ movil.id }}" tabindex="-1" aria-labelledby="cargar" aria-hidden="true">
-            <div class="modal-dialog">
-              <div class="modal-content">
-                <div class="modal-header">
-                  <h5 class="modal-title" id="exampleModalLabel3">Carga de combustible - Móvil {{ movil.numero }}</h5>
-                </div>
-                <div class="modal-body">
-                    <form action="/cargarcombustible/{{ movil.id }}/" method="post">
-                      {% csrf_token %}
-                      <label for="movil">Encargado:</label>
-                      <select class="form-control col-sm-6" name="encargado" id="">
-                        {% for bombero in bomberos %}
-                        <option value={{bombero.id}}>{{bombero.apellido}}, {{bombero.nombre}}</option>
-                        {% endfor %}
-                      </select>
-                      <label for="movil">Cantidad de litros:</label>
-                      <input class="form-control col-sm-3" type="number" name="cantidad" min="0" max="300" required>
-                      <label for="">Fecha y hora del ticket de carga</label>
-                      <input class="form-control col-sm-6" name="fecha" type="datetime-local" required>
-                </div>
-                <div class="modal-footer">
-                  <button type="submit" class="btn btn-primary">Actualizar combustible</button>
-                </form>
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
-          
-                </div>
-              </div>
-            </div>
-        </div>
 
-        <!-- MODAL COMBUSTIBLE-->
-        <div class="modal fade" id="estado{{ movil.id }}" tabindex="-1" aria-labelledby="estado" aria-hidden="true">
-            <div class="modal-dialog">
-              <div class="modal-content">
-                <div class="modal-header">
-                  <h5 class="modal-title" id="exampleModalLabel3">Cambio de estado - Móvil {{ movil.numero }}</h5>
-                </div>
-                <div class="modal-body">
-                    <form action="/cambiarestado/{{ movil.id }}/" method="post">
-                      {% csrf_token %}
-                      <label for="movil">Nuevo estado:</label>
-                      <select class="form-control col-sm-6" name="estado" id="">
-                        {% for estado in estados %}
-                        <option value={{estado.id}}>{{estado.estado}}</option>
-                        {% endfor %}
-                      </select>
-                </div>
-                <div class="modal-footer">
-                  <button type="submit" class="btn btn-primary">Actualizar estado</button>
-                </form>
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
-          
-                </div>
-              </div>
-            </div>
-        </div>
-
-        <!-- MODAL FLUIDOS-->
-        <div class="modal fade" id="fluidos{{ movil.id }}" tabindex="-1" aria-labelledby="fluidos" aria-hidden="true">
-          <div class="modal-dialog">
-            <div class="modal-content">
-              <div class="modal-header">
-                <h5 class="modal-title" id="exampleModalLabel3">Carga de combustible - Móvil {{ movil.numero }}</h5>
-              </div>
-              <div class="modal-body">
-                  <form action="/fluidos/{{ movil.id }}/" method="post">
-                    {% csrf_token %}
-                    <label for="movil">Encargado:</label>
-                    <select class="form-control col-sm-12" name="encargado" id="">
-                      {% for bombero in bomberos %}
-                      <option value={{bombero.id}}>{{bombero.apellido}}, {{bombero.nombre}}</option>
-                      {% endfor %}
-                    </select><br>
-                    <p>Cantidad de fluido agregados (en litros):</p>
-                    <div class="col-md-12 row wrapper">
-                      <div class="col-sm-6">
-                        <label for="movil">Agua en el radiador:</label>
-                        <input class="form-control" type="number" name="agua" min="0" max="300" value="0"><br>
-                      </div>
-                      <div class="col-sm-6">
-                        <label for="movil">Litros de aceite:</label>
-                        <input class="form-control" type="number" name="aceite" min="0" max="50" value="0"><br>
-                      </div>
-                    </div>
-                    <div class="col-md-12 row wrapper">
-                      <div class="col-sm-6">
-                        <label for="movil">Líquido hidráulico:</label>
-                        <input class="form-control" type="number" name="hidraulico" min="0" max="50" value="0"><br>
-                      </div>
-                      <div class="col-sm-6">
-                        <label for="movil">Líquido de frenos:</label>
-                        <input class="form-control" type="number" name="frenos" min="0" max="50" value="0"><br>
-                      </div>
-                    </div>
-                    <div class="col-md-12 row wrapper">
-                      <label for="movil">Agua de tanque:</label>
-                      <div class="col-12 mb-2">
-                        <input type="radio" class="btn-check" name="tanque" id="tanque-lleno" value="Completo" autocomplete="off" checked>
-                        <label class="btn btn-outline-success mr-2" for="pass1"><i class="fas fa-thumbs-up"></i> Completo</label>
-        
-                        <input type="radio" class="btn-check" name="tanque" id="tanque-faltaba" value="Faltaba" autocomplete="off">
-                        <label class="btn btn-outline-dark btn-fail" for="fail1"><i class="fas fa-times"></i> Faltaba</label>
-                    </div>
-                    </div>
-                    <label for="bomba">Bomba engranada:</label> 
-                    <div class="col-12 mb-2">
-                        <input type="radio" class="btn-check" name="bomba" id="bomba-funciona" value="Funciona" autocomplete="off" checked>
-                        <label class="btn btn-outline-success mr-2" for="bomba-funciona"><i class="fas fa-thumbs-up"></i> Funciona</label>
-                
-                        <input type="radio" class="btn-check" name="bomba" id="bomba-falla" value="Falla" autocomplete="off">
-                        <label class="btn btn-outline-dark btn-fail" for="bomba-falla"><i class="fas fa-times"></i> Falla</label>
-                    </div>
-                
-                    <!-- Luces reglamentarias/Emergencia -->
-                    <label for="luces">Luces reglamentarias/Emergencia:</label>
-                    <div class="col-12 mb-2">
-                        <input type="radio" class="btn-check" name="luces" id="luces-funciona" value="Funciona" autocomplete="off" checked>
-                        <label class="btn btn-outline-success mr-2" for="luces-funciona"><i class="fas fa-thumbs-up"></i> Funciona</label>
-                
-                        <input type="radio" class="btn-check" name="luces" id="luces-falla" value="Falla" autocomplete="off">
-                        <label class="btn btn-outline-dark btn-fail" for="luces-falla"><i class="fas fa-times"></i> Falla</label>
-                    </div>
-                
-                    <!-- Sirenas/Bocina -->
-                    <label for="sirena">Sirenas/Bocina:</label>
-                    <div class="col-12 mb-2">
-                        <input type="radio" class="btn-check" name="sirena" id="sirena-funciona" value="Funciona" autocomplete="off" checked>
-                        <label class="btn btn-outline-success mr-2" for="sirena-funciona"><i class="fas fa-thumbs-up"></i> Funciona</label>
-                
-                        <input type="radio" class="btn-check" name="sirena" id="sirena-falla" value="Falla" autocomplete="off">
-                        <label class="btn btn-outline-dark btn-fail" for="sirena-falla"><i class="fas fa-times"></i> Falla</label>
-                    </div>
-                    <div class="col-md-12">
-                      <label for="">Comentarios:</label>
-                      <textarea class="form-control" name="comentario" id=""></textarea>
-                    </div>
-              </div>
-              <div class="modal-footer">
-                <button type="submit" class="btn btn-primary">Guardar chequeo</button>
-              </form>
-              <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
-        
-              </div>
-            </div>
-          </div>
-        </div>
                 {% endfor %}
               </tbody>
             </table>
@@ -270,10 +121,6 @@ $(function () {
     language: {
     url: 'https://cdn.datatables.net/plug-ins/2.2.1/i18n/es-CL.json',
     },
-    layout: {
-    topStart: {
-        buttons: ['copyHtml5', 'excelHtml5']
-    }},
     "paging": true,
     "lengthChange": true,
     "searching": true,

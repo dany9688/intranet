@@ -41,7 +41,7 @@
         <!-- Contenedor de móviles -->
         <div class="row" id="movilesContainer">
           {% for movil in todo_los_moviles %}
-          <div class="col-lg-4 col-md-6 col-sm-6 col-12 movil-card" data-cuartel="{{ movil.IDBase.id }}">
+          <div class="col-lg-6 col-md-6 col-sm-6 col-12 movil-card" data-cuartel="{{ movil.IDBase.id }}">
               <div class="card mb-3 card-outline {% if movil.IDEstado.estado == 'En servicio' %} card-success 
               {% elif movil.IDEstado.estado == 'Condicional' %} card-warning 
               {% elif movil.IDEstado.estado == 'Fuera de servicio' %} card-danger

@@ -33,7 +33,7 @@ def index(request):
     if "Guardia" in grupo_usuario:
         print("entro a guardia")
         base = Base.objects.all().order_by('id')
-        moviles = Movil.objects.all()
+        moviles = Movil.objects.all().order_by('numero')
         bomberos1 = Bombero.objects.all()
         # Obtener los servicios "En curso"
         servicios_en_curso = Servicio.objects.filter(estado="En curso").prefetch_related(
@@ -356,6 +356,13 @@ class CargarServicio(View):
         telefono = request.POST.get("telefono")
         base = request.POST.get('zona')
 
+        # Eliminar 'Provincia de Buenos Aires' y 'Argentina'
+        address = re.sub(r",?\s*Provincia de Buenos Aires", "", address, flags=re.IGNORECASE)
+        address = re.sub(r",?\s*Argentina", "", address, flags=re.IGNORECASE)
+
+        # Eliminar espacios y comas sobrantes
+        address = address.strip().strip(",")
+
 
         # Validar datos requeridos
         if not (guardia and address and latitude and longitude and numero and salida and tipo_servicio_id and encargado_id):
@@ -391,43 +398,49 @@ class CargarServicio(View):
             print(f"🔍 Intentando enviar mensaje a: notificacion_{destacamento}")  # Debug
             print(f"🔍 Mensaje: {mensaje}")  # Debug
 
-            # # Enviar notificación vía WebSockets
-            # channel_layer = get_channel_layer()
-            # # Enviar notificación a todos los clientes en "servicios"
-            # async_to_sync(channel_layer.group_send)(
-            #     "servicios",  # 🔥 Notifica a todos los clientes
-            #     {
-            #         "type": "send_servicio_update",
-            #         "data" : {
-            #             "tipo": "nuevo_servicio",
-            #             "servicio": {
-            #                 "id": servicios.id,
-            #                 "numero": numero,
-            #                 "tipo": {
-            #                     "id": servicios.tipo.id,
-            #                     "tipo": servicios.tipo.tipo,  # ✅ Ahora envía el tipo de servicio completo
-            #                 },
-            #                 "direccion": address,
-            #                 "zona": base,
-            #                 "latitud": latitude,
-            #                 "longitud": longitude,
-            #                 "estado": "En curso",
-            #                 "salida": salida
-            #             }
-            #         }
-            #     }
-            # )
-            # print("✅ `group_send()` ejecutado con éxito")  # Debug
-            # messages.success(request, "Servicio cargado correctamente.")
-            # messages.success(request, "Se envió la alerta.")
-            # # Guarda el destacamento del usuario logueado
-            # request.session["usuario_destacamento"] = normalizar_destacamento(request.user.last_name)
+            # Enviar notificación vía WebSockets
+            channel_layer = get_channel_layer()
+            # Enviar notificación a todos los clientes en "servicios"
+            async_to_sync(channel_layer.group_send)(
+                "servicios",  # 🔥 Notifica a todos los clientes
+                {
+                    "type": "send_servicio_update",
+                    "data": {
+                        "tipo": "nuevo_servicio",
+                        "servicio": {
+                            "id": servicios.id,
+                            "numero": numero,
+                            "tipo": {
+                                "id": servicios.tipo.id,
+                                "tipo": servicios.tipo.tipo,
+                            },
+                            "direccion": address,
+                            "zona": base,
+                            "latitud": latitude,
+                            "longitud": longitude,
+                            "estado": "En curso",
+                            "salida": salida,
+                            "encargado": {
+                                "id": servicios.encargado.id,
+                                "legajo": servicios.encargado.legajo,
+                                "apellido": servicios.encargado.apellido,
+                                "nombre": servicios.encargado.nombre,
+                            } if servicios.encargado else None,  # Asegurar que no sea None
+                        }
+                    }
+                }
+            )
+            print("✅ `group_send()` ejecutado con éxito")  # Debug
+            messages.success(request, "Servicio cargado correctamente.")
+            messages.success(request, "Se envió la alerta.")
+            # Guarda el destacamento del usuario logueado
+            request.session["usuario_destacamento"] = normalizar_destacamento(request.user.last_name)
 
-            # # Guarda el destacamento del servicio creado
-            # request.session["servicio_destacamento"] = normalizar_destacamento(base)
+            # Guarda el destacamento del servicio creado
+            request.session["servicio_destacamento"] = normalizar_destacamento(base)
 
-            # request.session.modified = True
-            # request.session.save()
+            request.session.modified = True
+            request.session.save()
 
 
             # Datos de autenticación
@@ -534,16 +547,43 @@ def asignarmovil(request, servicio_id):
             servicio_movil.bomberos.set(bomberos_ids)  # Asigna la lista de bomberos seleccionados
             servicio_movil.save()
 
-            # Actualiza el estado del móvil
+            # Actualiza el estado del móvil a "Ocupado"
             movil.intervenciones += 1
             estado = get_object_or_404(Estado, estado="Ocupado")
             movil.IDEstado_id = int(estado.id)
             movil.save()
 
             # Obtiene los datos actualizados para enviar como JSON
-            bomberos_data = list(servicio_movil.bomberos.values("id", "nombre", "apellido"))
+            # Usamos el related_name "moviles_asignados" (ajusta según tu modelo)
+            servicio_data = {
+                "id": servicio.id,
+                "numero": servicio.numero,
+                "zona": servicio.zona,
+                "moviles_list": list(servicio.moviles_asignados.values(
+                    "movil__id", "movil__numero"  # Ajusta según lo que necesites
+                )),
+                "salida": servicio.salida.strftime("%Y-%m-%d %H:%M:%S"),
+                "direccion": servicio.direccion,
+                "encargado": {
+                    "legajo": servicio.encargado.legajo,
+                    "apellido": servicio.encargado.apellido,
+                    "nombre": servicio.encargado.nombre,
+                },
+                "tipo": {"tipo": servicio.tipo.tipo}
+            }
 
-            return redirect ('/servicio_detail/'+str(servicio_id))
+            from channels.layers import get_channel_layer
+            from asgiref.sync import async_to_sync
+            channel_layer = get_channel_layer()
+            async_to_sync(channel_layer.group_send)(
+                "servicios", 
+                {"type": "send_servicio_update", "data": {
+                    "tipo": "actualizar_servicio",
+                    "servicio": servicio_data
+                }}
+            )
+
+            return redirect('/servicio_detail/' + str(servicio_id))
 
     return JsonResponse({"success": False, "error": "Método no permitido"}, status=400)
 
@@ -589,7 +629,6 @@ class ModificarServicio(View):
         anterior.estado="En curso"
         anterior.zona = request.POST['zona']
         anterior.numero = request.POST['numero']
-        # anterior.movil_id = int(request.POST['movil'])
         anterior.salida = request.POST['salida']
         anterior.tipo_id = int(request.POST['tiposervicio'])
         print(anterior.tipo.id)
@@ -598,11 +637,38 @@ class ModificarServicio(View):
         anterior.telefono_denunciante = request.POST['telefono']
         anterior.save()
 
+        servicio_data = {
+            "id": anterior.id,
+            "numero": anterior.numero,
+            "zona": anterior.zona,
+            "salida": anterior.salida,
+            "direccion": anterior.direccion,
+            "latitud": anterior.latitud,
+            "longitud": anterior.longitud,
+            "encargado": {
+                "legajo": anterior.encargado.legajo,
+                "apellido": anterior.encargado.apellido,
+                "nombre": anterior.encargado.nombre,
+            },
+            "tipo": {"tipo": anterior.tipo.tipo}
+        }
+
+        from channels.layers import get_channel_layer
+        from asgiref.sync import async_to_sync
+        channel_layer = get_channel_layer()
+        async_to_sync(channel_layer.group_send)(
+            "servicios", 
+            {"type": "send_servicio_update", "data": {
+                "tipo": "actualizar_servicio",
+                "servicio": servicio_data
+            }}
+            )
+
         return redirect ('guardia')
     
 def obtener_servicios(request):
 
-    servicios = list(Servicio.objects.filter(estado="En curso").values("direccion", "latitud", "longitud", "tipo"))
+    servicios = list(Servicio.objects.filter(estado="En curso").values("id","direccion", "latitud", "longitud", "tipo"))
     tiposervicio = list(TipoServicio.objects.values("id", "tipo"))
     print(servicios)
     return JsonResponse({"servicios": servicios, "tiposervicio": tiposervicio})
@@ -918,7 +984,7 @@ class Guardia(View):
     def get(self, request):
         servicios = Servicio.objects.all()
         base = Base.objects.all().order_by('id')
-        moviles = Movil.objects.all()
+        moviles = Movil.objects.all().order_by('numero')
         cuentas = Base.objects.annotate(
             en_servicio=Count('movil', filter=Q(movil__IDEstado=1)),
             condicional=Count('movil', filter=Q(movil__IDEstado=2)),
@@ -930,7 +996,21 @@ class Guardia(View):
 
 class TV(View):
     def get(self, request):
-        return render (request, 'planilla/tv.html')
+        destacamentos = Base.objects.all().order_by('id')
+        servicios = Servicio.objects.filter(estado="En curso").prefetch_related(
+            Prefetch(
+                    "moviles_asignados",
+                    queryset=ServicioMovil.objects.select_related("movil").prefetch_related("bomberos"),
+                    to_attr="moviles_list"
+                )
+            )
+        print(servicios)
+        context = {
+            "destacamentos": destacamentos,
+            "servicios": servicios
+        }
+
+        return render (request, 'planilla/tv.html', context)
     
 def verificar_numero(request):
     if request.method == "POST":
@@ -1165,13 +1245,41 @@ def finalizar_servicio(request, servicio_id):
             movil.IDEstado_id = int(estado.id)
             movil.save()
 
-        channel_layer = get_channel_layer()
-        async_to_sync(channel_layer.group_send)(
-            "servicios",
-            {"type": "servicio_finalizado", "id": servicio_id}
-        )
+            channel_layer = get_channel_layer()
 
-        return redirect ('/')
+            # Enviar mensaje para finalizar el servicio
+            servicio_message = {
+                "tipo": "finalizar_servicio",
+                "servicio": {
+                    "id": str(servicio.id)  # Solo el ID es necesario para eliminarlo en el cliente
+                }
+            }
+            async_to_sync(channel_layer.group_send)(
+                "servicios",
+                {
+                    "type": "send_servicio_update",
+                    "data": servicio_message
+                }
+            )
+
+            # Enviar mensaje para actualizar el estado del móvil
+            movil_message = {
+                "tipo": "actualizar_movil",
+                "movil": {
+                    "id": movil_data.movil.id,
+                    "estado": "Ocupado",  # O el estado actualizado según corresponda
+                    "numero": movil.numero
+                }
+            }
+            async_to_sync(channel_layer.group_send)(
+                "servicios",
+                {
+                    "type": "send_movil_update",
+                    "data": movil_message
+                }
+            )
+
+            return redirect('/')
     return JsonResponse({"error": "Método no permitido"}, status=405)
 
 def signin(request):

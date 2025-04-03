@@ -3,7 +3,6 @@
 
 {% block title %}Ficha de control -{{movil}} {% endblock %}
 {% block css_block %}
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.0/css/bootstrap.min.css">
 <link rel="stylesheet" href="https://cdn.datatables.net/2.2.1/css/dataTables.bootstrap5.css">
 <link rel="stylesheet" href="https://cdn.datatables.net/responsive/3.0.3/css/responsive.bootstrap5.css">
 {% endblock %}
@@ -29,10 +28,27 @@
             <h2>FICHA DE CONTROL - {{movil}}</h2>
         </div>
         <div class="row">
+          <div class="col-4 col-sm-4">
+            <a href="#" class="btn btn-app col-12 col-sm-12 ml-0" data-toggle="modal" data-target="#cargar{{ movil.id }}">
+              <i class="fas fa-gas-pump"></i> Carga de combustible
+            </a>
+          </div>
+          <div class="col-4 col-sm-4">
+            <a href="#" class="btn btn-app col-12 col-sm-12 ml-0" data-toggle="modal" data-target="#fluidos{{ movil.id }}">
+              <i class="fas fa-list-check"></i> Chequeo del móvil
+            </a>
+          </div>
+          <div class="col-4 col-sm-4">
+            <a href="#" class="btn btn-app col-12 col-sm-12 ml-0" data-toggle="modal" data-target="#estado{{ movil.id }}">
+              <i class="fas fa-rotate"></i> Actualizar estado
+            </a>
+          </div>
+        </div>
+        <div class="row">
             <div class="col-sm-6">
-            <div class="card card-primary">
+            <div class="card card-primary card-outline">
                 <div class="card-header border-0">
-                  <h3 class="card-title">Carga de combustible</h3>
+                  <h3 class="card-title">Historial de carga de combustible</h3>
                 </div>
                 <div class="card-body table-responsive">
                   <table id="tabla-combustible" class="table table-striped table-valign-middle mt-0">
@@ -59,9 +75,9 @@
               </div>
               </div>
               <div class="col-md-6">
-                <div class="card card-danger collapsed-card">
+                <div class="card card-danger collapsed-card card-outline">
                   <div class="card-header">
-                    <h3 class="card-title">Consumo de combustible</h3>
+                    <h3 class="card-title">Gráfico de consumo de combustible</h3>
     
                     <div class="card-tools">
                       <button type="button" class="btn btn-tool" data-card-widget="collapse">
@@ -77,15 +93,14 @@
                       <canvas id="barChart-combustible" style="min-height: 350px; height: 450px; max-height: 450px; max-width: 100%;"></canvas>
                     </div>
                   </div>
-                  <!-- /.card-body -->
                 </div>
               </div>
             </div>
             <div class="row">
               <div class="col-sm-12">
-              <div class="card card-success">
+              <div class="card card-success card-outline">
                 <div class="card-header border-0">
-                  <h3 class="card-title">Control de fluidos</h3>
+                  <h3 class="card-title">Historial de chequeo del móvil</h3>
                 </div>
                 <div class="card-body table-responsive">
                   <table id="example2"  class="table table-striped table-bordered table-valign-middle mt-0">
@@ -128,9 +143,9 @@
         </div>
         <div class="row">
             <div class="col-md-12">
-            <div class="card card-danger collapsed-card">
+            <div class="card card-danger collapsed-card card-outline">
                 <div class="card-header">
-                  <h3 class="card-title">Consumos</h3>
+                  <h3 class="card-title">Gráfico de consumos del móvil</h3>
   
                   <div class="card-tools">
                     <button type="button" class="btn btn-tool" data-card-widget="collapse">
@@ -152,10 +167,10 @@
         </div>
         <div class="row">
           <div class="col-sm-12">
-            <div class="card card-olive">
+            <div class="card card-olive card-outline">
               <div class="card-header border-0 d-flex">
-                <h3 class="card-title">Reparaciones</h3>
-                <button data-toggle="modal" data-target="#reparacion" class="btn btn-xs btn-secondary ml-auto"><i class="fa-solid fa-wrench"></i>  Nueva reparación</button>
+                <h3 class="card-title">Historial de reparaciones</h3>
+                <button data-toggle="modal" data-target="#reparacion" class="btn btn-secondary ml-auto"><i class="fa-solid fa-wrench"></i>  Nueva reparación</button>
               </div>
               <div class="card-body table-responsive">
                 <table id="example3" class="table table-striped table-valign-middle mt-0">
@@ -212,6 +227,154 @@
               </div>
           </div>
 
+          <!-- MODAL COMBUSTIBLE-->
+          <div class="modal fade" id="cargar{{ movil.id }}" tabindex="-1" aria-labelledby="cargar" aria-hidden="true">
+            <div class="modal-dialog">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title" id="exampleModalLabel3">Carga de combustible - Móvil {{ movil.numero }}</h5>
+                </div>
+                <div class="modal-body">
+                    <form action="/cargarcombustible/{{ movil.id }}/" method="post">
+                      {% csrf_token %}
+                      <label for="movil">Encargado:</label>
+                      <select class="form-control col-sm-6" name="encargado" id="">
+                        {% for bombero in bomberos %}
+                        <option value={{bombero.id}}>{{bombero.apellido}}, {{bombero.nombre}}</option>
+                        {% endfor %}
+                      </select>
+                      <label for="movil">Cantidad de litros:</label>
+                      <input class="form-control col-sm-3" type="number" name="cantidad" min="0" max="300" required>
+                      <label for="">Fecha y hora del ticket de carga</label>
+                      <input class="form-control col-sm-6" name="fecha" type="datetime-local" required>
+                </div>
+                <div class="modal-footer">
+                  <button type="submit" class="btn btn-primary">Actualizar combustible</button>
+                </form>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+          
+                </div>
+              </div>
+            </div>
+        </div>
+
+        <!-- MODAL COMBUSTIBLE-->
+        <div class="modal fade" id="estado{{ movil.id }}" tabindex="-1" aria-labelledby="estado" aria-hidden="true">
+            <div class="modal-dialog">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title" id="exampleModalLabel3">Cambio de estado - Móvil {{ movil.numero }}</h5>
+                </div>
+                <div class="modal-body">
+                    <form action="/cambiarestado/{{ movil.id }}/" method="post">
+                      {% csrf_token %}
+                      <label for="movil">Nuevo estado:</label>
+                      <select class="form-control col-sm-6" name="estado" id="">
+                        {% for estado in estados %}
+                        <option value={{estado.id}}>{{estado.estado}}</option>
+                        {% endfor %}
+                      </select>
+                </div>
+                <div class="modal-footer">
+                  <button type="submit" class="btn btn-primary">Actualizar estado</button>
+                </form>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+          
+                </div>
+              </div>
+            </div>
+        </div>
+
+        <!-- MODAL FLUIDOS-->
+        <div class="modal fade" id="fluidos{{ movil.id }}" tabindex="-1" aria-labelledby="fluidos" aria-hidden="true">
+          <div class="modal-dialog">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel3">Carga de combustible - Móvil {{ movil.numero }}</h5>
+              </div>
+              <div class="modal-body">
+                  <form action="/fluidos/{{ movil.id }}/" method="post">
+                    {% csrf_token %}
+                    <label for="movil">Encargado:</label>
+                    <select class="form-control col-sm-12" name="encargado" id="">
+                      {% for bombero in bomberos %}
+                      <option value={{bombero.id}}>{{bombero.apellido}}, {{bombero.nombre}}</option>
+                      {% endfor %}
+                    </select><br>
+                    <p>Cantidad de fluido agregados (en litros):</p>
+                    <div class="col-md-12 row wrapper">
+                      <div class="col-sm-6">
+                        <label for="movil">Agua en el radiador:</label>
+                        <input class="form-control" type="number" name="agua" min="0" max="300" value="0"><br>
+                      </div>
+                      <div class="col-sm-6">
+                        <label for="movil">Litros de aceite:</label>
+                        <input class="form-control" type="number" name="aceite" min="0" max="50" value="0"><br>
+                      </div>
+                    </div>
+                    <div class="col-md-12 row wrapper">
+                      <div class="col-sm-6">
+                        <label for="movil">Líquido hidráulico:</label>
+                        <input class="form-control" type="number" name="hidraulico" min="0" max="50" value="0"><br>
+                      </div>
+                      <div class="col-sm-6">
+                        <label for="movil">Líquido de frenos:</label>
+                        <input class="form-control" type="number" name="frenos" min="0" max="50" value="0"><br>
+                      </div>
+                    </div>
+                    <div class="col-md-12 row wrapper">
+                      <label for="movil">Agua de tanque:</label>
+                      <div class="col-12 mb-2">
+                        <input type="radio" class="btn-check" name="tanque" id="tanque-lleno" value="Completo" autocomplete="off" checked>
+                        <label class="btn btn-outline-success mr-2" for="pass1"><i class="fas fa-thumbs-up"></i> Completo</label>
+        
+                        <input type="radio" class="btn-check" name="tanque" id="tanque-faltaba" value="Faltaba" autocomplete="off">
+                        <label class="btn btn-outline-dark btn-fail" for="fail1"><i class="fas fa-times"></i> Faltaba</label>
+                    </div>
+                    </div>
+                    <label for="bomba">Bomba engranada:</label> 
+                    <div class="col-12 mb-2">
+                        <input type="radio" class="btn-check" name="bomba" id="bomba-funciona" value="Funciona" autocomplete="off" checked>
+                        <label class="btn btn-outline-success mr-2" for="bomba-funciona"><i class="fas fa-thumbs-up"></i> Funciona</label>
+                
+                        <input type="radio" class="btn-check" name="bomba" id="bomba-falla" value="Falla" autocomplete="off">
+                        <label class="btn btn-outline-dark btn-fail" for="bomba-falla"><i class="fas fa-times"></i> Falla</label>
+                    </div>
+                
+                    <!-- Luces reglamentarias/Emergencia -->
+                    <label for="luces">Luces reglamentarias/Emergencia:</label>
+                    <div class="col-12 mb-2">
+                        <input type="radio" class="btn-check" name="luces" id="luces-funciona" value="Funciona" autocomplete="off" checked>
+                        <label class="btn btn-outline-success mr-2" for="luces-funciona"><i class="fas fa-thumbs-up"></i> Funciona</label>
+                
+                        <input type="radio" class="btn-check" name="luces" id="luces-falla" value="Falla" autocomplete="off">
+                        <label class="btn btn-outline-dark btn-fail" for="luces-falla"><i class="fas fa-times"></i> Falla</label>
+                    </div>
+                
+                    <!-- Sirenas/Bocina -->
+                    <label for="sirena">Sirenas/Bocina:</label>
+                    <div class="col-12 mb-2">
+                        <input type="radio" class="btn-check" name="sirena" id="sirena-funciona" value="Funciona" autocomplete="off" checked>
+                        <label class="btn btn-outline-success mr-2" for="sirena-funciona"><i class="fas fa-thumbs-up"></i> Funciona</label>
+                
+                        <input type="radio" class="btn-check" name="sirena" id="sirena-falla" value="Falla" autocomplete="off">
+                        <label class="btn btn-outline-dark btn-fail" for="sirena-falla"><i class="fas fa-times"></i> Falla</label>
+                    </div>
+                    <div class="col-md-12">
+                      <label for="">Comentarios:</label>
+                      <textarea class="form-control" name="comentario" id=""></textarea>
+                    </div>
+              </div>
+              <div class="modal-footer">
+                <button type="submit" class="btn btn-primary">Guardar chequeo</button>
+              </form>
+              <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+        
+              </div>
+            </div>
+          </div>
+        </div>
+
 {% endblock %}
 
 {% block js_block %}
@@ -227,49 +390,61 @@
 <script src= "{% static 'planilla/Chart.min.js' %}"></script>
 
 <script>
-   $(function () {
-       $('#example2').DataTable({
-       language: {
-       url: 'https://cdn.datatables.net/plug-ins/2.2.1/i18n/es-CL.json',
-       },
-       "paging": true,
-       "lengthChange": false,
-       layout: {
-        topStart: {
-            buttons: ['copyHtml5', 'excelHtml5']
-        }},
-       "ordering": true,
-           order:[[0,'desc']],
-       "searching": true,
-       "autoWidth": false,
-       "responsive": true,
-       });
-   });
-</script>
-
-<script>
   $(function () {
-      $('#example1').DataTable({
+    // Si el ancho es menor a 768px (celular), no se muestran botones; en otro caso se muestran.
+    var botones = window.innerWidth < 768 ? [] : ['copyHtml5', 'excelHtml5'];
+
+    $('#example2').DataTable({
       language: {
-      url: 'https://cdn.datatables.net/plug-ins/2.2.1/i18n/es-CL.json',
+        url: 'https://cdn.datatables.net/plug-ins/2.2.1/i18n/es-CL.json',
       },
-      "paging": true,
-      "lengthChange": false,
+      paging: true,
+      lengthChange: false,
+      // Usamos la configuración condicional de botones
       layout: {
-       topStart: {
-           buttons: ['copyHtml5', 'excelHtml5']
-       }},
-      "ordering": true,
-          order:[[0,'desc']],
-      "searching": true,
-      "autoWidth": false,
-      "responsive": true,
-      });
+        topStart: {
+          buttons: botones
+        }
+      },
+      ordering: true,
+      order: [[0, 'desc']],
+      searching: true,
+      autoWidth: false,
+      responsive: true,
+    });
   });
 </script>
 
 <script>
   $(function () {
+    // Si el ancho es menor a 768px (celular), no se muestran botones; en otro caso se muestran.
+    var botones = window.innerWidth < 768 ? [] : ['copyHtml5', 'excelHtml5'];
+
+    $('#example1').DataTable({
+      language: {
+        url: 'https://cdn.datatables.net/plug-ins/2.2.1/i18n/es-CL.json',
+      },
+      paging: true,
+      lengthChange: false,
+      // Usamos la configuración condicional de botones
+      layout: {
+        topStart: {
+          buttons: botones
+        }
+      },
+      ordering: true,
+      order: [[0, 'desc']],
+      searching: true,
+      autoWidth: false,
+      responsive: true,
+    });
+  });
+</script>
+
+<script>
+  $(function () {
+    // Si el ancho es menor a 768px (celular), no se muestran botones; en otro caso se muestran.
+    var botones = window.innerWidth < 768 ? [] : ['copyHtml5', 'excelHtml5'];
       $('#tabla-combustible').DataTable({
       language: {
       url: 'https://cdn.datatables.net/plug-ins/2.2.1/i18n/es-CL.json',
@@ -278,7 +453,7 @@
       "lengthChange": false,
       layout: {
        topStart: {
-           buttons: ['copyHtml5', 'excelHtml5']
+           buttons: botones
        }},
       "ordering": true,
           order:[[0,'desc']],
@@ -291,6 +466,8 @@
 
 <script>
   $(function () {
+    // Si el ancho es menor a 768px (celular), no se muestran botones; en otro caso se muestran.
+    var botones = window.innerWidth < 768 ? [] : ['copyHtml5', 'excelHtml5'];
       $('#example3').DataTable({
       language: {
       url: 'https://cdn.datatables.net/plug-ins/2.2.1/i18n/es-CL.json',
@@ -299,7 +476,7 @@
       "lengthChange": false,
       layout: {
        topStart: {
-           buttons: ['copyHtml5', 'excelHtml5']
+           buttons: botones
        }},
       "ordering": true,
           order:[[0,'desc']],

@@ -8,8 +8,8 @@
         <link rel="icon" href="{% static 'planilla/logo.png' %}" type="image/png" />       
         <!-- Google Font: Source Sans Pro -->
         <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/admin-lte@3.1/dist/css/adminlte.min.css">
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.4.1/dist/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/admin-lte@3.1/dist/css/adminlte.min.css">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap3-dialog/1.34.7/css/bootstrap-dialog.min.css">
         <link href="https://cdn.datatables.net/v/dt/dt-2.1.4/datatables.min.css" rel="stylesheet">
         {% block css_block %}
@@ -50,14 +50,16 @@
         
             <!-- Sidebar -->
             <div class="sidebar">
-            <div class="user-panel mt-3 pb-3 mb-3 d-flex">
-                <div class="image">
-                    <img src="{% static '/planilla/avatar.png'%}" class="img-circle elevation-2" alt="User Image">
-                </div>
-                <div class="info">
-                    <a style="cursor: default;"  href="#" class="d-block">{{request.user.first_name}} {{request.user.last_name}}</a>
-                </div>
-                </div>
+                <div class="user-panel mt-3 pb-3 mb-3 d-flex align-items-center">
+                    <div class="image">
+                        <img src="{% static '/planilla/avatar.png'%}" class="img-circle elevation-1" alt="User Image">
+                    </div>
+                    <div class="info">
+                        <a style="cursor: default;" href="#" class="d-block">
+                            {{request.user.first_name}} <br> {{request.user.last_name}}
+                        </a>
+                    </div>
+                </div>                
             <nav class="mt-2">
                 <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
                 <!-- <li class="nav-header">SERVICIOS HISTÓRICOS</li>

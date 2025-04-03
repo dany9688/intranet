@@ -74,3 +74,6 @@ class ServicioConsumer(AsyncWebsocketConsumer):
     async def send_servicio_update(self, event):
         """Enviar actualización de servicio a los clientes."""
         await self.send(text_data=json.dumps(event["data"]))
+
+    async def send_movil_update(self, event):
+        await self.send(text_data=json.dumps(event["data"]))

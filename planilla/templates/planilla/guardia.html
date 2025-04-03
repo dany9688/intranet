@@ -35,51 +35,47 @@
           {%for cuartel in base %}
           <div class="row">
           <div class="col-md-12">
-              <!-- Widget: user widget style 2 -->
-              <div class="card card-outline {% if cuartel.estado == 'Cubriendo zona' %} card-success {% elif cuartel.estado == 'En apoyo' %} card-warning {% elif cuartel.estado == 'Sin chofer' %} card-danger {%endif%}">
-                <!-- Add the bg color to the header using any of the bg-* classes -->
-                 <!-- {% if cuartel.estado == "Cubriendo zona" %}
-                <div class="widget-user-header bg-success">
-                 {% elif cuartel.estado == "En apoyo" %}
-                 <div class="widget-user-header bg-warning">
-                 {% elif cuartel.estado == "Sin chofer" %} 
-                 <div class="widget-user-header bg-danger">
-                {%endif%} -->
-                  <!-- <div class="widget-user-image">
-                    <img class="img-circle elevation-2 d-inline" src="{% static 'planilla/logo.png' %}" alt="User Avatar">
-                  </div> -->
-                  <!-- /.widget-user-image -->
+              <div class="card card-outline {% if cuartel.estado == 'Cubriendo zona' %} card-success {% elif cuartel.estado == 'En apoyo' %} card-warning {% elif cuartel.estado == 'Sin chofer' %} card-danger {%endif%}" style="height: 222px;">
                    <div class="card-header">
                     <h5 class="d-inline">{{cuartel.base|upper}} - </h5>
                     <strong><span class="d-inline">{{cuartel.estado|upper}}</span></strong>
                    </div>
-                <div class="card-footer p-0">
-                  <ul class="nav flex-column">
-                    <li class="nav-item">
-                      <span style="cursor: default;" class="nav-link">
-                        {% for cuenta in cuentas %}
-                        {% if cuenta.base == cuartel.base%}
-                        Móviles disponibles <span class="float-right badge bg-success" style="font-size: 16px;">{{cuenta.en_servicio}}</span>
-                      </span>
-                    </li>
-                    <li class="nav-item">
-                      <span style="cursor: default;"  class="nav-link">
-                        Móviles ocupados <span class="float-right badge bg-secondary" style="font-size: 16px;">{{cuenta.ocupados}}</span>
-                      </span>
-                    </li>
-                    <li class="nav-item">
-                      <span style="cursor: default;"  class="nav-link">
-                        Móviles en condicional <span class="float-right badge bg-warning" style="font-size: 16px;">{{cuenta.condicional}}</span>
-                      </span>
-                    </li>
-                    <li class="nav-item">
-                      <span style="cursor: default;"  class="nav-link">
-                        Móviles fuera de servicio <span class="float-right badge bg-danger" style="font-size: 16px;">{{cuenta.fuera_servicio}}</span>
-                      </span>
-                    </li>
-                    {% endif %}
-                    {% endfor %}
-                  </ul>
+                <div class="card-footer p-0" style="height: 170px;">
+                      <span style="cursor: default;" class="nav-link mt-2 mr-4">
+                        {% for movil in moviles %}
+                        {% if movil.IDBase.base == cuartel.base %}
+                          {% if movil.IDEstado.estado == "En servicio" %}
+                            <button id="movil-{{ movil.id }}" style="cursor: default;" class="mb-1 btn btn-success">
+                              Móvil {{ movil.numero }}
+                            </button>
+                          {% elif movil.IDEstado.estado == "Condicional" %}
+                            <button id="movil-{{ movil.id }}" style="cursor: default;" class="mb-1 btn btn-warning">
+                              Móvil {{ movil.numero }}
+                            </button>
+                          {% elif movil.IDEstado.estado == "Ocupado" %}
+                            <button id="movil-{{ movil.id }}" style="cursor: default;" class="mb-1 btn btn-secondary">
+                              {% for servicio in servicios %}
+                                {% if servicio.movil.id == movil.id %}
+                                  {% if servicio.tipo.tipo == "Incendio" %}
+                                    <span class="badge bg-danger"><i class="fa-solid fa-fire"></i></span>
+                                  {% elif servicio.tipo.tipo == "Auxilio" %}
+                                    <span class="badge bg-success"><i class="fa-solid fa-suitcase-medical"></i></span>
+                                  {% elif servicio.tipo.tipo == "Colaboración" %}
+                                    <span class="badge bg-success"><i class="fa-solid fa-handshake-angle"></i></span>
+                                  {% else %}
+                                    <span class="badge bg-purple"><i class="fa-solid fa-circle-info"></i></span>
+                                  {% endif %}
+                                {% endif %}
+                              {% endfor %}
+                              Móvil {{ movil.numero }}
+                            </button>
+                          {% else %}
+                            <button id="movil-{{ movil.id }}" style="cursor: default;" class="mb-1 btn btn-danger">
+                              Móvil {{ movil.numero }}
+                            </button>
+                          {% endif %}
+                        {% endif %}
+                      {% endfor %}
                 </div>
               </div>
               <!-- /.widget-user -->
@@ -306,87 +302,132 @@
   });
   </script>
 
-<!-- <script>
-  // Crear una instancia del modal
-  var alertaModalInstance = new bootstrap.Modal(document.getElementById('alertaModal'));
-
-  // Función para cerrar el modal
-  document.getElementById("cerrarModal").addEventListener("click", function() {
-      alertaModalInstance.hide();
-  });
-  
-  const destacamento = "{{ destacamento|default:'' }}".trim();  // Asegura que la variable se pase correctamente
-
-  if (destacamento) {
-    const protocol = window.location.protocol === "https:" ? "wss" : "ws";
-    let destacamentoNormalizado = normalizarDestacamento({destacamento});
-
-    let socket = new WebSocket(`${protocol}://${window.location.host}/ws/notificaciones/${destacamentoNormalizado}/`);
-    console.log(socket)
-      socket.onopen = () => console.log(`✅ Conectado al WebSocket de ${destacamento}`);
-      socket.onerror = (error) => console.error("❌ Error en WebSocket:", error);
-      socket.onmessage = (event) => console.log("📩 Mensaje recibido:", event.data);
-
-
-
-  socket.onmessage = function(event) {
-    const data = JSON.parse(event.data);
-    console.log("📩 Notificación recibida:", data.mensaje);
-
-    // Actualizar el mensaje en el modal
-    document.getElementById("mensajeNotificacion").textContent = data.mensaje;
-
-    // Reproducir sonido de alarma
-    const audio = document.getElementById("sonidoAlarma");
-    audio.play().catch(error => console.error("Error al reproducir el sonido:", error));
-
-    // Mostrar el modal de Bootstrap
-    const alertaModal = new bootstrap.Modal(document.getElementById("alertaModal"));
-    alertaModal.show();
-  };
-
-  socket.onclose = function(event) {
-      console.log("WebSocket cerrado.");
-  };
-
-} else {
-      console.error("❌ No se pudo conectar al WebSocket: el destacamento está vacío.");
-  }
-  function normalizarDestacamento(nombre) {
-    // Si nombre es un objeto, extraer la propiedad 'destacamento'
-    if (typeof nombre === "object" && nombre !== null && "destacamento" in nombre) {
-        nombre = nombre.destacamento;  // Obtener el valor real
-    }
-
-    // Validar que ahora sea un string antes de aplicar toLowerCase()
-    if (typeof nombre !== "string") {
-        console.error("Error: el valor no es un string", nombre);
-        return "";
-    }
-
-    return nombre.toLowerCase()
-                 .replace("°", "")
-                 .replace(/\s+/g, "_")
-                 .replace(/[^a-z0-9_]/g, "");
-}
-</script> -->
-
 <script>
 document.addEventListener("DOMContentLoaded", function() {
     const protocol = window.location.protocol === "https:" ? "wss" : "ws";
     const socket = new WebSocket(`${protocol}://${window.location.host}/ws/servicios/`);
 
     socket.onmessage = function(event) {
-        const data = JSON.parse(event.data);
+    const data = JSON.parse(event.data);
 
-        if (data.tipo === "nuevo_servicio") {
-            console.log("📩 Nueva alerta de servicio:", data.servicio);
-            mostrarModalAlerta(data.servicio);
-            agregarNuevoServicio(data.servicio);
-            agregarNuevoMarcador(data.servicio);
+    if (data.tipo === "nuevo_servicio") {
+        console.log("📩 Nueva alerta de servicio:", data.servicio);
+        mostrarModalAlerta(data.servicio);
+        agregarNuevoServicio(data.servicio);
+        agregarNuevoMarcador(data.servicio);
+    } else if (data.tipo === "finalizar_servicio") {
+        console.log("❌ Finalizando servicio:", data.servicio.id);
+        // Eliminar el card del servicio finalizado
+        const card = document.getElementById(`grupo-servicio-${data.servicio.id}`);
+        if (card) {
+            card.remove();
         }
-    };
+        // Opcionalmente, eliminar el marcador del mapa
+        if (markers && markers[data.servicio.id]) {
+            markers[data.servicio.id].setMap(null);
+            delete markers[data.servicio.id];
+        }
+    } else if (data.tipo === "actualizar_movil" && data.movil) {
+        actualizarEstadoMovil(data.movil);
+        return;
+    } else if (data.tipo === "actualizar_servicio" && data.servicio) {
+        actualizarCardServicio(data.servicio);
+        // También se puede actualizar el marcador (en mapa.js) si se envía el mismo mensaje
+        actualizarMarcador(data.servicio);
+        return;
+    }
+};
 });
+
+function actualizarCardServicio(servicio) {
+    // Se asume que cada card tiene id="grupo-servicio-<servicio.id>"
+    let card = document.getElementById("grupo-servicio-" + servicio.id);
+    if (card) {
+        // Definir el color/clase del card según el tipo de servicio
+        let tipoServicio = servicio.tipo.tipo;
+        let cardClass = "card ";
+        if (tipoServicio.includes("Incendio")) {
+            cardClass += "card-danger card-outline mb-2";
+        } else if (tipoServicio.includes("Auxilio")) {
+            cardClass += "card-teal card-outline mb-2";
+        } else if (tipoServicio.includes("Colaboración")) {
+            cardClass += "card-gray card-outline mb-2";
+        } else if (tipoServicio.includes("Accidente")) {
+            cardClass += "card-warning card-outline mb-2";
+        } else {
+            cardClass += "card-navy mb-2";
+        }
+        // Actualizamos la clase del card
+        card.setAttribute("class", cardClass);
+
+        // Actualizar el encabezado con el número y tipo de servicio
+        let headerLink = card.querySelector("a[data-toggle='collapse']");
+        if (headerLink) {
+            headerLink.innerHTML = `Servicio ${servicio.numero} - ${servicio.tipo.tipo}`;
+        }
+        // Si tienes elementos para dirección o salida dentro del card, actualízalos
+        let direccionElem = card.querySelector(".card-body .direccion");
+        if (direccionElem) {
+            direccionElem.textContent = servicio.direccion;
+        }
+        let salidaElem = card.querySelector(".card-body .salida");
+        if (salidaElem) {
+            salidaElem.textContent = formatearFecha(servicio.salida);
+        }
+        console.log("Card actualizado para servicio ID:", servicio.id);
+    } else {
+        console.warn("No se encontró el card para servicio ID:", servicio.id);
+    }
+}
+
+// Función para formatear la fecha (ejemplo)
+function formatearFecha(fechaISO) {
+    const date = new Date(fechaISO);
+    const meses = [
+        "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+        "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
+    ];
+    const dia = date.getDate();
+    const mes = meses[date.getMonth()];
+    const anio = date.getFullYear();
+    let horas = date.getHours();
+    let minutos = date.getMinutes();
+    if (horas < 10) horas = '0' + horas;
+    if (minutos < 10) minutos = '0' + minutos;
+    return `${dia} ${mes} ${anio} ${horas}:${minutos}`;
+}
+
+// Función para actualizar el botón del móvil según su estado
+function actualizarEstadoMovil(movil) {
+  // Se espera que movil tenga: id, numero y estado (por ejemplo: "Ocupado", "En servicio", "Condicional", etc.)
+  const btnMovil = document.getElementById(`movil-${movil.id}`);
+  if (btnMovil) {
+      let claseBtn;
+      let textoEstado;
+      switch (movil.estado) {
+          case "En servicio":
+              claseBtn = "btn btn-success";
+              textoEstado = "En servicio";
+              break;
+          case "Condicional":
+              claseBtn = "btn btn-warning";
+              textoEstado = "Condicional";
+              break;
+          case "Ocupado":
+              claseBtn = "btn btn-secondary";
+              textoEstado = "Ocupado";
+              break;
+          default:
+              claseBtn = "btn btn-danger";
+              textoEstado = movil.estado;
+      }
+      btnMovil.className = "mb-1 " + claseBtn;
+      btnMovil.innerHTML = `Móvil ${movil.numero}`;
+      console.log(`Estado actualizado para móvil ${movil.numero}: ${movil.estado}`);
+  } else {
+      console.warn("No se encontró el botón para el móvil ID:", movil.id);
+  }
+}
 
 function mostrarModalAlerta(servicio) {
     document.getElementById("mensajeNotificacion").textContent = `Nuevo servicio en ${servicio.zona}`;
@@ -415,15 +456,24 @@ function agregarNuevoServicio(servicio) {
 
     let tipoServicio = servicio.tipo && typeof servicio.tipo === "object" ? servicio.tipo.tipo : "Desconocido";
 
+    if (tipoServicio.includes("Incendio")) {
+      cardClass = "card-danger card-outline";
+    } else if (tipoServicio.includes("Auxilio")) {
+      cardClass = "card-teal card-outline";
+    } else if (tipoServicio.includes("Colaboración")) {
+      cardClass = "card-gray card-outline";
+    } else if (tipoServicio.includes("Accidente")) {
+      cardClass = "card-warning card-outline";
+    }
     const nuevoServicioHTML = `
-    <div class="card card-danger card-outline mb-2" id="grupo-servicio-${servicio.id}">
+      <div class="card ${cardClass} mb-2" id="grupo-servicio-${servicio.id}">
         <div class="card-header d-flex">
-            <h4 class="card-title w-100">
-                <a class="d-block w-100 float-left" data-toggle="collapse" data-target="#collapse${servicio.id}">
-                    Servicio ${servicio.numero} - ${tipoServicio}
-                </a>
-            </h4>
-            <span class="badge bg-warning float-right contador-servicio" id="contador${servicio.numero}" data-inicio="${servicio.salida}"></span>
+          <h4 class="card-title w-100">
+            <a class="d-block w-100 float-left" data-toggle="collapse" data-target="#collapse${servicio.id}">
+              Servicio ${servicio.numero} - ${tipoServicio}
+            </a>
+          </h4>
+          <span class="badge bg-warning float-right contador-servicio" id="contador${servicio.numero}" data-inicio="${servicio.salida}"></span>
         </div>
         <div id="collapse${servicio.id}" class="collapse">
             <div class="card-body">
@@ -456,9 +506,6 @@ function agregarNuevoServicio(servicio) {
     serviciosContainer.insertAdjacentHTML("afterbegin", nuevoServicioHTML);
     console.log(`✅ Nuevo servicio agregado: ${servicio.numero}`);
 }
-
-
-
 
 
 function agregarNuevoMarcador(servicio) {
