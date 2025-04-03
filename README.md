@@ -27,12 +27,12 @@ Para que funciones se debe tener instalado  [Docker](https://www.docker.com/) en
 
 Lo ideal es cargar la base de datos con los siguientes datos y de la siguiente forma a fin de no tener problemas.
 
-- [ ] Bases
+- ### Bases
 -    Cuartel Central
 -    Destacamento N°1
 -    Destacamento N°2
 
-- [ ] Cuarteles
+- ### Cuarteles
 -    Mariano Acosta
 -	José C. Paz
 -	Ituzaingo
@@ -49,7 +49,7 @@ Lo ideal es cargar la base de datos con los siguientes datos y de la siguiente f
 -	VIcente López
 -	General San Martín
 
-- [ ] Jerarquías
+- ### Jerarquías
 -    Comandante General
 -	Comandante Mayor
 -	Comandante
@@ -64,13 +64,13 @@ Lo ideal es cargar la base de datos con los siguientes datos y de la siguiente f
 -	Subayudante
 -	Bombero
 
-- [ ] Tipos de movil
+- ### Tipos de movil
 -    En servicio
 -    Condicional
 -    Fuera de servicio
 -    Ocupado
 
-- [ ] Tipos de movil
+- ### Tipos de movil
 -    Hidroelevador
 -	Cascada
 -	Transporte de personal
@@ -78,7 +78,7 @@ Lo ideal es cargar la base de datos con los siguientes datos y de la siguiente f
 -	Cisterna
 -	Primera dotación
 
-- [ ] Tipos de servicios
+- ### Tipos de servicios
 -    Técnico
 -	Comando
 -	Suministro de agua
@@ -88,33 +88,47 @@ Lo ideal es cargar la base de datos con los siguientes datos y de la siguiente f
 -	Auxilio
 -	Incendio
 
-- [ ] Móviles
+- ### Móviles
+-   Móvil 1
+-   Móvil 2
+-   Móvil 3
+-   Móvil 4
+-   Móvil 5
+-   Móvil 6
+-   Móvil 7
+-   Móvil 8
 
-- [ ] Bomberos
+- ### Bomberos
+**Asignarle cualquier jerarquía y demás opciones. Por lo menos uno debe ser OFicial**
+-   Tito Puente
+-   Homero Simpson
+-   Ned Flanders
+-   Apu Nahasapeemapetilon
+-   Moe Szyslak
 
-- [ ] Tipo de motores
+- ### Tipo de motores
 -    Eléctrico 220v
 -    Eléctrico 19v
 -    Combustión 2T
 -    Combustión 4T
 
-- [ ] Tipo de materiales
+- ### Tipo de materiales
 -    Manga
 -    Corte
 -    Acople
 
-- [ ] Ubicaciones
+- ### Ubicaciones
 -    Sección materiales - Cuartel Central
 -    Sección materiales - Destacamento N°1
 -    Sección materiales - Destacamento N°2
 
-- [ ] Grupos
+- ### Grupos
 -    Cuartel Central
 -    Destacamento N°1
 -    Destacamento N°2
 -    Jefatura
 
-- [ ] Usuarios
+- ### Usuarios
 -    usuario: central - password: guardia147 - grupo: Cuartel Central
 -    usuario: destacamento1 - password: guardia147 - grupo: Destacamento N°1
 -    usuario: destacamento2 - password: guardia147 - grupo: Destacamento N°2
