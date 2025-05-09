@@ -23,7 +23,7 @@
         <!-- 1ra fila -->
          <div class="row col-sm-12 mb-3 d-flex justify-content-center">
             <div class="col-sm-12">
-                <div class="card card-info">
+                <div class="card card-secondary">
                     <div class="card-header border-0">
                       <h3 class="card-title float-left">Servicio N° {{servicio.numero}}</h3>
                       <button type='button' data-toggle="modal" data-target="#checkModal" class="btn btn-sm btn-danger float-right">Guardar cambios</button>
@@ -63,7 +63,7 @@
                             <div class="row col-md-12">
                                 <div class="form-group col-md-6 row mr-3">
                                     <label for="exampleInputPassword1">Encargado</label>
-                                    <select class="form-control" name="encargado" id="encargado" required>
+                                    <select class="form-control" name="encargado" id="encargado">
                                         <option value="{{ servicio.encargado.id }}" selected>{{ servicio.encargado.IDJerarquia.jerarquia }} {{ servicio.encargado.apellido }}, {{ servicio.encargado.nombre }}</option>
                                         {% for bombero in bomberos %}
                                             <option value="{{ bombero.id }}">{{ bombero.IDJerarquia.jerarquia }} {{ bombero.apellido }}, {{ bombero.nombre }}</option>
@@ -105,8 +105,13 @@
                         </div>
                         </form>
                     </div>
-                    <div class="row col-md-12">
-                        <h3 class="mb-3">Unidades y personal asignado</h3> <span> - Cantidad de móviles: {{cantidad_moviles}} - Cantidad de bomberos: {{cantidad_bomberos}}</span>
+                    <div class="col-md-12">
+                        <div>
+                            <h3 class="mb-3">Unidades y personal asignado</h3>
+                        </div>
+                        <div>
+                            <span>Cantidad de móviles: {{cantidad_moviles}} - Cantidad de bomberos: {{cantidad_bomberos}}</span>
+                        </div>
                         <div class="row col-md-12 wrapper">
                             {% if servicio.moviles_list %}
                             {% for movil_data in servicio.moviles_list %}
@@ -135,9 +140,12 @@
                                 <!-- /.card-header -->
                                 <div class="card-body">
                                     <ul>
-                                    {% for bombero in movil_data.bomberos.all %}
-                                    <li>147/{{bombero.legajo}} - {{bombero.apellido|upper}}, {{bombero.nombre}}</li>
-                                    {%endfor%}
+                                        <li>Encargado: {{movil_data.movil.encargado_movil.apellido|upper}}, {{movil_data.movil.encargado_movil.nombre}}</li>
+                                        <li>Chofer: {{movil_data.chofer.apellido|upper}}, {{movil_data.chofer.nombre}}</li>
+                                        {% for bombero in movil_data.bomberos.all %}
+                                        <li>147/{{bombero.legajo}} - {{bombero.apellido|upper}},
+                                            {{bombero.nombre}}</li>
+                                        {%endfor%}
                                     </ul>
                                 </div>
                                 <!-- /.card-body -->

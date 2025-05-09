@@ -1,5 +1,5 @@
 {% extends 'planilla/base.html' %}
-
+{% block title %}Carga de planilla{% endblock title %}
 {% block content %}
     <!-- Content Wrapper. Contains page content -->
     <div class="content-wrapper">
@@ -69,7 +69,7 @@
 
                             </div>
                             <div class="form-group col-md-5">
-                                <label for="exampleInputPassword1">Of. a Cargo</label>
+                                <label for="exampleInputPassword1">Oficial de semana</label>
                                 <select class="form-control" name="oficial"  required>
                                 {% for bombero in bomberos %}
                                     {% if "Comandante" in bombero.IDJerarquia.jerarquia or "Oficial" in bombero.IDJerarquia.jerarquia %}

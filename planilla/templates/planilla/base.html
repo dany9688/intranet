@@ -1,23 +1,27 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        {% load static %}
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <title>Intranet - {% block title %}{% endblock %}</title>
-        <link rel="icon" href="{% static 'planilla/logo.png' %}" type="image/png" />       
-        <!-- Google Font: Source Sans Pro -->
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.4.1/dist/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/admin-lte@3.1/dist/css/adminlte.min.css">
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap3-dialog/1.34.7/css/bootstrap-dialog.min.css">
-        <link href="https://cdn.datatables.net/v/dt/dt-2.1.4/datatables.min.css" rel="stylesheet">
-        {% block css_block %}
 
-        {% endblock %}
-    </head>
+<head>
+    {% load static %}
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Intranet - {% block title %}{% endblock %}</title>
+    <link rel="icon" href="{% static 'planilla/logo.png' %}" type="image/png" />
+    <!-- Google Font: Source Sans Pro -->
+    <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.4.1/dist/css/bootstrap.min.css"
+        integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/admin-lte@3.1/dist/css/adminlte.min.css">
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap3-dialog/1.34.7/css/bootstrap-dialog.min.css">
+    <link href="https://cdn.datatables.net/v/dt/dt-2.1.4/datatables.min.css" rel="stylesheet">
+    {% block css_block %}
 
-  <body class="hold-transition sidebar-mini sidebar-collapse">
+    {% endblock %}
+</head>
+
+<body class="hold-transition sidebar-mini sidebar-collapse">
 
     <div class="wrapper">
         <!-- Navbar -->
@@ -25,17 +29,18 @@
 
             <!-- Left navbar links -->
             <ul class="navbar-nav">
-            <li class="nav-item">
-                <a class="nav-link" data-widget="pushmenu" href="#" role="button"><i class="fas fa-bars"></i></a>
-            </li>
+                <li class="nav-item">
+                    <a class="nav-link" data-widget="pushmenu" href="#" role="button"><i class="fas fa-bars"></i></a>
+                </li>
             </ul>
             <ul class="navbar-nav ml-auto">
             </ul>
             <div class="position-absolute" style="z-index: 1; top: 20px; right: 20px;">
 
-            <div id="toastContainer" class="toast bg-success" role="alert" aria-live="assertive" aria-atomic="true" data-delay="2000">
-            <div id="toastContainer" class="toast-container"></div>
-            </div>
+                <div id="toastContainer" class="toast bg-success" role="alert" aria-live="assertive" aria-atomic="true"
+                    data-delay="2000">
+                    <div id="toastContainer" class="toast-container"></div>
+                </div>
             </div>
         </nav>
         <!-- /.navbar -->
@@ -43,11 +48,12 @@
         <aside class="main-sidebar sidebar-dark-primary elevation-4">
             <!-- Brand Logo -->
             <a style="cursor: default;" href="" class="brand-link mb-2">
-            <img src="{% static '/planilla/logo.png' %}" alt="AdminLTE Logo" class="brand-image img-circle" style="opacity: .9; max-height: 45px">
-            <span class="brand-text font-weight-light">Intranet - BVM</span>
+                <img src="{% static '/planilla/logo.png' %}" alt="AdminLTE Logo" class="brand-image img-circle"
+                    style="opacity: .9; max-height: 45px">
+                <span class="brand-text font-weight-light">Intranet - BVM</span>
             </a>
-        
-        
+
+
             <!-- Sidebar -->
             <div class="sidebar">
                 <div class="user-panel mt-3 pb-3 mb-3 d-flex align-items-center">
@@ -59,10 +65,11 @@
                             {{request.user.first_name}} <br> {{request.user.last_name}}
                         </a>
                     </div>
-                </div>                
-            <nav class="mt-2">
-                <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
-                <!-- <li class="nav-header">SERVICIOS HISTÓRICOS</li>
+                </div>
+                <nav class="mt-2">
+                    <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu"
+                        data-accordion="false">
+                        <!-- <li class="nav-header">SERVICIOS HISTÓRICOS</li>
                     <li class="nav-item">
                         <a href="#" class="nav-link">
                         <i class="far fa-circle nav-icon"></i>
@@ -118,167 +125,176 @@
                         </li>
                         </ul>
                     </li> -->
-                    {% if request.user.groups.all.0.name == "Guardia central"  %}
-                    <li class="nav-header">GUARDIA</li>
-                    <li class="nav-item">
-                        <a href="/guardia" class="nav-link">
-                            <i class="nav-icon fa-solid fa-display"></i>
-                        <p>
-                            Panel de guardia
-                        </p>
-                        </a>
-                    </li>
-                    {% elif request.user.groups.all.0.name == "Guardia destacamento" %}
-                    <li class="nav-header">GUARDIA</li>
-                    <li class="nav-item">
-                        <a href="/guardia" class="nav-link">
-                            <i class="nav-icon fa-solid fa-display"></i>
-                        <p>
-                            Panel de guardia
-                        </p>
-                        </a>
-                    </li>
-                    {% elif request.user.groups.all.0.name in "Destacamento N°1,Destacamento N°2, Cuartel Central" %}
-                    <li class="nav-item">
-                        <a href="/" class="nav-link">
-                        <i class="nav-icon fa-solid fa-people-group"></i>
-                        <p>
-                            Panel de encargado
-                        </p>
-                        </a>
-                    </li>
-                    {% endif %}
-                    <li class="nav-item">
-                        <a href="/servicios" class="nav-link">
-                            <i class="nav-icon fa-solid fa-table-list"></i>
-                        <p>
-                            Ver servicios
-                        </p>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="/personal" class="nav-link">
-                        <i class="nav-icon fa-solid fa-people-group"></i>
-                        <p>
-                            Listado de personal
-                        </p>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="/mapa" class="nav-link">
-                            <i class="nav-icon fa-solid fa-map-location-dot"></i>
-                        <p>
-                            Mapa
-                        </p>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="/guia" class="nav-link">
-                        <i class="nav-icon fa-solid fa-phone"></i>
-                        <p>
-                            Guía telefónica
-                        </p>
-                        </a>
-                    </li>
-                    {% if not "Guardia" in request.user.groups.all.0.name %}
-                    <li class="nav-header">NOVEDADES</li>
-                    <li class="nav-item">
-                        <a href="#" class="nav-link">
-                        <i class="far fa-circle nav-icon"></i>
-                        <p>
-                            Encargados
-                            <i class="right fas fa-angle-left"></i>
-                        </p>
-                        </a>
-                        <ul class="nav nav-treeview">
-                        {% if not request.user.groups.all.0.name == "Jefatura" %}
+                        {% if request.user.groups.all.0.name == "Guardia central" %}
+                        <li class="nav-header">GUARDIA</li>
                         <li class="nav-item">
-                            <a href="/cargar_planilla" class="nav-link">
-                            <i class="nav-icon fa-solid fa-folder-plus"></i>
-                            <p>
-                                Cargar novedades
-                            </p>
+                            <a href="/guardia" class="nav-link">
+                                <i class="nav-icon fa-solid fa-display"></i>
+                                <p>
+                                    Panel de guardia
+                                </p>
+                            </a>
+                        </li>
+                        {% elif request.user.groups.all.0.name == "Guardia destacamento" %}
+                        <li class="nav-header">GUARDIA</li>
+                        <li class="nav-item">
+                            <a href="/guardia" class="nav-link">
+                                <i class="nav-icon fa-solid fa-display"></i>
+                                <p>
+                                    Panel de guardia
+                                </p>
+                            </a>
+                        </li>
+                        {% elif request.user.groups.all.0.name in "Destacamento N°1,Destacamento N°2, Cuartel Central"
+                        %}
+                        <li class="nav-item">
+                            <a href="/" class="nav-link">
+                                <i class="nav-icon fa-solid fa-people-group"></i>
+                                <p>
+                                    Panel de encargado
+                                </p>
                             </a>
                         </li>
                         {% endif %}
                         <li class="nav-item">
-                            <a href="/listado_planillas" class="nav-link">
-                            <i class="nav-icon fa-solid fa-folder-open"></i>
-                            <p>
-                                Listado de planillas
-                            </p>
-                            </a>
-                        </li>
-                        </ul>
-                    </li>
-                    {% endif %}
-                    <li class="nav-item">
-                        <a href="#" class="nav-link">
-                        <i class="far fa-circle nav-icon"></i>
-                        <p>
-                            Automotores
-                            <i class="right fas fa-angle-left"></i>
-                        </p>
-                        </a>
-                        <ul class="nav nav-treeview">
-                        <li class="nav-item">
-                            <a href="/moviles" class="nav-link">
-                            <i class="nav-icon fa-solid fa-truck"></i>
-                            <p>
-                                Estado de móviles
-                            </p>
-                            </a>
-                        </li>
-                        </ul>
-                    </li>
-                    <li class="nav-item">
-                        <a href="#" class="nav-link">
-                        <i class="far fa-circle nav-icon"></i>
-                        <p>
-                            Materiales
-                            <i class="right fas fa-angle-left"></i>
-                        </p>
-                        </a>
-                        <ul class="nav nav-treeview">
-                            <li class="nav-item">
-                                <a href="/inventario_movil" class="nav-link">
-                                <i class="nav-icon fa-solid fa-toolbox"></i>
+                            <a href="/servicios" class="nav-link">
+                                <i class="nav-icon fa-solid fa-table-list"></i>
                                 <p>
-                                    Materiales por móvil
+                                    Ver servicios
                                 </p>
-                                </a>
-                            </li>
-                        <li class="nav-item">
-                            <a href="/materiales" class="nav-link">
-                            <i class="nav-icon fa-solid fa-toolbox"></i>
-                            <p>
-                                Estado de materiales
-                            </p>
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a href="/repmateriales" class="nav-link">
-                            <i class="nav-icon fa-solid fa-square-poll-horizontal"></i>
-                            <p>
-                                Reporte de materiales
-                            </p>
+                            <a href="/personal" class="nav-link">
+                                <i class="nav-icon fa-solid fa-people-group"></i>
+                                <p>
+                                    Listado de personal
+                                </p>
                             </a>
                         </li>
-                        </ul>
-                    </li>
-                <li class="nav-header">OPCIONES</li>
-                <li class="nav-item">
-                    <a href="/logout" class="nav-link">
-                    <i class="nav-icon fa-solid fa-door-open"></i>
-                    <p>
-                        Cerrar sesión
-                    </p>
-                    </a>
-                </li>
-                </ul>
-            </nav>
-        
-            <!-- /.sidebar-menu -->
+                        <li class="nav-item">
+                            <a href="/mapa" class="nav-link">
+                                <i class="nav-icon fa-solid fa-map-location-dot"></i>
+                                <p>
+                                    Mapa
+                                </p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="/guia" class="nav-link">
+                                <i class="nav-icon fa-solid fa-phone"></i>
+                                <p>
+                                    Guía telefónica
+                                </p>
+                            </a>
+                        </li>
+                        {% if not "Guardia" in request.user.groups.all.0.name %}
+                        <li class="nav-header">NOVEDADES</li>
+                        <li class="nav-item">
+                            <a href="#" class="nav-link">
+                                <i class="far fa-circle nav-icon"></i>
+                                <p>
+                                    Encargados
+                                    <i class="right fas fa-angle-left"></i>
+                                </p>
+                            </a>
+                            <ul class="nav nav-treeview">
+                                {% if not request.user.groups.all.0.name == "Jefatura" %}
+                                <li class="nav-item">
+                                    <a href="/cargar_planilla" class="nav-link">
+                                        <i class="nav-icon fa-solid fa-folder-plus"></i>
+                                        <p>
+                                            Cargar novedades
+                                        </p>
+                                    </a>
+                                </li>
+                                {% endif %}
+                                <li class="nav-item">
+                                    <a href="/listado_planillas" class="nav-link">
+                                        <i class="nav-icon fa-solid fa-folder-open"></i>
+                                        <p>
+                                            Listado de planillas
+                                        </p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="/novedades" class="nav-link">
+                                        <i class="nav-icon fa-solid fa-book-bookmark"></i>
+                                        <p>
+                                            Novedades
+                                        </p>
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+                        {% endif %}
+                        <li class="nav-item">
+                            <a href="#" class="nav-link">
+                                <i class="far fa-circle nav-icon"></i>
+                                <p>
+                                    Automotores
+                                    <i class="right fas fa-angle-left"></i>
+                                </p>
+                            </a>
+                            <ul class="nav nav-treeview">
+                                <li class="nav-item">
+                                    <a href="/moviles" class="nav-link">
+                                        <i class="nav-icon fa-solid fa-truck"></i>
+                                        <p>
+                                            Estado de móviles
+                                        </p>
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+                        <li class="nav-item">
+                            <a href="#" class="nav-link">
+                                <i class="far fa-circle nav-icon"></i>
+                                <p>
+                                    Materiales
+                                    <i class="right fas fa-angle-left"></i>
+                                </p>
+                            </a>
+                            <ul class="nav nav-treeview">
+                                <li class="nav-item">
+                                    <a href="/inventario_movil" class="nav-link">
+                                        <i class="nav-icon fa-solid fa-toolbox"></i>
+                                        <p>
+                                            Materiales por móvil
+                                        </p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="/materiales" class="nav-link">
+                                        <i class="nav-icon fa-solid fa-toolbox"></i>
+                                        <p>
+                                            Estado de materiales
+                                        </p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="/repmateriales" class="nav-link">
+                                        <i class="nav-icon fa-solid fa-square-poll-horizontal"></i>
+                                        <p>
+                                            Reporte de materiales
+                                        </p>
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+                        <li class="nav-header">OPCIONES</li>
+                        <li class="nav-item">
+                            <a href="/logout" class="nav-link">
+                                <i class="nav-icon fa-solid fa-door-open"></i>
+                                <p>
+                                    Cerrar sesión
+                                </p>
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+
+                <!-- /.sidebar-menu -->
             </div>
             <!-- /.sidebar -->
         </aside>
@@ -287,21 +303,26 @@
         {% endblock %}
 
 
-    <!-- REQUIRED SCRIPTS -->
+        <!-- REQUIRED SCRIPTS -->
 
 
     </div>
-    <script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"
+        integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
     <script src="https://kit.fontawesome.com/0f48f5107a.js" crossorigin="anonymous"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/js/bootstrap.bundle.min.js" integrity="sha512-7Pi/otdlbbCR+LnW+F7PwFcSDJOuUJB3OxtEHbg4vSMvzvJjde4Po1v4BR9Gdc9aXNUNFVUY+SK51wWT8WF0Gg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.4.1/dist/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/js/bootstrap.bundle.min.js"
+        integrity="sha512-7Pi/otdlbbCR+LnW+F7PwFcSDJOuUJB3OxtEHbg4vSMvzvJjde4Po1v4BR9Gdc9aXNUNFVUY+SK51wWT8WF0Gg=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.4.1/dist/js/bootstrap.min.js"
+        integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6"
+        crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/admin-lte@3.1/dist/js/adminlte.min.js"></script>
 
     <script>
         document.addEventListener("DOMContentLoaded", function () {
             {% if messages %}
-                {% for message in messages %}
-                    let toastHTML = `
+            {% for message in messages %}
+            let toastHTML = `
                         <div class="toast show align-items-center text-white bg-{{ message.tags }} border-0" role="alert" aria-live="assertive" aria-atomic="true">
                             <div class="d-flex">
                                 <div class="toast-body">
@@ -310,20 +331,20 @@
                                 <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
                             </div>
                         </div>`;
-    
-                    document.getElementById("toastContainer").innerHTML += toastHTML;
-                {% endfor %}
-    
-                // Mostrar automáticamente los toasts con una duración de 5 segundos
-                let toastElements = document.querySelectorAll('.toast');
-                toastElements.forEach(toastElement => {
-                    new bootstrap.Toast(toastElement, { delay: 5000 }).show();
-                });
+
+            document.getElementById("toastContainer").innerHTML += toastHTML;
+            {% endfor %}
+
+            // Mostrar automáticamente los toasts con una duración de 5 segundos
+            let toastElements = document.querySelectorAll('.toast');
+            toastElements.forEach(toastElement => {
+                new bootstrap.Toast(toastElement, { delay: 5000 }).show();
+            });
             {% endif %}
         });
     </script>
-    
-    
+
+
     {% block js_block %}
 
     {% endblock %}

@@ -10,182 +10,192 @@
 {% block content %}
 <!-- Content Wrapper. Contains page content -->
 <div class="content-wrapper">
-    <!-- Content Header (Page header) -->
-    <div class="content-header">
-        <div class="container-fluid">
-        <div class="col-sm-6">
-        </div><!-- /.col -->
-        </div>
-        <!-- /.container-fluid -->
+  <!-- Content Header (Page header) -->
+  <div class="content-header">
+    <div class="container-fluid">
+      <div class="col-sm-6">
+      </div><!-- /.col -->
     </div>
-    <!-- /.content-header -->
+    <!-- /.container-fluid -->
+  </div>
+  <!-- /.content-header -->
 
-    <!-- Main content -->
-    <div class="content">
-        <div class="container-fluid">
-        <!-- 1ra fila -->
-<div class="row">
-    {% if todo_los_materiales %}
-      <div class="col-md-12">
-        <div class="card">
-          <div class="card-header">
-            <h3 class="card-title">Listado de materiales</h3>
-          </div>
-          <!-- /.card-header -->
-          <div class="card-body table-responsive">
-            <table id="tablaMateriales" class="table table-bordered table-striped text-center">
-              <thead>
-                <tr class="text-center">
-                  <th>Nombre</th>
-                  <th>Tipo</th>
-                  <th>Cuartel</th>
-                  <th>Móvil</th>
-                  <th>Ubicación</th>
-                  <th>Cajonera</th>
-                  <th>Cantidad</th>
-                  <th>Estado</th>
-                  <th>Acciones</th>
-                </tr>
-              </thead>
-              <tbody class="text-center">
-                {% for material in todo_los_materiales %}
-                    <tr class="text-center">
-                      {% if material.image %}
-                      <td class="text-center"><a class="btn" rel="popover" data-img="{{material.image.url}}">{{ material.nombre }}</a></td>
-                      {% else %}
-                      <td class="text-center">{{ material.nombre }}</td>
-                      {% endif %}
-                      <td>{{ material.tipo }}</td>
-                      {% if material.ubicacion.base %}
-                      <td>{{ material.ubicacion.base }}</td>
-                      {% elif material.movil %}
-                      <td>{{ material.movil.IDBase }}</td>
-                      {% else %}
-                      <td></td>
-                      {% endif %}
-                      <td>{{ material.movil }}</td>
-                      <td>{{ material.ubicacion.ubicacion }}</td>
-                      <td>{{ material.cajonera }}</td>
-                      <td>{{ material.cantidad }}</td>
-                      {% if material.estado.estado == "En servicio" %}
-                        <td class="text-green"><i class="fa-solid fa-circle-check"></i> {{material.estado.estado}}</td>
-                      {% elif material.estado.estado == "Condicional"  %}
-                        <td class="text-yellow"><i class="fa-solid fa-circle-xmark"></i> {{material.estado.estado}}</td>  
-                      {% elif material.estado.estado == "Fuera de servicio"%}
-                        <td class="text-red"><i class="fa-solid fa-circle-xmark"></i> {{material.estado.estado}}</td> 
-                      {% else %} 
-                        <td class="text-red"><i class="fa-solid fa-circle-xmark"></i> No se encontró estado</td> 
-                      {% endif %}
-                      <td>
-                        <button type="button" data-toggle="modal" data-target="#material{{material.id}}" class="btn btn-danger">Actualizar estado</button>
-                      </td>
-                    </tr>
-                    <!-- MODAL COMBUSTIBLE-->
-                    <div class="modal fade" id="material{{material.id}}" tabindex="-1" aria-labelledby="material" aria-hidden="true">
-                      <div class="modal-dialog">
-                        <div class="modal-content">
-                          <div class="modal-header">
-                            <h5 class="modal-title" id="exampleModalLabel3">Cambio de estado</h5>
-                          </div>
-                          <div class="modal-body">
-                              <form action="/cambiarestadomat/{{material.id}}/" method="post">
-                                {% csrf_token %}
-                                <label for="movil">Indique el encargado:</label>
-                                <select class="form-control col-sm-6" name="bombero" id="">
-                                  {% for bombero in bomberos %}
-                                  <option value={{bombero.id}}>{{bombero.nombre}} {{bombero.apellido}}</option>
-                                  {% endfor %}
-                                </select>
-                                <label for="movil">Nuevo estado:</label>
-                                <select class="form-control col-sm-6" name="estado" id="">
-                                  {% for estado in estados %}
-                                  <option value={{estado.id}}>{{estado.estado}}</option>
-                                  {% endfor %}
-                                </select>
-                                <label for="">Motivo:</label>
-                                <textarea class="form-control" name="motivo" id="" rows="2", cols="20"></textarea>
-                          </div>
-                          <div class="modal-footer">
-                            <button type="submit" class="btn btn-primary">Actualizar estado</button>
+  <!-- Main content -->
+  <div class="content">
+    <div class="container-fluid">
+      <!-- 1ra fila -->
+      <div class="row">
+        {% if todo_los_materiales %}
+        <div class="col-md-12">
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">Listado de materiales</h3>
+            </div>
+            <!-- /.card-header -->
+            <div class="card-body table-responsive">
+              <table id="tablaMateriales" class="table table-bordered table-striped text-center">
+                <thead>
+                  <tr class="text-center">
+                    <th>Nombre</th>
+                    <th>Tipo</th>
+                    <th>Cuartel</th>
+                    <th>Móvil</th>
+                    <th>Ubicación</th>
+                    <th>Cajonera</th>
+                    <th>Cantidad</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody class="text-center">
+                  {% for material in todo_los_materiales %}
+                  <tr class="text-center">
+                    {% if material.image %}
+                    <td class="text-center"><a class="btn" rel="popover" data-img="{{material.image.url}}">{{
+                        material.nombre }}</a></td>
+                    {% else %}
+                    <td class="text-center">{{ material.nombre }}</td>
+                    {% endif %}
+                    <td>{{ material.tipo }}</td>
+                    {% if material.ubicacion.base %}
+                    <td>{{ material.ubicacion.base }}</td>
+                    {% elif material.movil %}
+                    <td>{{ material.movil.IDBase }}</td>
+                    {% else %}
+                    <td></td>
+                    {% endif %}
+                    <td>{{ material.movil }}</td>
+                    <td>{{ material.ubicacion.ubicacion }}</td>
+                    <td>{{ material.cajonera }}</td>
+                    <td>{{ material.cantidad }}</td>
+                    {% if material.estado.estado == "En servicio" %}
+                    <td class="text-green"><i class="fa-solid fa-circle-check"></i> {{material.estado.estado}}</td>
+                    {% elif material.estado.estado == "Condicional" %}
+                    <td class="text-yellow"><i class="fa-solid fa-circle-xmark"></i> {{material.estado.estado}}</td>
+                    {% elif material.estado.estado == "Fuera de servicio"%}
+                    <td class="text-red"><i class="fa-solid fa-circle-xmark"></i> {{material.estado.estado}}</td>
+                    {% else %}
+                    <td class="text-red"><i class="fa-solid fa-circle-xmark"></i> No se encontró estado</td>
+                    {% endif %}
+                    <td>
+                      <button type="button" data-toggle="modal" data-target="#material{{material.id}}"
+                        class="btn btn-danger">Actualizar estado</button>
+                    </td>
+                  </tr>
+
+                  <!-- MODAL COMBUSTIBLE-->
+                  <div class="modal fade" id="material{{material.id}}" tabindex="-1" aria-labelledby="material"
+                    aria-hidden="true">
+                    <div class="modal-dialog">
+                      <div class="modal-content">
+                        <div class="modal-header">
+                          <h5 class="modal-title" id="exampleModalLabel3">Cambio de estado</h5>
+                        </div>
+                        <div class="modal-body">
+                          <form action="/cambiarestadomat/{{material.id}}/" method="post">
+                            {% csrf_token %}
+                            <label for="movil">Indique el encargado:</label>
+                            <select class="form-control col-sm-6" name="bombero" id="">
+                              {% for bombero in bomberos %}
+                              <option value={{bombero.id}}>{{bombero.nombre}} {{bombero.apellido}}</option>
+                              {% endfor %}
+                            </select>
+                            <label for="movil">Indique la guardia operativa:</label>
+                            <select class="form-control col-sm-6" name="guardia" id="">
+                              {% for guardia in guardia_operativa %}
+                              <option value={{guardia.id}}>{{guardia.fecha}} {{guardia.guardia}}</option>
+                              {% endfor %}
+                            </select>
+                            <label for="movil">Nuevo estado:</label>
+                            <select class="form-control col-sm-6" name="estado" id="">
+                              {% for estado in estados %}
+                              <option value={{estado.id}}>{{estado.estado}}</option>
+                              {% endfor %}
+                            </select>
+                            <label for="">Motivo:</label>
+                            <textarea class="form-control" name="motivo" id="" rows="2" , cols="20"></textarea>
+                        </div>
+                        <div class="modal-footer">
+                          <button type="submit" class="btn btn-primary">Actualizar estado</button>
                           </form>
                           <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
-                    
-                          </div>
+
                         </div>
                       </div>
+                    </div>
                   </div>
-                {% endfor %}
-              </tbody>
-            </table>
+                  {% endfor %}
+                </tbody>
+              </table>
 
 
-          </div>
-          </div>
-          <!-- /.card-body -->
-        </div>
-
-    {% else %}
-      <p>No hay materiales cargados.</p>
-    {% endif %}
-  </div>
-  <div class="row">
-    {% if cambios %}
-      <div class="col-md-12">
-        <div class="card">
-          <div class="card-header">
-            <h3 class="card-title">Cambios de estado - Materiales</h3>
-          </div>
-          <!-- /.card-header -->
-          <div class="card-body table-responsive">
-            <table class="table table-striped ">
-              <thead>
-                <tr class="text-center">
-                  <th>Fecha</th>
-                  <th>Ubicación</th>
-                  <th>Material</th>
-                  <th>Encargado</th>
-                  <th>Nuevo estado</th>
-                  <th>Motivo</th>
-                </tr>
-              </thead>
-              <tbody class="text-center">
-                {% for cambio in cambios %}
-                    <tr class="text-center">
-                      <td class="text-center">{{ cambio.fecha }}</td>
-                      {% for material in todo_los_materiales %}
-                        {% if material.id == cambio.material.id %}
-                        {% if material.ubicacion.base %}
-                        <td>{{ material.ubicacion.base }}</td>
-                        {% elif material.movil %}
-                        <td>{{ material.movil.IDBase }}</td>
-                        {% else %}
-                        <td></td>
-                        {% endif %}
-                        {% else %}
-                        {% endif %}
-                      {% endfor %}
-                      <td>{{ cambio.material.nombre }}</td>
-                      <td>{{ cambio.encargado }}</td>
-                      <td>{{ cambio.estado }}</td>
-                      <td>{{ cambio.motivo }}</td>
-                    </tr>
-                {% endfor %}
-              </tbody>
-            </table>
-          </div>
+            </div>
           </div>
           <!-- /.card-body -->
         </div>
 
-    {% else %}
-      <p>No hay materiales cargados.</p>
-    {% endif %}
-  </div>
-</div>
-</div>
-{% endblock %}
+        {% else %}
+        <p>No hay materiales cargados.</p>
+        {% endif %}
+      </div>
+      <div class="row">
+        {% if cambios %}
+        <div class="col-md-12">
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">Cambios de estado - Materiales</h3>
+            </div>
+            <!-- /.card-header -->
+            <div class="card-body table-responsive">
+              <table id="tablaHistorial" class="table table-striped ">
+                <thead>
+                  <tr class="text-center">
+                    <th>Fecha</th>
+                    <th>Ubicación</th>
+                    <th>Material</th>
+                    <th>Encargado</th>
+                    <th>Nuevo estado</th>
+                    <th>Motivo</th>
+                  </tr>
+                </thead>
+                <tbody class="text-center">
+                  {% for cambio in cambios %}
+                  <tr class="text-center">
+                    <td class="text-center">{{ cambio.fecha }}</td>
+                    {% for material in todo_los_materiales %}
+                    {% if material.id == cambio.material.id %}
+                    {% if material.ubicacion.base %}
+                    <td>{{ material.ubicacion.base }}</td>
+                    {% elif material.movil %}
+                    <td>{{ material.movil.IDBase }}</td>
+                    {% else %}
+                    <td></td>
+                    {% endif %}
+                    {% else %}
+                    {% endif %}
+                    {% endfor %}
+                    <td>{{ cambio.material.nombre }}</td>
+                    <td>{{ cambio.encargado }}</td>
+                    <td>{{ cambio.estado }}</td>
+                    <td>{{ cambio.motivo }}</td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <!-- /.card-body -->
+        </div>
 
-{% block js_block %}
+        {% else %}
+        <p>No hay materiales cargados.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  {% endblock %}
+
+  {% block js_block %}
   <!-- DATATABLES -->
   <script src="https://cdn.datatables.net/v/dt/dt-2.1.4/datatables.min.js"></script>
   <script src="https://cdn.datatables.net/buttons/3.1.1/js/dataTables.buttons.js"></script>
@@ -194,26 +204,44 @@
   <script src="https://cdn.datatables.net/buttons/3.1.1/js/buttons.html5.min.js"></script>
   <script src="https://cdn.datatables.net/2.2.1/js/dataTables.bootstrap5.js"></script>
   <script src="https://cdn.datatables.net/responsive/3.0.3/js/dataTables.responsive.js"></script>
-<script src="https://cdn.datatables.net/responsive/3.0.3/js/responsive.bootstrap5.js"></script>
+  <script src="https://cdn.datatables.net/responsive/3.0.3/js/responsive.bootstrap5.js"></script>
 
-<script>
-   $(function () {
-       $('#tablaMateriales').DataTable({
-       language: {
-       url: 'https://cdn.datatables.net/plug-ins/2.2.1/i18n/es-CL.json',
-       },
-       "paging": true,
-       "lengthChange": false,
-       layout: {
-        topStart: {
+  <script>
+    $(function () {
+      $('#tablaMateriales').DataTable({
+        language: {
+          url: 'https://cdn.datatables.net/plug-ins/2.2.1/i18n/es-CL.json',
+        },
+        "paging": true,
+        "lengthChange": false,
+        layout: {
+          topStart: {
             buttons: ['copyHtml5', 'excelHtml5']
-        }},
-       "ordering": true,
-           order:[[4,'asc'],[5,'asc']],
-       "searching": true,
-       "autoWidth": false,
-       "responsive": true,
-       });
-   });
-   </script>
-{% endblock %}
+          }
+        },
+        "ordering": true,
+        order: [[4, 'asc'], [5, 'asc']],
+        "searching": true,
+        "autoWidth": false,
+        "responsive": true,
+      });
+    });
+  </script>
+
+  <script>
+    $(function () {
+      $('#tablaHistorial').DataTable({
+        language: {
+          url: 'https://cdn.datatables.net/plug-ins/2.2.1/i18n/es-CL.json',
+        },
+        "paging": true,
+        "lengthChange": false,
+        "ordering": true,
+        order: [[0, 'asc']],
+        "searching": true,
+        "autoWidth": false,
+        "responsive": true,
+      });
+    });
+  </script>
+  {% endblock %}

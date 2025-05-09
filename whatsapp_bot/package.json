@@ -1,0 +1,22 @@
+{
+    "name": "base-wweb-memory",
+    "version": "1.0.0",
+    "description": "",
+    "main": "app.js",
+    "scripts": {
+        "start": "node app.js"
+    },
+    "keywords": [],
+    "dependencies": {
+        "@bot-whatsapp/bot": "latest",
+        "@bot-whatsapp/cli": "latest",
+        "@bot-whatsapp/database": "latest",
+        "@bot-whatsapp/portal": "latest",
+        "@bot-whatsapp/provider": "latest",
+        "whatsapp-web.js": "^1.27.0"
+    },
+    "devDependencies": {
+    },
+    "author": "",
+    "license": "ISC"
+}

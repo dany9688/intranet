@@ -1,106 +1,126 @@
 {% extends 'planilla/base.html' %}
-
+{% load dict_extras %}
+{% block title %}Novedades{% endblock %}
 {% block content %}
-<!-- Content Wrapper. Contains page content -->
 <div class="content-wrapper">
-    <!-- Content Header (Page header) -->
-    <div class="content-header">
-        <div class="container-fluid">
-        <div class="col-sm-6">
-        </div><!-- /.col -->
-        </div>
-        <!-- /.container-fluid -->
+  <div class="content-header">
+    <div class="container-fluid">
+      <div class="col-sm-6">
+        <h1>Novedades de los últimos 15 días</h1>
     </div>
-    <!-- /.content-header -->
-
-    <!-- Main content -->
-    <div class="content">
-        <div class="container-fluid">
-        <!-- 1ra fila -->
-         <!-- <div class="row">
-          <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#modalguardia">
-            Agregar planilla
-        </button>
-        
-        <div class="modal fade" id="modalguardia" tabindex="-1" role="dialog" aria-labelledby="modalguardiaLabel" aria-hidden="true">
-            <div class="modal-dialog" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                <h5 class="modal-title" id="modalguardiaLabel">Nueva planilla</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-                </div>
-                <div class="modal-body">
-                  <form action="/planilla/planilla/" method="post">
-                    {% csrf_token %}
-                    <div class="row">
-                        <div class="form-group col-md-6">
-                            <label for="exampleInputPassword1">Guardia operativa</label>
-                            <input type="number" class="form-control" id="guardiaoperativa" name="guardiaoperativa" min="0">
-                        </div>
-                      </div>
-                </div>
-                <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
-                <button type="submit" class="btn btn-primary">Guardar</button>
-                </div>
-                </form>
-            </div>
-            </div>
-        </div>
-         </div> -->
-<div class="row">
-    {% if todo_los_moviles %}
-      <div class="col-md-12">
-        <div class="card">
-          <div class="card-header">
-            <h3 class="card-title">Listado de móviles cargados</h3>
-          </div>
-          <!-- /.card-header -->
-          <div class="card-body">
-            <table id="example1" class="table table-bordered table-striped">
-              <thead>
-                <tr>
-                  <th>Número</th>
-                  <th>Tipo</th>
-                  <th>Capacidad combustible</th>
-                  <th>Intevenciones desde última carga</th>
-                  <th>Fecha de última carga</th>
-                  <th>Base</th>
-                  <th>Estado</th>
-                </tr>
-              </thead>
-              <tbody>
-                {% for movil in todo_los_moviles %}
-                    <tr>
-                      <td>{{ movil.numero }} </td>
-                      <td>{{ movil.IDTipo }}</td>
-                      <td>{{ movil.capacidad }}</td>
-                      <td>{{ movil.intervenciones }}</td>
-                      <td>{{ movil.ultima_carga }}</td>
-                      <td>{{ movil.IDBase }}</td>
-                      {% if movil.IDEstado.estado == "En servicio" %}
-                        <td class="text-green"><i class="fa-solid fa-circle-check"></i> {{movil.IDEstado.estado}}</td>
-                      {% elif movil.IDEstado.estado == "Condicional"  %}
-                        <td class="text-yellow"><i class="fa-solid fa-circle-xmark"></i> {{movil.IDEstado.estado}}</td>  
-                      {% else %}
-                        <td class="text-red"><i class="fa-solid fa-circle-xmark"></i> {{movil.IDEstado.estado}}</td>  
-                      {% endif %}
-                    </tr>
-                {% endfor %}
-              </tbody>
-            </table>
-          </div>
-          <!-- /.card-body -->
-        </div>
-
-      </div>
-    {% else %}
-      <p>No hay móviles cargados.</p>
-    {% endif %}
   </div>
 
-</div>
+  <div class="content mt-2">
+    <div class="container-fluid">
+      <div class="col-md-12">
+        <div class="timeline">
+          {% for fecha, data in timeline.items reversed  %}
+          <div class="time-label">
+            <span class="bg-gray">{{ fecha|date:"d F Y" }}</span>
+          </div>
+
+          {% for turno in turnos %}
+          {% with planilla=data|get_item:turno %}
+          {% if planilla %}
+          {# Encabezado de turno #}
+          <div class="time-label">
+            {% if turno == "diurna" %}
+            <span class="bg-olive">Diurna – {{ planilla.cuartel }}</span>
+            {% else %}
+            <span class="bg-navy">Nocturna – {{ planilla.cuartel }}</span>
+            {% endif %}
+          </div>
+
+          {# Ausentes #}
+          {% if planilla.guardia_ausentes.all %}
+          <div>
+            <i class="fas fa-user-times bg-red"></i>
+            <div class="timeline-item">
+              <h3 class="timeline-header">Ausentes</h3>
+              <div class="timeline-body">
+                {% for ausente in planilla.guardia_ausentes.all %}
+                <p>{{ ausente.bombero.IDJerarquia.jerarquia }} {{ ausente.bombero }}</p>
+                {% empty %}
+                —
+                {% endfor %}
+              </div>
+            </div>
+          </div>
+          {% endif %}
+
+          {# Materiales #}
+          {% if planilla.cambios_material %}
+          <div>
+            <i class="fas fa-screwdriver-wrench bg-orange"></i>
+            <div class="timeline-item">
+              <h3 class="timeline-header">Novedades de materiales</h3>
+              <div class="timeline-body">
+                {% for c in planilla.cambios_material %}
+                <p>{{ c.fecha }} – {{ c.material }} → 
+                  {% if c.estado.estado == "En servicio" %}<span style="cursor: default;" class="btn btn-success btn-sm"> 
+                  {% elif c.estado.estado == "Condicional" %}<span style="cursor: default;" class="btn btn-warning btn-sm"> 
+                  {% else %} <span style="cursor: default;" class="btn btn-danger btn-sm"> {% endif %}
+                  {{ c.estado }}</span></p>
+                {% empty %}
+                <p>No hubo cambios de material en este turno.</p>
+                {% endfor %}
+              </div>
+            </div>
+          </div>
+          {% endif %}
+
+          {# Tareas #}
+          {% if planilla.tareas %}
+          <div>
+            <i class="fas fa-person-digging bg-blue"></i>
+            <div class="timeline-item">
+              <h3 class="timeline-header">Tareas realizadas</h3>
+              <div class="timeline-body">
+                {{ planilla.tareas|default:"—" }}
+              </div>
+            </div>
+          </div>
+          {% endif %}
+
+          {# Novedades #}
+          {% if planilla.novedades %}
+          <div>
+            <i class="fas fa-triangle-exclamation bg-yellow"></i>
+            <div class="timeline-item">
+              <h3 class="timeline-header">Novedades</h3>
+              <div class="timeline-body">
+                {{ planilla.novedades|default:"—" }}
+              </div>
+            </div>
+          </div>
+          {% endif %}
+
+          {# Servicios filtrados por guardia_operativa #}
+          {% if planilla.servicios %}
+          <div>
+            <i class="fas fa-fire-extinguisher bg-red"></i>
+            <div class="timeline-item">
+              <h3 class="timeline-header">Servicios realizados</h3>
+              {% for s in planilla.servicios %}
+              <div class="timeline-body">
+                Servicio número {{ s.numero }} – {{ s.tipo }} – Encargado: {{ s.encargado }} <a
+                  href="{% url 'servicio_detail' s.id %}" class="btn btn-secondary btn-sm">
+                  Ver servicio
+                </a>
+              </div>
+              {% empty %}
+              <div class="timeline-body">—</div>
+              {% endfor %}
+            </div>
+          </div>
+          {% endif %}
+          {% endif %}
+          {% endwith %}
+          {% endfor %}
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 {% endblock %}

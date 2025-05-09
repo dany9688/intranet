@@ -3,7 +3,7 @@ from django.contrib.auth.decorators import login_required
 from django.conf import settings
 from django.conf.urls.static import static
 from . import views
-from planilla.views import CargarPlanilla, PlanillaDetailView, ServicioView, RepMaterialesView, CheckMaterialesView, CargarServicio, ModificarPlanilla, eliminar_presente, Guia, finalizar_servicio, Guardia, ModificarServicio, ServicioDetail, eliminar_movil, TV, TabletView
+from planilla.views import CargarPlanilla, PlanillaDetailView, ServicioView, RepMaterialesView, CheckMaterialesView, CargarServicio, ModificarPlanilla, eliminar_presente, Guia, finalizar_servicio, Guardia, ModificarServicio, ServicioDetail, eliminar_movil, TV, TabletView, NovedadesView
 
 urlpatterns = [
     # path("", views.index, name="index"),
@@ -13,6 +13,7 @@ urlpatterns = [
     path('hidrantes/', login_required(views.get_geojson, login_url='/signin/'), name='get_geojson'),
     path("personal/", login_required(views.PersonalView.as_view(), login_url='/signin/'), name="personal"), 
     path("listado_planillas/", login_required(views.PlanillaView.as_view(), login_url='/signin/'), name="listado_planillas"), 
+    path("novedades/", login_required(NovedadesView.as_view(), login_url='/signin/'), name="novedades"), 
     path("planilla_detail/<int:planilla_id>/", login_required(PlanillaDetailView.as_view(), login_url='/signin/'), name="planilla"), 
     path('eliminarpresente/<int:presente_id>/', login_required(eliminar_presente, login_url='/signin/'), name='eliminar_presente'),
     path("modificarplanilla/<int:id>/", login_required(ModificarPlanilla.as_view(), login_url='/signin/'), name="modificar_planilla"), 
@@ -45,7 +46,7 @@ urlpatterns = [
     path("guia/", login_required(Guia.as_view(), login_url='/signin/'), name="guia"),
     path("guardia/", login_required(Guardia.as_view(), login_url='/signin/'), name="guardia"),
     path("tablet/<str:movil>/", views.TabletView.as_view(), name="tablet_view"),
-    path("tv/", login_required(TV.as_view(), login_url='/signin/'), name="tv"),
+    path("tv/<int:base>/", login_required(TV.as_view(), login_url='/signin/'), name="tv"),
     path("signin_movil/", views.signinMovil, name="signin_movil"),
     path("signin/", views.signin, name="signin"),
     path("logout/", views.signout, name="logout"),

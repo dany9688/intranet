@@ -1,16 +1,17 @@
 {% extends 'planilla/base.html' %}
 {% load static %}
+{% block title %}Servicio{% endblock title %}
 {% block css_block %}
 <link rel="stylesheet" href="{% static 'planilla/bootstrap-duallistbox.min.css' %}">
 {% endblock %}
 {% block content %}
-    <!-- Content Wrapper. Contains page content -->
-    <div class="content-wrapper">
+<!-- Content Wrapper. Contains page content -->
+<div class="content-wrapper">
     <!-- Content Header (Page header) -->
     <div class="content-header">
         <div class="container-fluid">
-        <div class="col-sm-6">
-        </div><!-- /.col -->
+            <div class="col-sm-6">
+            </div><!-- /.col -->
         </div>
         <!-- /.container-fluid -->
     </div>
@@ -19,144 +20,243 @@
     <!-- Main content -->
     <div class="content">
         <div class="container-fluid">
-        <!-- 1ra fila -->
-         <div class="row col-sm-12 mb-3 d-flex justify-content-center">
-            <div class="col-sm-12">
-                <div class="card card-navy">
-                    <div class="card-header border-0">
-                      <h3 class="card-title float-left">Servicio N° {{servicio.numero }}</h3>
-                      {% if not servicio.estado == "Cerrado" %}
-                      {% if "Guardia" in request.user.groups.all.0.name  %}
-                      <button type="button" data-toggle="modal" data-target="#cerrar{{ servicio.id }}" title="Finalizar servicio" data-bs-toggle="tooltip" class="btn btn-sm btn-danger mr-2 float-right">Finalizar</button>
-                      <!-- <a href="/finalizar_servicio/{{servicio.id}}" data-toggle="modal" class="btn btn-sm btn-danger mr-2 float-right">Finalizar</a> -->
-                      <a href="/modificar_servicio/{{servicio.id}}" class="btn btn-sm btn-warning mr-2 float-right">Modificar</a>
-                      <button class="btn btn-sm btn-primary float-right mr-2" data-toggle="modal" data-target="#asignarModal">Asignar móvil</button>
-                      {%endif%}
-                      {%endif%}
-                    </div>
-                    </div>
-                    <div class="card-body">
-                    <div class="row col-md-12">
-                        <div class="col-md-6">
-                            <div class="row form-group col-md-12">
-                                <label for="">Dirección de la intervención</label>
-                                <div class="row col-md-12">
-                                    <input class="form-control col-sm-8" type="text" name="address" id="address" placeholder="Ingrese una dirección" value="{{servicio.direccion}}" disabled >
-                                    <button id="buscarDireccion" class="btn btn-success" onclick="geocodeAddress(event)">Buscar Dirección</button>
-                                </div>
-                            </div>
-                            <div class="row col-md-12">
-                                <div class="row form-group mr-3 col-md-4">
-                                    <label for="exampleInputPassword1">Número de guardia operativa</label>
-                                    <input type="number" class="form-control" id="guardia" name="guardia" min="0" value="{{servicio.guardia_operativa}}" disabled>
-                                </div>
-                                <div class="row form-group col-md-4">
-                                    <label for="exampleInputPassword1">Número de servicio</label>
-                                    <input type="number" class="form-control" id="numeroservicio" name="numero" min="0" value="{{servicio.numero}}" disabled>
-                                </div>
-                            </div>
-                            <div class="row col-md-12">
-                                <div class="form-group col-md-3 row mr-3">
-                                    <label for="exampleInputPassword1">Zona</label>
-                                    <input class="form-control" type="text" name="zona" id="zona" disabled>
-                                </div>
-                                <div class="form-group col-md-4 row">
-                                    <label for="exampleInputPassword1">Hora de salida</label>
-                                    <input type="datetime-local" class="form-control" name="salida" value="{{ fecha }}" disabled>
-                                </div>
-                            </div>
-                            <div class="row col-md-12">
-                                <div class="form-group col-md-6 row mr-3">
-                                    <label for="exampleInputPassword1">Encargado</label>
-                                    <select class="form-control" name="encargado" id="encargado" disabled>
-                                        <option value="{{ servicio.encargado.id }}" selected>{{ servicio.encargado.IDJerarquia.jerarquia }} {{ servicio.encargado.apellido }}, {{ servicio.encargado.nombre }}</option>
-                                        {% for bombero in bomberos %}
-                                            <option value="{{ bombero.id }}">{{ bombero.IDJerarquia.jerarquia }} {{ bombero.apellido }}, {{ bombero.nombre }}</option>
-                                        {% endfor %}
-                                    </select>
-                                </div>
-                                <div class="form-group col-md-4 row mr-3">
-                                    <label for="exampleInputPassword1">Tipo de servicio</label>
-                                    <select class="form-control" name="tiposervicio" id="tiposervicio" disabled>
-                                        <option value="{{ servicio.tipo.id }}">{{ servicio.tipo.tipo }}</option>
-                                        {% for tipo in tipo_servicios %}
-                                            <option value="{{ tipo.id }}">{{ tipo.tipo }}</option>
-                                        {% endfor %}
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="row col-md-12">
-                                <div class="form-group col-md-6 row mr-3">
-                                    <label for="exampleInputPassword1">Denunciante</label>
-                                    <input class="form-control" type="text" name="denunciante" value="{{ servicio.nombre_denunciante }}" disabled>
-                                </div>
-                                <div class="form-group col-md-4 row mr-3">
-                                    <label for="exampleInputPassword1">Teléfono del denunciante</label>
-                                    <input class="form-control" type="text" name="telefono" value="{{ servicio.telefono_denunciante }}" disabled>
-                                </div>
-                            </div>
-
-                            <input type="hidden" id="latitude" name="latitude" value="{{servicio.latitud}}">
-                            <input type="hidden" id="longitude" name="longitude" value="{{servicio.longitud}}">
-                        
-                        </div>
-                        <div class="col-md-6">                   
-                            <div class="col-md-12 d-flex justify-content-center mt-3 mb-3">
-                                <div id="map" style="height: 450px; width: 900px;"></div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="row col-md-12">
-                        <h4 class="col-sm-12 mb-3 d-inline">Unidades y personal asignado <span class="d-inline"> - <i class="fa-solid fa-truck-field"></i> {{cantidad_moviles}} - <i class="fa-solid fa-user-group"></i> {{cantidad_bomberos}}</span> </h4> 
-                        <div class="row col-md-12 wrapper">
-                            {% if servicio.moviles_list %}
-                            {% for movil_data in servicio.moviles_list %}
-                            <div class="col-md-3">
-                                <div class="card card-navy">
-                                <div class="card-header">
-                                    <h3 class="card-title">
-                                    <strong>Móvil {{ movil_data.movil.numero }}</strong> - {{ movil_data.movil.IDTipo.tipo }}
-                                    </h3>
-                                </div>
-                                <!-- /.card-header -->
-                                <div class="card-body">
-                                    <ul>
-                                    {% for bombero in movil_data.bomberos.all %}
-                                    <li>147/{{bombero.legajo}} - {{bombero.apellido|upper}}, {{bombero.nombre}}</li>
-                                    {%endfor%}
-                                    </ul>
-                                </div>
-                                <!-- /.card-body -->
-                                </div>
-                                <!-- /.card -->
-                            </div>
-                            {%endfor%}
+            <!-- 1ra fila -->
+            <div class="col-sm-12 mb-3 d-flex justify-content-center">
+                <div class="col-sm-12">
+                    <div class="card card-navy">
+                        <div class="card-header border-0">
+                            <h3 class="card-title float-left">Servicio N° {{servicio.numero }}</h3>
+                            {% if not servicio.estado == "Cerrado" %}
+                            {% if "Guardia" in request.user.groups.all.0.name %}
+                            <button type="button" data-toggle="modal" data-target="#cerrar{{ servicio.id }}"
+                                title="Finalizar servicio" data-bs-toggle="tooltip"
+                                class="btn btn-sm btn-danger mr-2 float-right">Finalizar</button>
+                            <!-- <a href="/finalizar_servicio/{{servicio.id}}" data-toggle="modal" class="btn btn-sm btn-danger mr-2 float-right">Finalizar</a> -->
+                            <a href="/modificar_servicio/{{servicio.id}}"
+                                class="btn btn-sm btn-warning mr-2 float-right">Modificar</a>
+                            <button class="btn btn-sm btn-primary float-right mr-2" data-toggle="modal"
+                                data-target="#asignarModal">Asignar móvil</button>
+                            {%endif%}
                             {%endif%}
                         </div>
-
-                        <!-- ./col -->
                     </div>
-
-                                      <!-- MODAL ESTADO-->
-                            <div class="modal fade" id="cerrar{{ servicio.id }}" tabindex="-1" aria-labelledby="estado" aria-hidden="true">
-                                <div class="modal-dialog">
-                                <div class="modal-content">
-                                    <div class="modal-header">
-                                    <h5 class="modal-title" id="exampleModalLabel3">Finalizar servicio</h5>
-                                    </div>
-                                    <div class="modal-body">
-                                        <form action="/finalizar_servicio/{{servicio.id}}/" method="GET">
-                                        ¿Está seguro de que quiere finalizar el servicio?
-                                    </div>
-                                    <div class="modal-footer">
-                                    <button type="submit" class="btn btn-primary">Confirmar</button>
-                                    </form>
-                                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
-                            
+                    <div class="row card-body">
+                        <div class="col-md-4">
+                            <div class="card" style="height: 500px;">
+                                <div class="card-header">
+                                    <h3 class="card-title">
+                                        Información del servicio
+                                    </h3>
+                                </div>
+                            <div class="card-body">
+                            <div class="col-md-12">
+                                <div class="row form-group col-md-12">
+                                    <label for="">Dirección de la intervención</label>
+                                    <div class="row col-md-12">
+                                        <input class="form-control col-sm-8" type="text" name="address" id="address"
+                                            placeholder="Ingrese una dirección" value="{{servicio.direccion}}" disabled>
+                                        <button id="buscarDireccion" class="btn btn-success"
+                                            onclick="geocodeAddress(event)">Buscar Dirección</button>
                                     </div>
                                 </div>
+                                <div class="row col-md-12">
+                                    <div class="row form-group mr-3 col-md-6">
+                                        <label for="exampleInputPassword1">Número de guardia operativa</label>
+                                        <input type="number" class="form-control" id="guardia" name="guardia" min="0"
+                                            value="{{servicio.guardia_operativa}}" disabled>
+                                    </div>
+                                    <div class="row form-group col-md-6">
+                                        <label for="exampleInputPassword1">Número de servicio</label>
+                                        <input type="number" class="form-control" id="numeroservicio" name="numero"
+                                            min="0" value="{{servicio.numero}}" disabled>
+                                    </div>
+                                </div>
+                                <div class="row col-md-12">
+                                    <div class="form-group col-md-4">
+                                        <label for="exampleInputPassword1">Zona</label>
+                                        <input class="form-control" type="text" name="zona" id="zona" disabled>
+                                    </div>
+                                    <div class="form-group col-md-8">
+                                        <label for="exampleInputPassword1">Hora de salida</label>
+                                        <input type="datetime-local" class="form-control" name="salida"
+                                            value="{{ fecha }}" disabled>
+                                    </div>
+                                </div>
+                                <div class="row col-md-12">
+                                    <div class="form-group col-md-8">
+                                        <label for="exampleInputPassword1">Encargado del servicio</label>
+                                        <select class="form-control" name="encargado" id="encargado" disabled>
+                                            <option value="{{ servicio.encargado.id }}" selected>{{servicio.encargado.IDJerarquia.jerarquia }}
+                                                {{servicio.encargado.apellido }}, {{ servicio.encargado.nombre }}
+                                            </option>
+                                            {% for bombero in bomberos %}
+                                            <option value="{{ bombero.id }}">{{ bombero.IDJerarquia.jerarquia }} {{bombero.apellido }}, {{ bombero.nombre }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="form-group col-md-4">
+                                        <label for="exampleInputPassword1">Tipo de servicio</label>
+                                        <select class="form-control" name="tiposervicio" id="tiposervicio" disabled>
+                                            {% for tipo in tipo_servicios %}
+                                              <option
+                                                value="{{ tipo.id }}"
+                                                {% if tipo.id == servicio.tipo.id %}selected{% endif %}
+                                              >{{ tipo.tipo }}</option>
+                                            {% endfor %}
+                                          </select>
+                                    </div>
+                                </div>
+                                <div class="row col-md-12">
+                                    <div class="form-group col-md-6">
+                                        <label for="exampleInputPassword1">Denunciante</label>
+                                        <input class="form-control" type="text" name="denunciante"
+                                            value="{{ servicio.nombre_denunciante }}" disabled>
+                                    </div>
+                                    <div class="form-group col-md-6">
+                                        <label for="exampleInputPassword1">Teléfono del denunciante</label>
+                                        <input class="form-control" type="text" name="telefono"
+                                            value="{{ servicio.telefono_denunciante }}" disabled>
+                                    </div>
+                                </div>
+
+                                <input type="hidden" id="latitude" name="latitude" value="{{servicio.latitud}}">
+                                <input type="hidden" id="longitude" name="longitude" value="{{servicio.longitud}}">
+                            </div>
+                            </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card" style="height: 500px;">
+                                <div class="card-header">
+                                    <h3 class="card-title">
+                                        Ubicación
+                                    </h3>
+                                </div>
+                                <div class="card-body">
+                                    <div class="col-md-12 d-flex justify-content-center">
+                                        <div id="map" style="height: 420px; width: 100%;"></div>
+                                    </div>
                                 </div>
                             </div>
+                        </div>
+                        <div class="col-md-5">
+                            <div class="card" style="height: 500px;">
+                                <div class="card-header">
+                                    <h3 class="card-title">
+                                        Historial
+                                    </h3>
+                                </div>
+                                <div class="card-body overflow-auto">
+                                    <div class="timeline" id="timeline-servicio-{{ servicio.id }}">
+                                        <div class="time-label mt-1 ml-1">
+                                          <span class="bg-gray">Fecha</span>
+                                        </div>
+                                      
+                                        {% for ev in timeline %}
+                                          <div>
+                                            <i class="{{ ev.icon }}"></i>
+                                            <div class="timeline-item">
+                                              <span class="time">
+                                                <i class="fas fa-clock"></i>
+                                                {{ ev.time|date:"H:i" }}
+                                              </span>
+                                              <div class="timeline-body">
+                                                <p>{{ ev.description }}</p>
+                                              </div>
+                                            </div>
+                                          </div>
+                                        {% endfor %}
+                                      
+                                        <div>
+                                          <i class="fas fa-star bg-yellow"></i>
+                                          <div class="timeline-item">
+                                          </div>
+                                        </div>
+                                    </div>                                 
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card card-navy  d-flex">
+                        <div class="card-header border-0">
+                            <h3 class="card-title float-left">Unidades y personal asignado <span class="d-inline">
+                                    -
+                            <i class="fa-solid fa-truck-field"></i> {{cantidad_moviles}} - <i
+                                class="fa-solid fa-user-group"></i> {{cantidad_bomberos}}</span> </h3>
+                        </div>
+
+                            <div class="row card-body col-md-12 wrapper">
+                                {% if servicio.moviles_list %}
+                                {% for movil_data in servicio.moviles_list %}
+                                <div class="col-md-3">
+                                    <div class="card card-navy">
+                                        <div class="card-header d-flex align-items-center">
+                                            <h3 class="card-title">
+                                                <strong>Móvil {{ movil_data.movil.numero }} </strong> <br>
+                                                Hora de salida: {{movil_data.salida_movil|date:"H:i"}}
+                                            </h3>
+                                            {% if servicio.estado != "Cerrado" %}
+                                            <select class="form-control col-sm-5 ml-auto btn btn-default status-select" name="estado"
+                                                data-id="{{ movil_data.movil.id }}"
+                                                data-previous="{{ movil.IDEstado_id }}">
+                                                {% for estado in estados %}
+                                                {% if movil_data.movil.IDEstado_id == estado.id %}
+                                                <option value={{estado.id}} selected>{{estado.estado}}</option>
+                                                {% else %}
+                                                <option value={{estado.id}}>{{estado.estado}}</option>
+                                                {%endif%}
+                                                {%endfor%}
+                                            </select>
+                                            {%endif%}
+                                        </div>
+                                        <!-- /.card-header -->
+                                        <div class="card-body">
+                                            <ul>
+                                                <li>Encargado: {{movil_data.encargado_movil.apellido|upper}},
+                                                    {{movil_data.encargado_movil.nombre}}</li>
+                                                <li>Chofer: {{movil_data.chofer.apellido|upper}},
+                                                    {{movil_data.chofer.nombre}}</li>
+                                                {% for bombero in movil_data.bomberos.all %}
+                                                <li>147/{{bombero.legajo}} - {{bombero.apellido|upper}},
+                                                    {{bombero.nombre}}</li>
+                                                {%endfor%}
+                                            </ul>
+                                        </div>
+                                        <!-- /.card-body -->
+                                    </div>
+                                    <!-- /.card -->
+                                </div>
+                                {%endfor%}
+                                {%endif%}
+                            </div>
+
+                            <!-- ./col -->
+                        </div>
+                    </div>
+
+
+                    <!-- MODAL ESTADO-->
+                    <div class="modal fade" id="cerrar{{ servicio.id }}" tabindex="-1" aria-labelledby="estado"
+                        aria-hidden="true">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="exampleModalLabel3">Finalizar servicio</h5>
+                                </div>
+                                <div class="modal-body">
+                                    <form action="/finalizar_servicio/{{servicio.id}}/" method="GET">
+                                        ¿Está seguro de que quiere finalizar el servicio?
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="submit" class="btn btn-primary">Confirmar</button>
+                                    </form>
+                                    <button type="button" class="btn btn-secondary"
+                                        data-dismiss="modal">Cancelar</button>
+
+                                </div>
+                            </div>
+                        </div>
+                    </div>
 
                     <div class="modal fade" id="asignarModal" tabindex="-1" role="dialog">
                         <div class="modal-dialog modal-xl" role="document">
@@ -166,228 +266,421 @@
                                     <button type="button" class="close" data-dismiss="modal">&times;</button>
                                 </div>
                                 <div class="modal-body">
-                                  <form action="/asignarmovil/{{servicio.id}}/" method="post">
-                                    {% csrf_token %}
-                                    <label for="movilSelect">Móvil:</label>
-                                    <select id="movilSelect" class="form-control col-md-3" name="movil">
-                                        {% for movil in moviles %}
-                                        <option value="{{movil.id}}">Móvil {{movil.numero}}</option>
-                                        {%endfor%}
-                                    </select>
-
-                                    <label for="bomberosSelect">Bomberos:</label>
-                                    {% if bomberos %}  
-                                    <select id="bomberosSelect" class="form-control duallistbox" multiple style="height: 300px;" name="bomberos">
-                                      {% for bombero in bomberos %}
-                                        <option value="{{bombero.id}}">{{bombero.IDJerarquia.jerarquia}} - {{bombero.apellido|upper}}, {{bombero.nombre}}</option>
-                                        {%endfor%}
-                                    </select>
-                                    {%else%}
-                                    <span>NO HAY BOMBEROS</span>
-                                    {%endif%}
-                                  </div>
+                                    <form action="/asignarmovil/{{servicio.id}}/" method="post">
+                                        {% csrf_token %}
+                                        <div class="row col-md-12 mb-4">
+                                            <div class="col-md-2">
+                                                <label for="movilSelect">Móvil:</label>
+                                                <select id="movilSelect" class="form-control col-md-12" name="movil">
+                                                    {% for movil in moviles %}
+                                                    <option value="{{movil.id}}">Móvil {{movil.numero}}</option>
+                                                    {%endfor%}
+                                                </select>
+                                            </div>
+                                            <div class="form-group col-md-4 row">
+                                                <label for="exampleInputPassword1">Hora de salida</label>
+                                                <input type="datetime-local" class="form-control" name="salida_movil">
+                                            </div>
+                                        </div>
+                                        <div class="row col-md-12 mb-4">
+                                            <div class="col-md-5">
+                                                <label for="movilSelect">Encargado:</label>
+                                                <select id="movilSelect" class="form-control col-md-12"
+                                                    name="encargado">
+                                                    {% for bombero in bomberos %}
+                                                    <option value="{{bombero.id}}">{{bombero.IDJerarquia.jerarquia}}
+                                                        - {{bombero.apellido|upper}}, {{bombero.nombre}}</option>
+                                                    {%endfor%}
+                                                </select>
+                                            </div>
+                                            <div class="col-md-5">
+                                                <label for="movilSelect">Chofer:</label>
+                                                <select id="movilSelect" class="form-control col-md-12" name="chofer">
+                                                    {% for bombero in bomberos %}
+                                                    {% if bombero.es_chofer %}
+                                                    <option value={{bombero.id}}>{{bombero.IDJerarquia.jerarquia}}
+                                                        - {{bombero.apellido|upper}}, {{bombero.nombre}}</option>
+                                                    {% endif %}
+                                                    {%endfor%}
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <label for="bomberosSelect">Bomberos:</label>
+                                        {% if bomberos %}
+                                        <select id="bomberosSelect" class="form-control duallistbox" multiple
+                                            style="height: 300px;" name="bomberos">
+                                            {% for bombero in bomberos %}
+                                            <option value="{{bombero.id}}">{{bombero.IDJerarquia.jerarquia}} -
+                                                {{bombero.apellido|upper}}, {{bombero.nombre}}</option>
+                                            {%endfor%}
+                                        </select>
+                                        {%else%}
+                                        <span>NO HAY BOMBEROS</span>
+                                        {%endif%}
+                                </div>
                                 <div class="modal-footer">
-                                    <button type="submit" class="btn btn-success" data-servicio-id="{{ servicio.id }}" id="asignarMovil">Asignar</button>
+                                    <button type="submit" class="btn btn-success" data-servicio-id="{{ servicio.id }}"
+                                        id="asignarMovil">Asignar</button>
                                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
                                 </div>
-                              </form>
+                                </form>
                             </div>
                         </div>
                     </div>
+                    <!-- Modal de confirmación -->
+                    <div class="modal fade" id="confirmStatusModal" tabindex="-1" aria-labelledby="confirmStatusModalLabel" aria-hidden="true">
+                        <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                            <h5 class="modal-title" id="confirmStatusModalLabel">Confirmar cambio de estado</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                            </div>
+                            <div class="modal-body" id="confirmStatusModalBody">
+                            <!-- Texto dinámico aquí -->
+                            </div>
+                            <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" id="cancelStatusBtn">Cancelar</button>
+                            <button type="button" class="btn btn-primary" id="confirmStatusBtn">Sí, cambiar</button>
+                            </div>
+                        </div>
+                        </div>
                     </div>
+
                 </div>
             </div>
+
         </div>
     </div>
-    </div>
-    </div>
+</div>
+</div>
 {% endblock %}
 {% block js_block %}
-<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDgZ9iDyLaJEwAAYUcuN7MgVWN2alaLd1s&libraries=places"></script>
+<script
+    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDgZ9iDyLaJEwAAYUcuN7MgVWN2alaLd1s&libraries=places"></script>
 
 <script src="{% static 'planilla/jquery.bootstrap-duallistbox.js' %}"></script>
 <script>
-  $(function () {
-  //Bootstrap Duallistbox
-  $('.duallistbox').bootstrapDualListbox()
-  })
+    $(function () {
+        //Bootstrap Duallistbox
+        $('.duallistbox').bootstrapDualListbox()
+    })
 </script>
 
 <script>
     document.addEventListener("DOMContentLoaded", function () {
-      document.querySelectorAll(".eliminar-btn").forEach(button => {
-        button.addEventListener("click", function (event) {
-        event.preventDefault(); // Evita el envío del formulario si está dentro de uno
-          let presenteId = this.getAttribute("data-id");
-  
-          fetch(`/eliminarpresenteservicio/${presenteId}/`, {
-            method: "DELETE",
-            headers: {
-              "X-CSRFToken": "{{ csrf_token }}"  // Asegurar la protección CSRF
-            }
-          }).then(response => {
-            console.log(response)
-            if (response.ok) {
-              document.getElementById(`presente-${presenteId}`).remove();
-            }
-          }).catch(error => console.error("Error:", error));
+        document.querySelectorAll(".eliminar-btn").forEach(button => {
+            button.addEventListener("click", function (event) {
+                event.preventDefault(); // Evita el envío del formulario si está dentro de uno
+                let presenteId = this.getAttribute("data-id");
+
+                fetch(`/eliminarpresenteservicio/${presenteId}/`, {
+                    method: "DELETE",
+                    headers: {
+                        "X-CSRFToken": "{{ csrf_token }}"  // Asegurar la protección CSRF
+                    }
+                }).then(response => {
+                    console.log(response)
+                    if (response.ok) {
+                        document.getElementById(`presente-${presenteId}`).remove();
+                    }
+                }).catch(error => console.error("Error:", error));
+            });
         });
-      });
     });
-  </script>
+</script>
 
 <script>
- // Variables globales
-var map;
-var geocoder;
-var marker;
-var autocomplete;
-let zonas = [];
-var ultimaUbicacion = null; // Almacena la última ubicación válida
-var ultimaDireccion = ""; // Almacena la última dirección seleccionada
+    // Variables globales
+    var map;
+    var geocoder;
+    var marker;
+    var autocomplete;
+    let zonas = [];
+    var ultimaUbicacion = null; // Almacena la última ubicación válida
+    var ultimaDireccion = ""; // Almacena la última dirección seleccionada
 
-document.addEventListener("DOMContentLoaded", function () {
-    setTimeout(() => {
-        let lat = document.getElementById("latitude").value;
-        let lng = document.getElementById("longitude").value;
+    document.addEventListener("DOMContentLoaded", function () {
+        setTimeout(() => {
+            let lat = document.getElementById("latitude").value;
+            let lng = document.getElementById("longitude").value;
 
-        if (lat && lng) {
-            let ubicacionBackend = new google.maps.LatLng(parseFloat(lat), parseFloat(lng));
-            console.log("📍 Usando coordenadas del backend:", ubicacionBackend.lat(), ubicacionBackend.lng());
-            setMapLocation(ubicacionBackend, "Backend");
-        } else {
-            console.log("⚠️ No hay coordenadas en el backend, usando Geocoder.");
-            geocodeAddress(); // Solo si el backend no envió coordenadas
-        }
-    }, 1000);
-});
-
-
-// Inicializa el mapa
-function initMap() {
-    map = new google.maps.Map(document.getElementById("map"), {
-        center: { lat: -34.657713050818785, lng: -58.63239669756467 },
-        zoom: 15
+            if (lat && lng) {
+                let ubicacionBackend = new google.maps.LatLng(parseFloat(lat), parseFloat(lng));
+                console.log("📍 Usando coordenadas del backend:", ubicacionBackend.lat(), ubicacionBackend.lng());
+                setMapLocation(ubicacionBackend, "Backend");
+            } else {
+                console.log("⚠️ No hay coordenadas en el backend, usando Geocoder.");
+                geocodeAddress(); // Solo si el backend no envió coordenadas
+            }
+        }, 1000);
     });
 
-    geocoder = new google.maps.Geocoder();
-    marker = new google.maps.Marker({ map: map });
 
-    // Configurar Autocomplete
-    var input = document.getElementById("address");
-    autocomplete = new google.maps.places.Autocomplete(input);
-    autocomplete.bindTo("bounds", map);
+    // Inicializa el mapa
+    function initMap() {
+        map = new google.maps.Map(document.getElementById("map"), {
+            center: { lat: -34.657713050818785, lng: -58.63239669756467 },
+            zoom: 15
+        });
 
-    autocomplete.addListener("place_changed", function () {
-        var place = autocomplete.getPlace();
-        if (!place.geometry) {
-            alert("No se encontraron coordenadas para la dirección.");
+        geocoder = new google.maps.Geocoder();
+        marker = new google.maps.Marker({ map: map });
+
+        // Configurar Autocomplete
+        var input = document.getElementById("address");
+        autocomplete = new google.maps.places.Autocomplete(input);
+        autocomplete.bindTo("bounds", map);
+
+        autocomplete.addListener("place_changed", function () {
+            var place = autocomplete.getPlace();
+            if (!place.geometry) {
+                alert("No se encontraron coordenadas para la dirección.");
+                return;
+            }
+
+            // Guardar la ubicación y la dirección formateada
+            ultimaUbicacion = place.geometry.location;
+            ultimaDireccion = place.formatted_address;
+            document.getElementById("address").dataset.formattedAddress = ultimaDireccion;
+
+            console.log("✅ Dirección seleccionada desde Autocomplete:", ultimaDireccion);
+            console.log("✅ Coordenadas desde Autocomplete:", ultimaUbicacion.lat(), ultimaUbicacion.lng());
+
+            setMapLocation(ultimaUbicacion, "Autocompletado");
+        });
+
+        // Cargar zonas desde el archivo JSON
+        fetch("{% static 'planilla/zonas.json' %}")
+            .then(response => response.json())
+            .then(data => {
+                data.features.forEach(feature => {
+                    let nombreZona = feature.properties.Name;
+                    let coordenadas = feature.geometry.coordinates;
+                    let poligonos = [];
+
+                    if (feature.geometry.type === "Polygon") {
+                        poligonos.push(new google.maps.Polygon({
+                            paths: coordenadas[0].map(coord => ({ lat: coord[1], lng: coord[0] }))
+                        }));
+                    } else if (feature.geometry.type === "MultiPolygon") {
+                        coordenadas.forEach(poligono => {
+                            poligonos.push(new google.maps.Polygon({
+                                paths: poligono[0].map(coord => ({ lat: coord[1], lng: coord[0] }))
+                            }));
+                        });
+                    }
+
+                    zonas.push({ nombre: nombreZona, poligonos: poligonos });
+                });
+            });
+    }
+
+    // Función para geocodificar dirección manualmente
+    function geocodeAddress(event) {
+        if (event) event.preventDefault();
+
+        var addressInput = document.getElementById("address").value.trim();
+
+        // Si ya guardamos la ubicación desde el backend, no volver a geocodificar
+        if (ultimaUbicacion && addressInput === ultimaDireccion) {
+            console.log("🔄 Usando ubicación ya almacenada en vez de geocodificar:", ultimaUbicacion.lat(), ultimaUbicacion.lng());
+            setMapLocation(ultimaUbicacion, "Backend");
             return;
         }
 
-        // Guardar la ubicación y la dirección formateada
-        ultimaUbicacion = place.geometry.location;
-        ultimaDireccion = place.formatted_address;
-        document.getElementById("address").dataset.formattedAddress = ultimaDireccion;
+        console.log("⚠️ No se detectó ubicación previa, usando Geocoder para:", addressInput);
 
-        console.log("✅ Dirección seleccionada desde Autocomplete:", ultimaDireccion);
-        console.log("✅ Coordenadas desde Autocomplete:", ultimaUbicacion.lat(), ultimaUbicacion.lng());
-
-        setMapLocation(ultimaUbicacion, "Autocompletado");
-    });
-
-    // Cargar zonas desde el archivo JSON
-    fetch("{% static 'planilla/zonas.json' %}")
-        .then(response => response.json())
-        .then(data => {
-            data.features.forEach(feature => {
-                let nombreZona = feature.properties.Name;
-                let coordenadas = feature.geometry.coordinates;
-                let poligonos = [];
-
-                if (feature.geometry.type === "Polygon") {
-                    poligonos.push(new google.maps.Polygon({
-                        paths: coordenadas[0].map(coord => ({ lat: coord[1], lng: coord[0] }))
-                    }));
-                } else if (feature.geometry.type === "MultiPolygon") {
-                    coordenadas.forEach(poligono => {
-                        poligonos.push(new google.maps.Polygon({
-                            paths: poligono[0].map(coord => ({ lat: coord[1], lng: coord[0] }))
-                        }));
-                    });
-                }
-
-                zonas.push({ nombre: nombreZona, poligonos: poligonos });
-            });
-        });
-}
-
-// Función para geocodificar dirección manualmente
-function geocodeAddress(event) {
-    if (event) event.preventDefault();
-
-    var addressInput = document.getElementById("address").value.trim();
-
-    // Si ya guardamos la ubicación desde el backend, no volver a geocodificar
-    if (ultimaUbicacion && addressInput === ultimaDireccion) {
-        console.log("🔄 Usando ubicación ya almacenada en vez de geocodificar:", ultimaUbicacion.lat(), ultimaUbicacion.lng());
-        setMapLocation(ultimaUbicacion, "Backend");
-        return;
-    }
-
-    console.log("⚠️ No se detectó ubicación previa, usando Geocoder para:", addressInput);
-
-    geocoder.geocode({ 'address': addressInput }, function (results, status) {
-        if (status === 'OK') {
-            ultimaUbicacion = results[0].geometry.location; // Guardar la ubicación obtenida
-            ultimaDireccion = addressInput; // Guardar la dirección del backend
-            console.log("🌍 Coordenadas obtenidas por Geocoder:", ultimaUbicacion.lat(), ultimaUbicacion.lng());
-            setMapLocation(ultimaUbicacion, "Geocoding");
-        } else {
-            alert('No se pudo encontrar la dirección: ' + status);
-        }
-    });
-}
-
-
-// Función para establecer la ubicación en el mapa y verificar la zona
-function setMapLocation(location, source) {
-    console.log(`📍 Ubicación de ${source}:`, location.lat(), location.lng());
-
-    map.setCenter(location);
-    marker.setPosition(location);
-    marker.setVisible(true);
-
-    document.getElementById("latitude").value = location.lat();
-    document.getElementById("longitude").value = location.lng();
-
-    let zonaEncontrada = "Fuera de las zonas definidas";
-    zonas.forEach(zona => {
-        zona.poligonos.forEach(poligono => {
-            if (google.maps.geometry.poly.containsLocation(location, poligono)) {
-                zonaEncontrada = zona.nombre;
+        geocoder.geocode({ 'address': addressInput }, function (results, status) {
+            if (status === 'OK') {
+                ultimaUbicacion = results[0].geometry.location; // Guardar la ubicación obtenida
+                ultimaDireccion = addressInput; // Guardar la dirección del backend
+                console.log("🌍 Coordenadas obtenidas por Geocoder:", ultimaUbicacion.lat(), ultimaUbicacion.lng());
+                setMapLocation(ultimaUbicacion, "Geocoding");
+            } else {
+                alert('No se pudo encontrar la dirección: ' + status);
             }
         });
-    });
-
-    document.getElementById("zona").value = zonaEncontrada;
-    console.log("✅ Zona detectada:", zonaEncontrada);
-}
-
-// Cargar el mapa cuando la página esté lista
-google.maps.event.addDomListener(window, "load", initMap);
+    }
 
 
-  </script>
+    // Función para establecer la ubicación en el mapa y verificar la zona
+    function setMapLocation(location, source) {
+        console.log(`📍 Ubicación de ${source}:`, location.lat(), location.lng());
 
-<!-- <script>
-document.addEventListener("DOMContentLoaded", function () {
-    setTimeout(() => {
-        if (document.getElementById("address").value.trim() !== "") {
-            geocodeAddress(); // Llamar la función automáticamente si hay una dirección en el input
+        map.setCenter(location);
+        marker.setPosition(location);
+        marker.setVisible(true);
+
+        document.getElementById("latitude").value = location.lat();
+        document.getElementById("longitude").value = location.lng();
+
+        let zonaEncontrada = "Fuera de las zonas definidas";
+        zonas.forEach(zona => {
+            zona.poligonos.forEach(poligono => {
+                if (google.maps.geometry.poly.containsLocation(location, poligono)) {
+                    zonaEncontrada = zona.nombre;
+                }
+            });
+        });
+
+        document.getElementById("zona").value = zonaEncontrada;
+        console.log("✅ Zona detectada:", zonaEncontrada);
+    }
+
+    // Cargar el mapa cuando la página esté lista
+    google.maps.event.addDomListener(window, "load", initMap);
+
+
+</script>
+
+<script>
+    // obtenemos CSRF token de la cookie (Django)
+    function getCookie(name) {
+      let cookieValue = null;
+      document.cookie.split(';').forEach(c => {
+        c = c.trim();
+        if (c.startsWith(name + '=')) {
+          cookieValue = decodeURIComponent(c.substring(name.length + 1));
         }
-    }, 1000); // Pequeño retraso para asegurar que el mapa se haya cargado correctamente
-});
-</script> -->
+      });
+      return cookieValue;
+    }
+    const csrfToken = getCookie('csrftoken');
+    
+    document.addEventListener('DOMContentLoaded', () => {
+      const modalEl    = document.getElementById('confirmStatusModal');
+      const modal      = new bootstrap.Modal(modalEl);
+      const bodyEl     = document.getElementById('confirmStatusModalBody');
+      const btnConfirm = document.getElementById('confirmStatusBtn');
+      const btnCancel  = document.getElementById('cancelStatusBtn');
+    
+      let currentId, currentStatus, previousStatus;
+    
+      // Guardar valor previo al focus
+      document.querySelectorAll('.status-select').forEach(sel => {
+        sel.addEventListener('focus', () => {
+          sel.dataset.previous = sel.value;
+        });
+      });
+    
+      // Al cambiar el select, lanzamos el modal
+      document.querySelectorAll('.status-select').forEach(sel => {
+        sel.addEventListener('change', () => {
+          currentId      = sel.dataset.id;
+          currentStatus  = sel.value;
+          previousStatus = sel.dataset.previous;
+          bodyEl.textContent = 
+            `¿Cambiar el estado del móvil ${currentId} a "${sel.options[sel.selectedIndex].text}"?`;
+          modal.show();
+        });
+      });
+    
+      // Confirmar: generamos y enviamos el form
+      btnConfirm.addEventListener('click', () => {
+        // Creamos un <form> invisible
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = `/cambiarestado/${currentId}/`;
+        // CSRF
+        const csrfInput = document.createElement('input');
+        csrfInput.type  = 'hidden';
+        csrfInput.name  = 'csrfmiddlewaretoken';
+        csrfInput.value = csrfToken;
+        form.appendChild(csrfInput);
+        // estado
+        const estadoInput = document.createElement('input');
+        estadoInput.type  = 'hidden';
+        estadoInput.name  = 'estado';
+        estadoInput.value = currentStatus;
+        form.appendChild(estadoInput);
+        // next
+        const nextInput = document.createElement('input');
+        nextInput.type  = 'hidden';
+        nextInput.name  = 'next';
+        // guardamos ruta y query string para volver exactamente donde estábamos
+        nextInput.value = window.location.pathname + window.location.search;
+        form.appendChild(nextInput);
+        // lo adjuntamos y enviamos
+        document.body.appendChild(form);
+        form.submit();
+        // no es necesario ocultar el modal porque la página recargará
+      });
+    
+      // Cancelar: restauramos el valor previo
+      btnCancel.addEventListener('click', () => {
+        const sel = document.querySelector(`.status-select[data-id="${currentId}"]`);
+        if (sel) sel.value = previousStatus;
+        modal.hide();
+      });
+    });
+</script>
+    
+<script>
+    const socket = new WebSocket(`wss://${window.location.host}/ws/servicios/`);
+    socket.onmessage = ({ data }) => {
+      const msg = JSON.parse(data);
+      if (msg.tipo === "nuevo_evento_movil") {
+        const tl = document.getElementById(`timeline-servicio-${msg.servicio_id}`);
+        if (!tl) return;
+  
+        const e = msg.evento;
+        // Crear nodo DOM igual que tu markup de timeline
+        const item = document.createElement("div");
+        item.classList.add("timeline-item");
+  
+        const timeSpan = document.createElement("span");
+        timeSpan.classList.add("time");
+        // conviertes ISO "2025-04-30T14:53:22" en tu formato si quieres,
+        // o bien mostrarlo tal cual:
+        timeSpan.textContent = e.time.replace("T", " ");
+  
+        const icon = document.createElement("i");
+        e.icon.split(" ").forEach(c => icon.classList.add(c));
+  
+        const body = document.createElement("div");
+        body.classList.add("timeline-body");
+        body.textContent = e.description;
+  
+        item.append(timeSpan, icon, body);
+        tl.appendChild(item);
+      }
+
+      socket.onmessage = ({ data }) => {
+  const msg = JSON.parse(data);
+
+  if (msg.tipo === "actualizar_servicio") {
+    const svc = msg.servicio;
+    const wrapper = document.querySelector(".wrapper"); // o el id que uses
+    wrapper.innerHTML = "";  // limpia todas las cards existentes
+
+    svc.moviles.forEach(m => {
+      const card = document.createElement("div");
+      card.className = "col-md-3";
+      card.innerHTML = `
+        <div class="card card-navy">
+         <div class="card-header d-flex align-items-center">
+           <h3 class="card-title">
+             <strong>Móvil ${m.movil.numero}</strong><br>
+             Hora de salida: ${m.salida.slice(11)}
+           </h3>
+           <!-- aquí tu <select> también, con sus opciones -->
+         </div>
+         <div class="card-body">
+           <ul>
+             <li>Encargado: ${m.encargado.apellido.toUpperCase()}, ${m.encargado.nombre}</li>
+             <li>Chofer: ${m.chofer.apellido.toUpperCase()}, ${m.chofer.nombre}</li>
+             ${m.bomberos.map(b =>
+               `<li>147/${b.legajo} - ${b.apellido.toUpperCase()}, ${b.nombre}</li>`
+             ).join("")}
+           </ul>
+         </div>
+        </div>
+      `;
+      wrapper.appendChild(card);
+    });
+  }
+};
+    };
+  </script>
 
 {% endblock %}

@@ -134,7 +134,7 @@
                                 <label class="col-form-label col-sm-2" for="exampleInputPassword1">Chofer</label>
                                 <select class="form-control col-sm-6" name="chofer">
                                     {% if planilla.chofer %}
-                                    <option value="{{planilla.chofer.id}}" selected>value="{{planilla.chofer}}"</option>
+                                    <option value="{{planilla.chofer.id}}" selected>{{planilla.chofer}}</option>
                                     {% for bombero in bomberos %}
                                     {% if bombero.es_chofer %}
                                         <option value="{{ bombero.id }}">{{ bombero.IDJerarquia.jerarquia }} {{ bombero.apellido }}, {{ bombero.nombre }}</option>
@@ -348,7 +348,7 @@
                             <div class="tab-content" id="vert-tabs-tabContent2">
                             <div class="tab-pane text-left fade show active" id="vert-tabs-home2" role="tabpanel" aria-labelledby="vert-tabs-home-tab2">
                                 <textarea rows="10" class="form-control" style="width: 100%;" id="exampleInputPassword1"
-                                name="tareas" placeholder="Tareas habituales como por ejemplo orden interno.">{{planilla.tareas}}"</textarea>
+                                name="tareas" placeholder="Tareas habituales como por ejemplo orden interno.">{{planilla.tareas}}</textarea>
                             </div>
                             <div class="tab-pane fade" id="vert-tabs-profile2" role="tabpanel" aria-labelledby="vert-tabs-profile-tab2">
                                 <textarea rows="10" class="form-control" style="width: 100%;" id="exampleInputPassword1"

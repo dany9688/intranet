@@ -43,6 +43,7 @@ class Bombero(models.Model):
     IDBase = models.ForeignKey(Base, null = True, on_delete=models.SET_NULL, verbose_name="Base")
     posicion = models.IntegerField(null=True, blank = True, default = 0)
     activo = models.BooleanField(default = True)
+    celular =  models.CharField(max_length=10, blank=True, null=True)
     def __str__(self):
         bombero = self.apellido+", "+self.nombre
         return bombero
@@ -148,8 +149,6 @@ class Planilla(models.Model):
         verbose_name = "Planilla"
         verbose_name_plural = "Planillas"
 
-#onetomany
-
 class GuardiaPresentes(models.Model):
     guardia_op = models.ForeignKey(Planilla, related_name="guardia_presentes", blank=True, on_delete=models.SET_NULL, null=True)
     bombero = models.ForeignKey(Bombero, blank=True, on_delete=models.SET_NULL, null=True)
@@ -190,13 +189,12 @@ class Servicio(models.Model):
     direccion = models.CharField(max_length=200, blank=True, null=True, verbose_name="direccion")
     latitud = models.CharField(max_length=200, blank=True, null=True, verbose_name="latitud")
     longitud = models.CharField(max_length=200, blank=True, null=True, verbose_name="longitud")
-    # movil = models.ForeignKey(Movil, blank=True, null=True, on_delete=models.SET_NULL, verbose_name="móvil")
     tipo = models.ForeignKey(TipoServicio, null=True, on_delete=models.SET_NULL, verbose_name="tipo de servicio", related_name="servicios")
     salida = models.DateTimeField(blank=True, null=True, verbose_name="horario de salida")
     regreso = models.DateTimeField(blank=True, null=True, verbose_name="horario de regreso")
     estado = models.CharField(max_length=50, blank=True, null=True, verbose_name="estado")
     zona = models.CharField(max_length=40, blank=True, null=True)
-    encargado = models.ForeignKey(Bombero, blank = True, on_delete=models.SET_NULL, null=True, verbose_name="ncargado")
+    encargado = models.ForeignKey(Bombero, blank = True, on_delete=models.SET_NULL, null=True, verbose_name="encargado")
     nombre_denunciante = models.CharField(max_length=150, null=True, blank=True, verbose_name="denunciante")
     telefono_denunciante = models.CharField(max_length=150, null=True, blank=True, verbose_name="telefono")
     def __str__(self):
@@ -208,14 +206,39 @@ class Servicio(models.Model):
 
 class ServicioMovil(models.Model):
     servicio = models.ForeignKey(Servicio, blank=True, on_delete=models.SET_NULL, null=True, related_name="moviles_asignados")
+    encargado_movil = models.ForeignKey(Bombero, blank=True, on_delete=models.SET_NULL, null=True, related_name="encargado_movil")
+    salida_movil = models.DateTimeField(blank=True, null=True, verbose_name="horario de salida")
+    chofer = models.ForeignKey(Bombero, blank=True, on_delete=models.SET_NULL, null=True, related_name="chofer_movil")
     movil = models.ForeignKey(Movil, on_delete=models.CASCADE)
     bomberos = models.ManyToManyField(Bombero, blank=True)
+
     def __str__(self):
         return f"{self.servicio.numero} - {self.movil.numero}"
 
     class Meta:
         verbose_name = "Presente en servicio"
         verbose_name_plural = "Presentes en servicio"
+
+
+class ServicioMovilEvento(models.Model):
+    servicio_movil = models.ForeignKey(
+        ServicioMovil,
+        related_name='eventos',
+        on_delete=models.CASCADE
+    )
+    estado    = models.ForeignKey(Estado, null=True, blank=True, on_delete=models.SET_NULL, verbose_name="estado")
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    def to_timeline(self):
+        return {
+            "time":        self.timestamp.strftime("%Y-%m-%dT%H:%M:%S"),
+            "icon":        "fas fa-map-marker-alt bg-green",
+            "description": f"Móvil {self.servicio_movil.movil.numero} {self.estado.estado}",
+        }
+    
+    def __str__(self):
+        return f"{self.servicio_movil} – {self.get_estado_display()}"
+
 
 class Ubicacion(models.Model):
     base = models.ForeignKey(Base, null=True, on_delete=models.SET_NULL, verbose_name="Base")
@@ -257,13 +280,17 @@ class Material(models.Model):
     estado = models.ForeignKey(Estado, blank=True, null=True, on_delete=models.SET_NULL, verbose_name="estado")
     image = models.ImageField(upload_to='materiales/', null=True, blank=True)
     def __str__(self):
-        return str(self.nombre) + ' - ' + str(self.ubicacion)
+        if self.ubicacion == None:
+            return str(self.nombre) + ' - ' + str(self.cajonera) + " - " + str(self.movil)
+        else:
+            return str(self.nombre) + ' - ' + str(self.ubicacion)
 
     class Meta:
         verbose_name = "Material"
         verbose_name_plural = "Materiales"
 
 class CambioEstado(models.Model):
+    guardia_operativa = models.ForeignKey(Planilla, blank=True, null=True, on_delete=models.SET_NULL, verbose_name="Guardia operativa")
     material = models.ForeignKey(Material, blank=True, null=True, on_delete=models.SET_NULL, verbose_name="material")
     fecha = models.DateTimeField(blank=True, null=True, verbose_name="fecha de cambio")
     estado = models.ForeignKey(Estado, blank=True, null=True, on_delete=models.SET_NULL, verbose_name="estado")

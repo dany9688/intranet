@@ -1,279 +1,304 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        {% load static %}
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <title>Intranet - TV{% block title %}{% endblock %}</title>
-        <link rel="icon" href="{% static 'planilla/logo.png' %}" type="image/png" />       
-        <!-- Google Font: Source Sans Pro -->
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/admin-lte@3.1/dist/css/adminlte.min.css">
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.4.1/dist/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap3-dialog/1.34.7/css/bootstrap-dialog.min.css">
-        <link href="https://cdn.datatables.net/v/dt/dt-2.1.4/datatables.min.css" rel="stylesheet">
-    </head>
+
+<head>
+  {% load static %}
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Intranet - TV{% block title %}{% endblock %}</title>
+  <link rel="icon" href="{% static 'planilla/logo.png' %}" type="image/png" />
+  <!-- Google Font: Source Sans Pro -->
+  <link rel="stylesheet"
+    href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/admin-lte@3.1/dist/css/adminlte.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.4.1/dist/css/bootstrap.min.css"
+    integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+  <link rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap3-dialog/1.34.7/css/bootstrap-dialog.min.css">
+  <link href="https://cdn.datatables.net/v/dt/dt-2.1.4/datatables.min.css" rel="stylesheet">
+</head>
+
 <body class="dark-mode">
 
-    <!-- Main content -->
-    <div class="content">
-        <div class="container-fluid">
-        <!-- 1ra fila -->
-         <div class="row col-md-12 mt-4">
-          <div class="col-md-12">
-            <!-- Widget: user widget style 1 -->
-            <div class="card card-widget widget-user">
-              <!-- Add the bg color to the header using any of the bg-* classes -->
-              <div class="widget-user-header" style="height: 20px;" id="ww_6ebbfd191fa33" v='1.3' loc='auto' a='{"t":"responsive","lang":"es","sl_lpl":1,"ids":[],"font":"Arial","sl_ics":"one_a","sl_sot":"celsius","cl_bkg":"image","cl_font":"#FFFFFF","cl_cloud":"#FFFFFF","cl_persp":"#81D4FA","cl_sun":"#FFC107","cl_moon":"#FFC107","cl_thund":"#FF5722"}'>Más previsiones: <a href="https://oneweather.org/es/seville/" id="ww_6ebbfd191fa33_u" target="_blank">https://oneweather.org/es/seville/</a></div><script async src="https://app3.weatherwidget.org/js/?id=ww_6ebbfd191fa33"></script>
+  <!-- Main content -->
+  <div class="content">
+    <div class="container-fluid">
+      <!-- 1ra fila -->
+      <div class="row col-md-12 mt-4">
+        <div class="col-md-12">
+          <!-- Widget: user widget style 1 -->
+          <div class="card card-widget widget-user">
+            <!-- Add the bg color to the header using any of the bg-* classes -->
+            <div class="widget-user-header" style="height: 20px;" id="ww_6ebbfd191fa33" v='1.3' loc='auto'
+              a='{"t":"responsive","lang":"es","sl_lpl":1,"ids":[],"font":"Arial","sl_ics":"one_a","sl_sot":"celsius","cl_bkg":"image","cl_font":"#FFFFFF","cl_cloud":"#FFFFFF","cl_persp":"#81D4FA","cl_sun":"#FFC107","cl_moon":"#FFC107","cl_thund":"#FF5722"}'>
+              Más previsiones: <a href="https://oneweather.org/es/seville/" id="ww_6ebbfd191fa33_u"
+                target="_blank">https://oneweather.org/es/seville/</a></div>
+            <script async src="https://app3.weatherwidget.org/js/?id=ww_6ebbfd191fa33"></script>
             <div class="card-footer">
-                <div class="row">
-                  {% for destacamento in destacamentos %}
-                  <div class="col-sm-4 {% if not forloop.last %}border-right{% endif %} mt-0">
-                    <div class="description-block">
-                      <h2 class="">{{ destacamento.base|upper }}</h2>
-                      <span style="font-size: 14px;" class="description-text badge
+              <div class="row">
+                {% for destacamento in destacamentos %}
+                <div class="col-sm-4 {% if not forloop.last %}border-right{% endif %} mt-0">
+                  <div class="description-block">
+                    <h2 class="">{{ destacamento.base|upper }}</h2>
+                    <span style="font-size: 14px;" class="description-text badge
                       {% if destacamento.estado == 'Cubriendo zona' %} bg-success
                       {% elif destacamento.estado == 'En apoyo' %} bg-warning
                       {% elif destacamento.estado == 'Sin chofer' %} bg-danger{% endif %}">
-                        {{ destacamento.estado }}
-                      </span>
-                    </div>
-                    <!-- /.description-block -->
+                      {{ destacamento.estado }}
+                    </span>
                   </div>
-                {% endfor %}
-                  <!-- /.col -->
+                  <!-- /.description-block -->
                 </div>
-                <!-- /.row -->
+                {% endfor %}
+                <!-- /.col -->
               </div>
+              <!-- /.row -->
             </div>
-            <!-- /.widget-user -->
           </div>
+          <!-- /.widget-user -->
+        </div>
 
-         </div>
+      </div>
 
-        <div class="row col-md-12">
-          <div class="col-md-12">
-            <div class="card card-danger card-outline">  
-              <div class="card-header">
-                <h3 class="card-title">Servicios en curso</h3>
-              </div>
-              <!-- /.card-header -->
-              <div class="card-body table-responsive">
-                <table class="table">
-                  <thead>
-                    <tr>
-                      <th>Número</th>
-                      <th>Cuartel</th>
-                      <th>Móviles</th>
-                      <th>Salida</th>
-                      <th>Domicilio</th>
-                      <th>Encargado</th>
-                      <th>Tipo de servicio</th>
-                    </tr>
-                  </thead>
-                  {% if servicios %}
-                  <tbody id="servicios-table-body">
-                      {% for servicio in servicios %}
-                          <tr id="servicio-{{ servicio.id }}">
-                            <td>{{ servicio.numero }}</td>
-                            <td>{{ servicio.zona }}</td>
-                            <td class="wrapper">
-                              {% if servicio.moviles_list %}
-                                <span>
-                                  {% for movil_data in servicio.moviles_list %}
-                                    Móvil {{ movil_data.movil.numero }}{% if not forloop.last %} - {% endif %}
-                                  {% endfor %}
-                                </span>
-                              {% endif %}
-                            </td>
-                            <td>{{ servicio.salida }}</td>
-                            <td>{{ servicio.direccion }}</td>
-                            <td>{{ servicio.encargado.apellido }}, {{ servicio.encargado.nombre }}</td>
-                            {% if servicio.tipo.tipo == "Incendio" %}
-                            <td><span style="font-size: 14px;" class="badge bg-danger"> {{ servicio.tipo.tipo }} </span></td>
-                            {% elif servicio.tipo.tipo == "Auxilio" %}
-                            <td><span style="font-size: 14px;" class="badge bg-success"> {{ servicio.tipo.tipo }} </span></td>
-                            {% elif servicio.tipo.tipo == "Colaboración" %}
-                            <td><span style="font-size: 14px;" class="badge bg-secondary"> {{ servicio.tipo.tipo }} </span></td>
-                            {% else %}
-                            <td><span style="font-size: 14px;" class="badge bg-purple"> {{ servicio.tipo.tipo }} </span></td>
-                            {% endif %}
-                          </tr>
-                      {% endfor %}
-                  </tbody>
-                  {% else %}
-                  <tbody id="servicios-table-body">
-                    <tr>
-                      <td colspan="6" class="text-center">No hay servicios en curso.</td>
-                    </tr>
-                  </tbody>
+      <div class="row col-md-12">
+        <div class="col-md-12">
+          <div class="card card-danger card-outline">
+            <div class="card-header">
+              <h3 class="card-title">Servicios en curso</h3>
+            </div>
+            <!-- /.card-header -->
+            <div class="card-body table-responsive">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>Número</th>
+                    <th>Cuartel</th>
+                    <th>Móviles</th>
+                    <th>Salida</th>
+                    <th>Domicilio</th>
+                    <th>Encargado</th>
+                    <th>Tipo de servicio</th>
+                  </tr>
+                </thead>
+                {% if servicios %}
+                <tbody id="servicios-table-body">
+                  {% for servicio in servicios %}
+                  <tr id="servicio-{{ servicio.id }}">
+                    <td>{{ servicio.numero }}</td>
+                    <td>{{ servicio.zona }}</td>
+                    <td class="wrapper">
+                      {% if servicio.moviles_list %}
+                      <span>
+                        {% for movil_data in servicio.moviles_list %}
+                        Móvil {{ movil_data.movil.numero }}{% if not forloop.last %} - {% endif %}
+                        {% endfor %}
+                      </span>
+                      {% endif %}
+                    </td>
+                    <td>{{ servicio.salida }}</td>
+                    <td>{{ servicio.direccion }}</td>
+                    <td>{{ servicio.encargado.apellido }}, {{ servicio.encargado.nombre }}</td>
+                    {% if servicio.tipo.tipo == "Incendio" %}
+                    <td><span style="font-size: 14px;" class="badge bg-danger"> {{ servicio.tipo.tipo }} </span></td>
+                    {% elif servicio.tipo.tipo == "Auxilio" %}
+                    <td><span style="font-size: 14px;" class="badge bg-success"> {{ servicio.tipo.tipo }} </span></td>
+                    {% elif servicio.tipo.tipo == "Colaboración" %}
+                    <td><span style="font-size: 14px;" class="badge bg-secondary"> {{ servicio.tipo.tipo }} </span></td>
+                    {% else %}
+                    <td><span style="font-size: 14px;" class="badge bg-purple"> {{ servicio.tipo.tipo }} </span></td>
+                    {% endif %}
+                  </tr>
+                  {% endfor %}
+                </tbody>
+                {% else %}
+                <tbody id="servicios-table-body">
+                  <tr>
+                    <td colspan="6" class="text-center">No hay servicios en curso.</td>
+                  </tr>
+                </tbody>
                 {% endif %}
-                </table>
-              </div>
-          </div>
+              </table>
+            </div>
           </div>
         </div>
-          <div class="row col-md-12">
-            <div class="col-md-12">
-                <div class="card card-primary card-outline">
-                    <div class="card-header border-0">
-                      <h3 class="card-title">Novedades de los últimos 10 días</h3>
-                    </div>
-                    <div class="card-body">
-                      <table class="table table-striped" style="table-layout: fixed; width: 100%;">
-                        <thead>
-                        <tr>
-                          <th style="width: 10%;">Fecha</th>
-                          <th style="width: 20%;">Encargado</th>
-                          <th style="width: 70%;">Novedad</th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        {% for novedad in novedades %}
-                        {% if novedad.novedades%}
-                        {% if novedad.cuartel.base == group%}
-                        <tr>
-                          <td style="width: 10%;">{{ novedad.fecha }}</td>
-                          <td style="width: 20%;">{{ novedad.encargado }}</td>
-                          <td style="width: 70%;">{{ novedad.novedades }}</td>
-                        </tr>
-                        {%endif%}
-                        {%endif%}
-                        {% endfor %}
-                        </tbody>
-                      </table>
-                    </div>
-                </div>
+      </div>
+      <div class="row col-md-12">
+        <div class="col-md-12">
+          <div class="card card-primary card-outline">
+            <div class="card-header border-0">
+              <h3 class="card-title">Novedades de los últimos 10 días - {{ group.nombre }}</h3>
+            </div>
+            <div class="card-body">
+              <table class="table table-striped" style="table-layout: fixed; width: 100%;">
+                <thead>
+                  <tr>
+                    <th style="width:10%">Fecha</th>
+                    <th style="width:20%">Encargado</th>
+                    <th style="width:70%">Detalle</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for item in timeline %}
+                    <tr>
+                      <td>{{ item.fecha|date:"d F Y H:i" }}</td>
+                      <td>{{ item.encargado }}</td>
+                      <td>
+                        {% if item.novedades %}
+                          {{ item.novedades }}
+                        {% elif item.material %}
+                          Cambio de material: <strong>{{ item.material }}</strong>
+                          &rarr; Estado: <em>{{ item.estado }}</em>
+                        {% elif item.movil %}
+                          Reparación de móvil <strong>{{ item.movil }}</strong>:
+                          {{ item.tarea }}
+                        {% endif %}
+                      </td>
+                    </tr>
+                  {% empty %}
+                    <tr>
+                      <td colspan="3" class="text-center">
+                        No hay movimientos en los últimos 15 días para este destacamento.
+                      </td>
+                    </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
             </div>
           </div>
+        </div>
+      </div>
     </div>
   </div>
-    
+
 </body>
-  <script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
-  <script src="https://kit.fontawesome.com/0f48f5107a.js" crossorigin="anonymous"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/js/bootstrap.bundle.min.js" integrity="sha512-7Pi/otdlbbCR+LnW+F7PwFcSDJOuUJB3OxtEHbg4vSMvzvJjde4Po1v4BR9Gdc9aXNUNFVUY+SK51wWT8WF0Gg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.4.1/dist/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
-  <script src="https://cdn.jsdelivr.net/npm/admin-lte@3.1/dist/js/adminlte.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"
+  integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
+<script src="https://kit.fontawesome.com/0f48f5107a.js" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/js/bootstrap.bundle.min.js"
+  integrity="sha512-7Pi/otdlbbCR+LnW+F7PwFcSDJOuUJB3OxtEHbg4vSMvzvJjde4Po1v4BR9Gdc9aXNUNFVUY+SK51wWT8WF0Gg=="
+  crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.4.1/dist/js/bootstrap.min.js"
+  integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/admin-lte@3.1/dist/js/adminlte.min.js"></script>
 
 
 <script>
-var socket = new WebSocket("wss://" + window.location.host + "/ws/servicios/");
+  var socket = new WebSocket("wss://" + window.location.host + "/ws/servicios/");
 
-socket.onmessage = function(event) {
+  socket.onmessage = function (event) {
     try {
-        var data = JSON.parse(event.data);
+      var data = JSON.parse(event.data);
 
-        // Si el mensaje indica que un servicio ha finalizado, eliminar la fila correspondiente
-        if (data.tipo === "finalizar_servicio" && data.servicio) {
-            console.log("Eliminando servicio ID:", data.servicio.id);
-            var fila = document.getElementById("servicio-" + data.servicio.id);
-            if (fila) {
-                fila.remove();
-            } else {
-                console.warn("No se encontró la fila con ID:", data.servicio.id);
-            }
-            return;
-        }
-
-        // Si el mensaje indica un nuevo servicio, agregarlo a la tabla
-        if (data.tipo === "nuevo_servicio" && data.servicio) {
-            actualizarTablaConNuevoServicio(data.servicio);
-            return;
-        }
-        
-        // Si el mensaje indica que se actualizó un servicio (por ejemplo, al asignar un móvil)
-        if (data.tipo === "actualizar_servicio" && data.servicio) {
-            actualizarFilaServicio(data.servicio);
-            return;
-        }
-
-        // Si se recibe un array de servicios, actualizar la tabla completa
-        if (data.servicios) {
-            actualizarTabla(data.servicios);
+      // Si el mensaje indica que un servicio ha finalizado, eliminar la fila correspondiente
+      if (data.tipo === "finalizar_servicio" && data.servicio) {
+        console.log("Eliminando servicio ID:", data.servicio.id);
+        var fila = document.getElementById("servicio-" + data.servicio.id);
+        if (fila) {
+          fila.remove();
         } else {
-            console.warn("Mensaje inesperado recibido:", data);
+          console.warn("No se encontró la fila con ID:", data.servicio.id);
         }
-    } catch (error) {
-        console.error("Error procesando los datos del WebSocket:", error);
-    }
-};
+        return;
+      }
 
-// Función para actualizar toda la tabla de servicios
-function actualizarTabla(servicios) {
+      // Si el mensaje indica un nuevo servicio, agregarlo a la tabla
+      if (data.tipo === "nuevo_servicio" && data.servicio) {
+        actualizarTablaConNuevoServicio(data.servicio);
+        return;
+      }
+
+      // Si el mensaje indica que se actualizó un servicio (por ejemplo, al asignar un móvil)
+      if (data.tipo === "actualizar_servicio" && data.servicio) {
+        actualizarFilaServicio(data.servicio);
+        return;
+      }
+
+      // Si se recibe un array de servicios, actualizar la tabla completa
+      if (data.servicios) {
+        actualizarTabla(data.servicios);
+      } else {
+        console.warn("Mensaje inesperado recibido:", data);
+      }
+    } catch (error) {
+      console.error("Error procesando los datos del WebSocket:", error);
+    }
+  };
+
+  // Función para actualizar toda la tabla de servicios
+  function actualizarTabla(servicios) {
     var tableBody = document.getElementById("servicios-table-body");
     if (!tableBody) {
-        console.error("No se encontró el elemento 'servicios-table-body'");
-        return;
+      console.error("No se encontró el elemento 'servicios-table-body'");
+      return;
     }
 
     // Limpiar tabla antes de actualizarla
     tableBody.innerHTML = "";
 
     servicios.forEach(servicio => {
-        tableBody.appendChild(crearFilaServicio(servicio));
+      tableBody.appendChild(crearFilaServicio(servicio));
     });
-}
+  }
 
-// Función para agregar un nuevo servicio sin borrar los existentes
-function actualizarTablaConNuevoServicio(servicio) {
+  // Función para agregar un nuevo servicio sin borrar los existentes
+  function actualizarTablaConNuevoServicio(servicio) {
     var tableBody = document.getElementById("servicios-table-body");
     if (!tableBody) {
-        console.error("No se encontró el elemento 'servicios-table-body'");
-        return;
+      console.error("No se encontró el elemento 'servicios-table-body'");
+      return;
     }
 
     // Solo agregar si no existe ya la fila
     if (!document.getElementById("servicio-" + servicio.id)) {
-        tableBody.appendChild(crearFilaServicio(servicio));
+      tableBody.appendChild(crearFilaServicio(servicio));
     }
-}
+  }
 
-// Función para actualizar la fila de un servicio ya existente (por ejemplo, su lista de móviles asignados)
-function actualizarFilaServicio(servicio) {
+  // Función para actualizar la fila de un servicio ya existente (por ejemplo, su lista de móviles asignados)
+  function actualizarFilaServicio(servicio) {
     var fila = document.getElementById("servicio-" + servicio.id);
     if (fila) {
-        // Se crea una nueva fila con los datos actualizados y se reemplaza la existente
-        var nuevaFila = crearFilaServicio(servicio);
-        fila.parentNode.replaceChild(nuevaFila, fila);
-        console.log("Fila actualizada para servicio ID:", servicio.id);
+      // Se crea una nueva fila con los datos actualizados y se reemplaza la existente
+      var nuevaFila = crearFilaServicio(servicio);
+      fila.parentNode.replaceChild(nuevaFila, fila);
+      console.log("Fila actualizada para servicio ID:", servicio.id);
     } else {
-        // Si la fila no existe, se agrega a la tabla
-        actualizarTablaConNuevoServicio(servicio);
-        console.log("Fila agregada para servicio ID:", servicio.id);
+      // Si la fila no existe, se agrega a la tabla
+      actualizarTablaConNuevoServicio(servicio);
+      console.log("Fila agregada para servicio ID:", servicio.id);
     }
-}
+  }
 
-// Función para agregar un nuevo servicio sin borrar los existentes
-function actualizarTablaConNuevoServicio(servicio) {
+  // Función para agregar un nuevo servicio sin borrar los existentes
+  function actualizarTablaConNuevoServicio(servicio) {
     var tableBody = document.getElementById("servicios-table-body");
     if (!tableBody) {
-        console.error("No se encontró el elemento 'servicios-table-body'");
-        return;
+      console.error("No se encontró el elemento 'servicios-table-body'");
+      return;
     }
 
     // Si existe la fila "No hay servicios en curso", la elimina.
     // Se asume que esa fila tiene un <td> con clase "text-center" y el texto.
     var noServiceRow = tableBody.querySelector("tr td.text-center");
     if (noServiceRow && noServiceRow.textContent.trim() === "No hay servicios en curso.") {
-        tableBody.innerHTML = "";
+      tableBody.innerHTML = "";
     }
 
     // Verificar si ya existe la fila del servicio en la tabla
     if (!document.getElementById("servicio-" + servicio.id)) {
-        tableBody.appendChild(crearFilaServicio(servicio));
+      tableBody.appendChild(crearFilaServicio(servicio));
     }
-}
+  }
 
-// Función para crear una fila (tr) de la tabla a partir de un servicio
-function crearFilaServicio(servicio) {
+  // Función para crear una fila (tr) de la tabla a partir de un servicio
+  function crearFilaServicio(servicio) {
     var row = document.createElement("tr");
     row.setAttribute("id", "servicio-" + servicio.id);
 
     // Si el servicio tiene asignado un encargado, se muestra; de lo contrario, se muestra "Sin encargado"
     var encargadoTexto = "Sin encargado";
     if (servicio.encargado) {
-        encargadoTexto = `${servicio.encargado.apellido}, ${servicio.encargado.nombre}`;
+      encargadoTexto = `${servicio.encargado.apellido}, ${servicio.encargado.nombre}`;
     }
 
     row.innerHTML = `
@@ -289,13 +314,13 @@ function crearFilaServicio(servicio) {
     `;
 
     return row;
-}
+  }
 
-function formatearFecha(fechaISO) {
+  function formatearFecha(fechaISO) {
     const date = new Date(fechaISO);
     const meses = [
-        "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
-        "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
+      "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+      "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
     ];
     const dia = date.getDate();
     const mes = meses[date.getMonth()];
@@ -305,12 +330,12 @@ function formatearFecha(fechaISO) {
     if (horas < 10) horas = '0' + horas;
     if (minutos < 10) minutos = '0' + minutos;
     return `${dia} ${mes} ${anio} ${horas}:${minutos}`;
-}
+  }
 
-socket.onclose = function(event) {
+  socket.onclose = function (event) {
     console.log("WebSocket cerrado, intentando reconectar...");
-    setTimeout(function() {
-        location.reload();
+    setTimeout(function () {
+      location.reload();
     }, 5000);
-};
+  };
 </script>

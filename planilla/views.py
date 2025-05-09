@@ -1,15 +1,16 @@
 from django.shortcuts import get_object_or_404, render, redirect
 from .models import *
+from collections import OrderedDict
 import re
 from django.views import generic, View
 from django.contrib.auth import login, authenticate, logout
-from datetime import timedelta
-from datetime import datetime
+from datetime import timedelta, datetime, time, date
 from django.utils import timezone
+from django.utils.http import url_has_allowed_host_and_scheme
 from django.utils.timezone import get_current_timezone, is_naive, make_aware
 from django.contrib import messages
 from .forms import *
-from django.http import JsonResponse, HttpResponseRedirect
+from django.http import JsonResponse
 from django.urls import reverse
 import json
 from channels.layers import get_channel_layer
@@ -20,6 +21,8 @@ from django.db.models import Sum, Count, Q, Prefetch
 from django.views.decorators.csrf import csrf_exempt
 import requests
 import logging
+from operator import attrgetter
+
 # Configuración de logging
 logger = logging.getLogger(__name__)
 
@@ -128,6 +131,135 @@ class PersonalView(generic.ListView):
     def get_queryset(self):
         """Devuelve todos los bomberos"""
         return Bombero.objects.order_by("legajo")
+
+
+class NovedadesView(generic.View):
+    template_name = "planilla/novedades.html"
+
+    def get(self, request, *args, **kwargs):
+        logger.info("Accediendo a novedades operativas")
+
+        # 1. Rango de los últimos 30 días
+        hace_15_dias = timezone.now() - timedelta(days=15)
+
+        # 2. Planillas (día y noche) con sus relaciones de presentes/ausentes/refuerzos
+        planillas = (
+            Planilla.objects
+            .filter(fecha__gte=hace_15_dias)
+            .select_related("cuartel", "cabecera", "oficial", "encargado", "chofer")
+            .prefetch_related(
+                "guardia_presentes__bombero",
+                "guardia_ausentes__bombero",
+                "guardia_refuerzos__bombero",
+            )
+            .order_by("fecha", "guardia")
+        )
+
+        # 3. Servicios realizados vinculados por fecha de salida
+        servicios = (
+            Servicio.objects
+            .filter(salida__date__gte=hace_15_dias)
+            .select_related("tipo", "encargado")
+            .order_by("salida")
+        )
+
+        # 4. Cambios de estado en materiales, cargas de combustible, controles de fluidos y reparaciones
+        cambios_material = (
+            CambioEstado.objects
+            .filter(fecha__date__gte=hace_15_dias)
+            .select_related("material", "estado", "encargado", "guardia_operativa")
+            .order_by("fecha")
+        )
+        combustibles = (
+            Combustible.objects
+            .filter(fecha__date__gte=hace_15_dias)
+            .select_related("movil", "encargado")
+            .order_by("fecha")
+        )
+        fluidos = (
+            Fluidos.objects
+            .filter(fecha__date__gte=hace_15_dias)
+            .select_related("movil", "encargado")
+            .order_by("fecha")
+        )
+        reparaciones = (
+            ReparacionMovil.objects
+            .filter(fecha__date__gte=hace_15_dias)
+            .select_related("movil", "encargado")
+            .order_by("fecha")
+        )
+
+        # 5. Construcción de un dict ordenado por fecha
+        timeline = OrderedDict()
+        for p in planillas:
+            fecha = p.fecha
+            if fecha not in timeline:
+                timeline[fecha] = {
+                    "diurna": None,
+                    "nocturna": None,
+                    "presentes": [],
+                    "ausentes": [],
+                    "refuerzos": [],
+                    "cambios_material": [],
+                    "combustibles": [],
+                    "fluidos": [],
+                    "reparaciones": [],
+                }
+            turno = "diurna" if p.guardia.lower().startswith("d") else "nocturna"
+            timeline[fecha][turno] = p
+            timeline[fecha]["presentes"].extend(p.guardia_presentes.all())
+            timeline[fecha]["ausentes"].extend(p.guardia_ausentes.all())
+            timeline[fecha]["refuerzos"].extend(p.guardia_refuerzos.all())
+
+        # Inicializar lista de servicios en cada planilla
+        for fecha, data in timeline.items():
+            for turno in ("diurna", "nocturna"):
+                plan = data[turno]
+                if plan:
+                    plan.servicios = []
+                    plan.cambios_material = []   # ← aquí
+                    plan.combustibles = []
+                    plan.fluidos = []
+                    plan.reparaciones = []
+
+        # Asignar cada cambio de estadod de materiales sólo a la planilla correcta
+        for cambio in cambios_material:
+            dt = cambio.fecha.date()
+            if dt in timeline:
+                for turno in ("diurna", "nocturna"):
+                    plan = timeline[dt][turno]
+                    # comparas la FK que acabas de agregar
+                    if plan and cambio.guardia_operativa_id == plan.pk:
+                        plan.cambios_material.append(cambio)
+                        print(plan.cambios_material)
+
+        # Asignar cada servicio sólo a la planilla correcta
+        for s in servicios:
+            dt = s.salida.date()
+            if dt in timeline:
+                for turno in ("diurna", "nocturna"):
+                    plan = timeline[dt][turno]
+                    if plan and s.guardia_operativa == plan.guardia_operativa:
+                        plan.servicios.append(s)
+
+        # Vincular eventos adicionales por fecha
+        for ev, key in (
+            (cambios_material, "cambios_material"),
+            (combustibles, "combustibles"),
+            (fluidos, "fluidos"),
+            (reparaciones, "reparaciones"),
+        ):
+            for obj in ev:
+                dt = getattr(obj, "fecha", obj).date()
+                if dt in timeline:
+                    timeline[dt][key].append(obj)
+
+        turnos = ["diurna", "nocturna"]
+        print(timeline)
+        return render(request, self.template_name, {
+            "timeline": timeline,
+            "turnos": turnos,
+        })
 
 class PlanillaView(generic.ListView):
     template_name = "planilla/listado_planillas.html" 
@@ -284,6 +416,7 @@ class MaterialesView(generic.ListView):
         context = super().get_context_data(**kwargs)
         context['estados'] = Estado.objects.all()
         context['bomberos'] = Bombero.objects.all()
+        context["guardia_operativa"] = Planilla.objects.all().order_by('-fecha')
         context['cambios'] = CambioEstado.objects.all().order_by('-fecha')
         return context
     
@@ -331,13 +464,15 @@ class CargarServicio(View):
         moviles = Movil.objects.all().order_by('numero')
         bomberos = Bombero.objects.all()
         tipo_servicios = TipoServicio.objects.all()
+        planillas = Planilla.objects.all().order_by('guardia_operativa').reverse()
         destacamento = request.session.get("destacamento", request.user.last_name)  # Recupera destacamento o usa last_name
 
         context = {
             "moviles": moviles,
             "bomberos": bomberos,
             "tipo_servicios": tipo_servicios,
-            "destacamento": destacamento
+            "destacamento": destacamento,
+            "planillas": planillas
         }
         return render (request, 'planilla/cargar_servicio.html', context)
     
@@ -351,7 +486,7 @@ class CargarServicio(View):
         numero = request.POST.get("numero")
         salida = request.POST.get("salida")
         tipo_servicio_id = request.POST.get("tiposervicio")
-        encargado_id = request.POST.get("encargado")
+        # encargado_id = request.POST.get("encargado")
         nombre = request.POST.get("denunciante")
         telefono = request.POST.get("telefono")
         base = request.POST.get('zona')
@@ -365,7 +500,7 @@ class CargarServicio(View):
 
 
         # Validar datos requeridos
-        if not (guardia and address and latitude and longitude and numero and salida and tipo_servicio_id and encargado_id):
+        if not (guardia and address and latitude and longitude and numero and salida and tipo_servicio_id):
             messages.error(request, "Todos los campos son obligatorios.")
             return redirect("cargar_servicio")
 
@@ -381,7 +516,6 @@ class CargarServicio(View):
                 salida=salida,
                 zona=base,
                 tipo_id=tipo_servicio_id,
-                encargado_id=encargado_id,
                 nombre_denunciante=nombre,
                 telefono_denunciante=telefono,
             )
@@ -442,64 +576,6 @@ class CargarServicio(View):
             request.session.modified = True
             request.session.save()
 
-
-            # Datos de autenticación
-            token = "EAAIugAMEhZA0BOZBdZBSBca76uunzMnDpKQSlGrHQC1lceZA7KJPwtgBrM8EWaedOOBUnsPnAWZA5TiJo0hTKNTok4DlrJ8cn64V82RNB22IVcyZC9Sre2gyA5OFyLy8SCYZCxnV3KKfrOtkeqyxG6TR5WZA3N3D5iWfbKn14Gs3TNq6hYN4kyHsZAa6ZB30fxn2Gua6rXyiUzRTG2ZAJhbwwITLcnS"  # Reemplázalo con tu token válido
-            id_numero_telefono = "500203196519111"  # ID del número de teléfono en WhatsApp Business
-            telefono_envia = "541165564694"  # Número de destino en formato internacional SIN "+"
-
-            # Nombre exacto de la plantilla en WhatsApp Manager (debe coincidir 100%)
-            nombre_plantilla = "nuevoservicio"
-
-            # Código de idioma correcto ("es_AR" o "es", según WhatsApp Manager)
-            idioma_plantilla = "es_AR"  # Si da error, prueba con "es"
-
-            # Parámetros de la plantilla (verifica que no sean None o vacíos)
-            parametros = [
-                {"type": "text", "text": "Incendio"},
-                {"type": "text", "text": "Destacamento N°1"},
-                {"type": "text", "text": "Hospital Posadas"}
-            ]
-
-            # URL de la API de WhatsApp Cloud
-            url = f"https://graph.facebook.com/v18.0/{id_numero_telefono}/messages"
-
-            # Encabezados de la petición
-            headers = {
-                "Authorization": f"Bearer {token}",
-                "Content-Type": "application/json"
-            }
-
-            # 🔴 🔴 🔴 IMPORTANTE: Verifica que los parámetros sean correctos 🔴 🔴 🔴
-            if not parametros or any(p.get("text") in [None, ""] for p in parametros):
-                print("⚠️ ERROR: Hay parámetros vacíos o incorrectos. Revisa los valores antes de enviar.")
-                exit()
-
-            # 📌 JSON con la estructura corregida
-            data = {
-                "messaging_product": "whatsapp",
-                "to": telefono_envia,
-                "type": "template",
-                "template": {
-                    "name": nombre_plantilla,  # 🔹 Verifica que el nombre de la plantilla es EXACTO
-                    "language": {"code": idioma_plantilla},  # 🔹 Verifica que el idioma sea correcto
-                    "components": [
-                        {
-                            "type": "body",
-                            "parameters": parametros  # 🔹 Verifica que este array tenga datos
-                        }
-                    ]
-                }
-            }
-
-            # Mostrar JSON antes de enviarlo
-            print("📌 JSON Enviado a WhatsApp:", data)
-
-            # Enviar mensaje
-            response = requests.post(url, headers=headers, json=data)
-
-            # Ver respuesta
-            print("📌 Respuesta de WhatsApp API:", response.json())
             return redirect ('/')
         
         except Exception as e:
@@ -510,19 +586,67 @@ class ServicioDetail(View):
     def get(self, request, id):
         bomberos = Bombero.objects.all()
         moviles = Movil.objects.all()
+        estados = Estado.objects.all()
         servicio = get_object_or_404(
             Servicio.objects.prefetch_related(
                 Prefetch(
                     "moviles_asignados",
-                    queryset=ServicioMovil.objects.select_related("movil").prefetch_related("bomberos"),
+                    queryset=(
+                        ServicioMovil.objects
+                        .select_related(
+                            "movil",          # tu Móvil
+                            "chofer",         # tu chofer (ForeignKey)
+                            "encargado_movil" # tu encargado (ForeignKey)
+                        )
+                        .prefetch_related("bomberos", "eventos")  # ManyToMany
+                    ),
                     to_attr="moviles_list"
                 )
             ),
             id=id
         )
-        cantidad_moviles = len(servicio.moviles_list)
-        cantidad_bomberos = sum(len(movil.bomberos.all()) for movil in servicio.moviles_list)
+            # 1) Evento inicial: alarma recibida
+        timeline = []
+        if servicio.salida:
+            timeline.append({
+                'time':        servicio.salida,
+                'icon':        'fas fa-phone-volume bg-red',
+                'description': 'Alarma recibida',
+            })
 
+        # 2) Por cada móvil, salida y luego sus eventos de estado
+        for sm in servicio.moviles_list:
+            if sm.salida_movil:
+                timeline.append({
+                    'time':        sm.salida_movil,
+                    'icon':        'fas fa-truck-fast bg-success',
+                    'description': (
+                        f"Se desplaza móvil {sm.movil.numero}"
+                        f"{' a cargo de ' + sm.encargado_movil.__str__() if sm.encargado_movil else ''}"
+                    ),
+                })
+            # eventos de estado
+            for ev in sm.eventos.all():
+                timeline.append({
+                    'time':        ev.timestamp,
+                    'icon':        'fas fa-map-marker-alt bg-green',
+                    'description': (
+                        f"Móvil {sm.movil.numero} "
+                        f"{ev.estado.estado}"   # ← aquí usamos el campo del FK
+                    ),
+                })
+
+        # 3) Orden cronológico ascendente
+        timeline = sorted(timeline, key=lambda e: e['time'])
+
+        cantidad_moviles = len(servicio.moviles_list)
+        cantidad_bomberos = sum(
+            movil.bomberos.all().count()
+            + (1 if movil.chofer else 0)
+            + (1 if movil.encargado_movil else 0)
+            for movil in servicio.moviles_list
+        )
+        
         fecha_formateada = servicio.salida.strftime("%Y-%m-%dT%H:%M") if servicio.salida else ""
 
         context = {
@@ -531,61 +655,96 @@ class ServicioDetail(View):
             "bomberos": bomberos,
             "moviles": moviles,
             'cantidad_moviles': cantidad_moviles,
-            'cantidad_bomberos': cantidad_bomberos
+            'cantidad_bomberos': cantidad_bomberos,
+            'estados': estados,
+            'timeline': timeline
         }
         return render (request, 'planilla/servicio_detail.html', context)
 
 def asignarmovil(request, servicio_id):
-    if request.method == "POST":
-        servicio = get_object_or_404(Servicio, id=servicio_id)
-        movil_id = request.POST['movil']
-        bomberos_ids = request.POST.getlist("bomberos")  # Obtiene lista de IDs
+    if request.method != "POST":
+        return JsonResponse({"success": False}, status=400)
 
-        if movil_id:
-            movil = get_object_or_404(Movil, id=movil_id)
-            servicio_movil, created = ServicioMovil.objects.get_or_create(servicio=servicio, movil=movil)
-            servicio_movil.bomberos.set(bomberos_ids)  # Asigna la lista de bomberos seleccionados
-            servicio_movil.save()
+    servicio = get_object_or_404(Servicio, id=servicio_id)
+    movil    = get_object_or_404(Movil, id=request.POST["movil"])
 
-            # Actualiza el estado del móvil a "Ocupado"
-            movil.intervenciones += 1
-            estado = get_object_or_404(Estado, estado="Ocupado")
-            movil.IDEstado_id = int(estado.id)
-            movil.save()
+    # 1) Obtener o crear la asignación
+    sm, created = ServicioMovil.objects.get_or_create(servicio=servicio, movil=movil)
 
-            # Obtiene los datos actualizados para enviar como JSON
-            # Usamos el related_name "moviles_asignados" (ajusta según tu modelo)
-            servicio_data = {
-                "id": servicio.id,
-                "numero": servicio.numero,
-                "zona": servicio.zona,
-                "moviles_list": list(servicio.moviles_asignados.values(
-                    "movil__id", "movil__numero"  # Ajusta según lo que necesites
-                )),
-                "salida": servicio.salida.strftime("%Y-%m-%d %H:%M:%S"),
-                "direccion": servicio.direccion,
-                "encargado": {
-                    "legajo": servicio.encargado.legajo,
-                    "apellido": servicio.encargado.apellido,
-                    "nombre": servicio.encargado.nombre,
-                },
-                "tipo": {"tipo": servicio.tipo.tipo}
-            }
+    # 2) Rellenar campos de la asignación y guardar
+    sm.encargado_movil_id = int(request.POST["encargado"])
+    sm.chofer_id          = int(request.POST["chofer"])
+    sm.salida_movil       = datetime.strptime(request.POST["salida_movil"], "%Y-%m-%dT%H:%M")
+    sm.save()
+    sm.bomberos.set(request.POST.getlist("bomberos"))
 
-            from channels.layers import get_channel_layer
-            from asgiref.sync import async_to_sync
-            channel_layer = get_channel_layer()
-            async_to_sync(channel_layer.group_send)(
-                "servicios", 
-                {"type": "send_servicio_update", "data": {
-                    "tipo": "actualizar_servicio",
-                    "servicio": servicio_data
-                }}
-            )
+    # ── Nuevo bloque: Cambiar el estado del móvil ──
+    # Buscamos el objeto Estado cuyo campo 'estado' sea precisamente "En desplazamiento"
+    estado_desplaz = get_object_or_404(Estado, estado="En desplazamiento")
+    movil.IDEstado = estado_desplaz
+    movil.intervenciones += 1  # si mantienes este contador
+    movil.save()
+    # ───────────────────────────────────────────────
 
-            return redirect('/servicio_detail/' + str(servicio_id))
+    # 3) Reconstruimos el payload completo (igual que antes)…
+    asigns = (ServicioMovil.objects
+                .filter(servicio=servicio)
+                .select_related("movil","encargado_movil","chofer")
+                .prefetch_related("bomberos"))
+    moviles_payload = []
+    for a in asigns:
+        moviles_payload.append({
+            "movil":     {"id": a.movil.id, "numero": a.movil.numero},
+            "salida":    a.salida_movil.strftime("%Y-%m-%dT%H:%M"),
+            "encargado": a.encargado_movil and {
+                "id": a.encargado_movil.id,
+                "nombre": a.encargado_movil.nombre,
+                "apellido": a.encargado_movil.apellido,
+            },
+            "chofer": a.chofer and {
+                "id": a.chofer.id,
+                "nombre": a.chofer.nombre,
+                "apellido": a.chofer.apellido,
+            },
+            "bomberos": [
+                {"id": b.id, "legajo": b.legajo,
+                 "nombre": b.nombre, "apellido": b.apellido}
+                for b in a.bomberos.all()
+            ],
+            # opcional: incluye aquí el estado actual del móvil
+            "estado_actual": a.movil.IDEstado.estado,
+        })
 
-    return JsonResponse({"success": False, "error": "Método no permitido"}, status=400)
+    servicio_data = {
+      "id":        servicio.id,
+      "numero":    servicio.numero,
+      "zona":      servicio.zona,
+      "moviles":   moviles_payload,
+      "salida":    servicio.salida.strftime("%Y-%m-%dT%H:%M:%S"),
+      "direccion": servicio.direccion,
+      "encargado": servicio.encargado and {
+          "legajo": servicio.encargado.legajo,
+          "apellido": servicio.encargado.apellido,
+          "nombre": servicio.encargado.nombre,
+      },
+      "tipo": {"tipo": servicio.tipo.tipo},
+    }
+
+    # 4) Emitir actualización por WebSocket
+    layer = get_channel_layer()
+    async_to_sync(layer.group_send)(
+      "servicios",
+      {
+        "type": "send_servicio_update",
+        "data": {
+          "tipo":     "actualizar_servicio",
+          "servicio": servicio_data
+        }
+      }
+    )
+
+    # 5) Redireccionar al detalle
+    return redirect(f"/servicio_detail/{servicio_id}")
 
 class ModificarServicio(View):
     def get(self, request, id):
@@ -873,7 +1032,7 @@ class CargarPlanilla(View):
 
         print("BASE: ", request.POST.get('base', False))
 
-        planilla = Planilla(guardia_operativa=request.POST['guardiaoperativa'], fecha=request.POST['fecha'], guardia=request.POST['guardia'], cabecera_id=int(request.POST['cabecera']), oficial_id=request.POST['oficial'], cuartelero=request.POST['cuartelero'], recibido=request.POST['recibido'], gastado=request.POST['gastos'], concepto=request.POST['concepto'], entregado=request.POST['entregado'], encargado_id=request.POST['encargado'], ingreso_encargado=request.POST["ingresoEncargado"], chofer_id=request.POST['chofer'], ingreso_chofer=ingresoChofer, tareas = request.POST['tareas'], novedades=request.POST['novedades'], cuartel_id=int(request.POST['base'])) 
+        planilla = Planilla(guardia_operativa=request.POST['guardiaoperativa'], fecha=request.POST['fecha'], guardia=request.POST['guardia'], cabecera_id=int(request.POST['cabecera']), oficial_id=request.POST['oficial'], cuartelero=request.POST['cuartelero'], recibido=request.POST['recibido'], gastado=request.POST['gastos'], concepto=request.POST['concepto'], entregado=request.POST['entregado'], encargado_id=request.POST['encargado'], ingreso_encargado=request.POST["ingresoEncargado"], chofer_id=request.POST['chofer'], ingreso_chofer=ingresoChofer, tareas=request.POST['tareas'], novedades=request.POST['novedades'], cuartel_id=int(request.POST['base'])) 
 
         planilla.save()
 
@@ -900,8 +1059,8 @@ class CargarPlanilla(View):
         print("PRESENTES: ", resultadoPresentes)
         for presente in resultadoPresentes.values():
             personal_guardia = GuardiaPresentes.objects.create(
-                guardia_op_id=planilla.id, 
-            fecha = presente['fecha'],
+            guardia_op_id=planilla.id, 
+            fecha = request.POST['fecha'],
             bombero_id=presente["bombero_id"], 
             ingreso=presente["ingreso"])
             print(personal_guardia)
@@ -909,7 +1068,7 @@ class CargarPlanilla(View):
 
         encargado_guardia = GuardiaPresentes.objects.create(
             guardia_op_id=planilla.id, 
-            fecha = presente['fecha'],
+            fecha = request.POST['fecha'],
             bombero_id=request.POST['encargado'],
             ingreso=request.POST["ingresoEncargado"])
         encargado_guardia.save()
@@ -917,7 +1076,7 @@ class CargarPlanilla(View):
         if ingresoChofer == "":
             chofer_guardia = GuardiaPresentes.objects.create(
             guardia_op_id=planilla.id, 
-            fecha = presente['fecha'],
+            fecha = request.POST['fecha'],
             bombero_id=request.POST["chofer"], 
             ingreso=ingresoChofer)
             chofer_guardia.save()
@@ -994,23 +1153,69 @@ class Guardia(View):
 
         return render (request, 'planilla/guardia.html', {'servicios': servicios, 'base': base, 'moviles': moviles, 'cuentas': cuentas})
 
-class TV(View):
-    def get(self, request):
-        destacamentos = Base.objects.all().order_by('id')
-        servicios = Servicio.objects.filter(estado="En curso").prefetch_related(
-            Prefetch(
-                    "moviles_asignados",
-                    queryset=ServicioMovil.objects.select_related("movil").prefetch_related("bomberos"),
-                    to_attr="moviles_list"
-                )
-            )
-        print(servicios)
-        context = {
-            "destacamentos": destacamentos,
-            "servicios": servicios
-        }
 
-        return render (request, 'planilla/tv.html', context)
+class TV(View):
+    def get(self, request, base, *args, **kwargs):
+        # 1) Cargo la Base seleccionada
+        group = get_object_or_404(Base, pk=base)
+
+        # 2) Defino el corte de 15 días atrás
+        cutoff = timezone.now() - timedelta(days=15)
+
+        # 3) Novedades: solo las Planillas de esta Base
+        novedades = Planilla.objects.filter(
+            fecha__gte=cutoff.date(),
+            cuartel=group
+        )
+
+        # 4) Cambios de material: solo los que provienen de una Planilla de esta Base
+        cambios_material = CambioEstado.objects.filter(
+            fecha__gte=cutoff,
+            guardia_operativa__cuartel=group
+        ).select_related(
+            'material', 'estado', 'encargado', 'guardia_operativa'
+        )
+        print(cambios_material)
+
+        # 5) Reparaciones: solo las de móviles asignados a esta Base
+        reparaciones = ReparacionMovil.objects.filter(
+            fecha__gte=cutoff,
+            movil__IDBase=group
+        ).select_related(
+            'movil', 'encargado'
+        )
+
+        # 6) Uno los tres QuerySets en una lista Python
+        items = list(novedades) + list(cambios_material) + list(reparaciones)
+
+        # 7) Si alguna Planilla tiene .fecha de tipo date en lugar de datetime, 
+        #    la convierto a datetime a las 00:00 para ordenarlas homogéneamente
+        for obj in items:
+            if isinstance(obj.fecha, date) and not isinstance(obj.fecha, datetime):
+                obj.fecha = datetime.combine(obj.fecha, time.min)
+
+        # 8) Ordeno de más nuevo a más antiguo
+        timeline = sorted(items, key=attrgetter('fecha'), reverse=True)
+
+        # 9) Servicios en curso, filtrados también por Base
+        servicios = Servicio.objects.filter(
+            estado='En curso'
+        ).prefetch_related(
+            Prefetch(
+                'moviles_asignados',
+                queryset=ServicioMovil.objects
+                         .select_related('movil')
+                         .prefetch_related('bomberos'),
+                to_attr='moviles_list'
+            )
+        ).distinct()
+
+        return render(request, 'planilla/tv.html', {
+            'destacamentos': Base.objects.order_by('id'),
+            'group':          group,
+            'timeline':       timeline,
+            'servicios':      servicios,
+        })
     
 def verificar_numero(request):
     if request.method == "POST":
@@ -1097,15 +1302,66 @@ def fluidos(request, id):
     else:
         print("NO CORRESPONDE EL METODO")
 
-def estado_movil(request, id):
-    if request.method == "POST":
-        movil = Movil.objects.get(id=id)
-        movil.IDEstado_id = int(request.POST['estado'])
-        movil.save()
 
-        return redirect('moviles')
-    else:
-        print("NO CORRESPONDE EL METODO")
+def estado_movil(request, id):
+    if request.method != "POST":
+        return redirect("moviles")
+
+    movil = get_object_or_404(Movil, id=id)
+    # 1) Cambio de estado del móvil
+    nuevo_estado_id = int(request.POST["estado"])
+    movil.IDEstado_id = nuevo_estado_id
+    movil.save()
+
+    # 2) Preparamos WebSocket
+    layer     = get_channel_layer()
+    timestamp = timezone.now().strftime("%H:%M:%S")
+
+    # 3) Buscamos asignaciones activas usando el through model
+    asignaciones = ServicioMovil.objects.filter(
+        movil=movil,
+        servicio__estado="En curso"
+    )
+
+    # 4) Para cada asignación, creamos un evento de timeline y lo enviamos
+    for asign in asignaciones:
+        # obtenemos la instancia de Estado que acabamos de asignar
+        estado_obj = get_object_or_404(Estado, id=nuevo_estado_id)
+
+        # creamos el evento en la base
+        evento = ServicioMovilEvento.objects.create(
+            servicio_movil=asign,
+            estado=estado_obj   # aquí ya es FK correctamente
+        )
+
+        # preparamos la entrada para el timeline
+        entry = {
+            "time":        evento.timestamp.strftime("%Y-%m-%dT%H:%M:%S"),
+            "icon":        "fas fa-map-marker-alt bg-green",
+            "description": (
+            f"Móvil {asign.movil.numero} "
+            f"{evento.estado.estado}"       # ← aquí usamos el texto del FK
+        ),
+        }
+
+        # enviamos por WebSocket
+        async_to_sync(layer.group_send)(
+            "servicios",
+            {
+                "type": "send_movil_update",
+                "data": {
+                    "tipo":        "nuevo_evento_movil",
+                    "servicio_id": asign.servicio.id,
+                    "evento":      entry
+                }
+            }
+        )
+
+    # 5) redirección según next o fallback
+    next_url = request.POST.get("next")
+    if next_url and url_has_allowed_host_and_scheme(next_url, allowed_hosts=None):
+        return redirect(next_url)
+    return redirect("moviles")
 
 def estado_base(request):
     if request.method == "POST":
@@ -1124,14 +1380,15 @@ def estado_mat(request, id):
         # Obtener la instancia del bombero
 
         bombero = Bombero.objects.get(pk=int(request.POST['bombero']))
+        guardia = Planilla.objects.get(pk=int(request.POST['guardia']))
         material = Material.objects.get(id=id)
         material.estado = estado
         material.save()
 
 
 
-        print(material, datetime.now(), int(request.POST['estado']), int(request.POST['bombero']), request.POST['motivo'])
-        novedad = CambioEstado(material=material, fecha=datetime.now(), estado=estado, encargado=bombero, motivo=request.POST['motivo'])
+        print(material, datetime.now(), int(request.POST['estado']), int(request.POST['bombero']), request.POST['motivo'], request.POST['guardia'] )
+        novedad = CambioEstado(material=material, fecha=datetime.now(), estado=estado, encargado=bombero, motivo=request.POST['motivo'], guardia_operativa=guardia)
         novedad.save()
 
         return redirect('materiales')
